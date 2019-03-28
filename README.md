@@ -1,2 +1,25 @@
 # SpectrumShaderLanguage
-A custom GPU shading language designed for use with the Spectrum graphics library.
+A custom GPU shading language designed for use with the [Spectrum](https://github.com/SpectrumLib/Spectrum) graphics library.
+
+The current version of GLSL for Vulkan uses confusing semantics (designed for OpenGL), provides far more types than is used in 95% of shader programs, and there is no standardized procedure for getting reflection info about shaders. All of these make GLSL far more complex than is required for nearly all developers and shader authors, and would make a full parsing and reflecting system for Spectrum too complex to easily develop and manage. Therefore, we designed SSL as a minimal and simpler shading language, similar to GLSL, but should still work for most situtations.
+
+A quick list of the design features and changes from GLSL to SSL:
+
+* Designed for use with Vulkan, instead of being hacked together from another library like GLSL is.
+* Unified and explicit syntax for shader input, output, uniforms, and stages.
+* Greatly reduced set of types.
+* All shader stages are described in the same source file.
+* (Nearly) all of the built-in functions of GLSL are supported.
+* Smaller subset of common GLSL features, making programming against the generated SPIRV with Vulkan easier.
+
+Because it has the ability to generate GLSL source instead of compiling directly to SPIRV, this tool can additionally be used outside of the Spectrum environment for any project. This is supported by the licensing (MIT), and is encouraged by us, the authors.
+
+More information will be provided as development progresses.
+
+## Limitations
+
+This language is designed to minimally cover only the features that are required by Spectrum. This makes it unable to support advanced features and shading tricks. However, it can be used for a larget subset of standard shader effects, such as texturing, lighting, shadows, deferred rendering, ect...
+
+## Acknowledgements
+
+This library uses [ANTLR](https://www.antlr.org/) for lexing and parsing SSL for translation into GLSL.
