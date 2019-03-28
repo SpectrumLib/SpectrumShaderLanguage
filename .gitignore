@@ -1,5 +1,7 @@
 
+\.vs/
+
 Grammar/\.antlr/
 
-*.log
-
+Generated/obj/
+Generated/bin/
