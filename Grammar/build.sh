@@ -7,7 +7,6 @@ java -jar antlr-4.7.2-complete.jar  \
     -visitor                        \
     -o ../Generated/                \
     -package SSLang.Generated       \
-    -Xlog                           \
     -Xexact-output-dir              \
-    -Dlanguage=C#                   \
+    -Dlanguage=CSharp               \
     SSL.g4

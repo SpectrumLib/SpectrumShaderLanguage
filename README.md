@@ -1,5 +1,5 @@
 # SpectrumShaderLanguage
-A custom GPU shading language designed for use with the [Spectrum](https://github.com/SpectrumLib/Spectrum) graphics library.
+A custom GPU shading language designed for use with the [Spectrum](https://github.com/SpectrumLib/Spectrum) graphics library. It works by [transpiling](https://en.wikipedia.org/wiki/Source-to-source_compiler) the SSL source into GLSL, and then using the tools in the Vulkan SDK to compile the generated GLSL to SPIR-V bytecode.
 
 The current version of GLSL for Vulkan uses confusing semantics (designed for OpenGL), provides far more types than is used in 95% of shader programs, and there is no standardized procedure for getting reflection info about shaders. All of these make GLSL far more complex than is required for nearly all developers and shader authors, and would make a full parsing and reflecting system for Spectrum too complex to easily develop and manage. Therefore, we designed SSL as a minimal and simpler shading language, similar to GLSL, but should still work for most situtations.
 
@@ -13,6 +13,8 @@ A quick list of the design features and changes from GLSL to SSL:
 * Smaller subset of common GLSL features, making programming against the generated SPIRV with Vulkan easier.
 
 Because it has the ability to generate GLSL source instead of compiling directly to SPIRV, this tool can additionally be used outside of the Spectrum environment for any project. This is supported by the licensing (MIT), and is encouraged by us, the authors.
+
+In order to compile SSL into SPIRV, the Vulkan SDK must be installed and in the PATH. If only converting to GLSL, the Vulkan SDK is not required.
 
 More information will be provided as development progresses.
 
