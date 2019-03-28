@@ -1,0 +1,14 @@
+@rem This is the grammar build script for Windows.
+@rem This file is public domain.
+
+@echo off
+
+java -jar antlr-4.7.2-complete.jar  ^
+    -no-listener                    ^
+    -visitor                        ^
+    -o ../Generated/                ^
+    -package SSLang.Generated       ^
+    -Xlog                           ^
+    -Xexact-output-dir              ^
+    -Dlanguage=C#                   ^
+    SSL.g4
