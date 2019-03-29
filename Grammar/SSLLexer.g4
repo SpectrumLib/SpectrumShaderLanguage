@@ -18,13 +18,21 @@ fragment HexLiteral         : '0x' HexDigitChar+ ;
 fragment ExponentPart       : [eE] ('-'|'+')? DigitChar+ ;
 
 // Keywords
-KW_BLOCK        : 'block' ;
-KW_SHADER       : 'shader' ;
-KW_UNIFORM      : 'uniform' ;
+KW_BLOCK            : 'block' ;
+KW_INPUT            : 'input' ;
+KW_LOCALS           : 'locals' ;
+KW_OUTPUT           : 'output' ;
+KW_SHADER           : 'shader' ;
+KW_UNIFORM          : 'uniform' ;
+
+// Shader stage function keywords
+KW_STAGE_VERT       : '@vert' ;
+KW_STAGE_FRAG       : '@frag' ;
 
 // Type keywords
 TYPE_KEYWORD
-    : DATA_TYPE_KEYWORD
+    : KWT_VOID
+    | DATA_TYPE_KEYWORD
     ;
 DATA_TYPE_KEYWORD
     : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT | KWT_DOUBLE
@@ -33,6 +41,7 @@ DATA_TYPE_KEYWORD
     | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4 | KWT_DOUBLE4
     | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
     ;
+KWT_VOID        : 'void' ;
 KWT_BOOL        : 'bool' ;
 KWT_INT         : 'int' ;
 KWT_UINT        : 'uint' ;
