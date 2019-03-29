@@ -5,22 +5,22 @@ STRING_LITERAL
     : '"' (~('"'|'\n'|'\r'))* '"'
     ;
 
-// Numeric literals
-INTEGER_LITERAL
-    : DecimalLiteral
-    | HexLiteral
+// Boolean literals
+BOOLEAN_LITERAL
+    : KW_TRUE
+    | KW_FALSE
     ;
-FLOAT_LITERAL
-    : DigitChar* '.' DigitChar+ ExponentPart?
-    ;
-fragment DecimalLiteral     : DigitChar+ ;
-fragment HexLiteral         : '0x' HexDigitChar+ ;
-fragment ExponentPart       : [eE] ('-'|'+')? DigitChar+ ;
+KW_TRUE     : 'true' ;
+KW_FALSE    : 'false' ;
 
 // Keywords
 KW_BLOCK            : 'block' ;
+KW_CONST            : 'const' ;
+KW_IN               : 'in' ;
+KW_INOUT            : 'inout' ;
 KW_INPUT            : 'input' ;
 KW_LOCALS           : 'locals' ;
+KW_OUT              : 'out' ;
 KW_OUTPUT           : 'output' ;
 KW_SHADER           : 'shader' ;
 KW_UNIFORM          : 'uniform' ;
@@ -30,17 +30,6 @@ KW_STAGE_VERT       : '@vert' ;
 KW_STAGE_FRAG       : '@frag' ;
 
 // Type keywords
-TYPE_KEYWORD
-    : KWT_VOID
-    | DATA_TYPE_KEYWORD
-    ;
-DATA_TYPE_KEYWORD
-    : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT | KWT_DOUBLE
-    | KWT_BOOL2 | KWT_INT2 | KWT_UINT2 | KWT_FLOAT2 | KWT_DOUBLE2
-    | KWT_BOOL3 | KWT_INT3 | KWT_UINT3 | KWT_FLOAT3 | KWT_DOUBLE3
-    | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4 | KWT_DOUBLE4
-    | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
-    ;
 KWT_VOID        : 'void' ;
 KWT_BOOL        : 'bool' ;
 KWT_INT         : 'int' ;
@@ -66,6 +55,23 @@ KWT_MAT2        : 'mat2' ;
 KWT_MAT3        : 'mat3' ;
 KWT_MAT4        : 'mat4' ;
 
+// Swizzles
+SWIZZLE
+    : '.' ([xyzw]+ | [rbga]+ | [stpq]+)
+    ;
+
+// Numeric literals
+INTEGER_LITERAL
+    : DecimalLiteral
+    | HexLiteral
+    ;
+FLOAT_LITERAL
+    : DigitChar* '.' DigitChar+ ExponentPart?
+    ;
+fragment DecimalLiteral     : DigitChar+ ;
+fragment HexLiteral         : '0x' HexDigitChar+ ;
+fragment ExponentPart       : [eE] ('-'|'+')? DigitChar+ ;
+
 // Identifiers (variable and member names)
 IDENTIFIER
     : AlphaChar (AlphaNumericChar|'_')*
@@ -84,7 +90,21 @@ PERIOD          : '.' ;
 SEMI_COLON      : ';' ;
 
 // Operators
+ASSIGN_OP
+    : OP_ASSIGN | OP_ADD_ASSIGN | OP_SUB_ASSIGN | OP_MUL_ASSIGN | OP_DIV_ASSIGN
+    ;
+BINARY_OP
+    : OP_ADD | OP_SUB | OP_MUL | OP_DIV
+    ;
 OP_ASSIGN       : '=' ;
+OP_ADD_ASSIGN   : '+=' ;
+OP_SUB_ASSIGN   : '-=' ;
+OP_MUL_ASSIGN   : '*=' ;
+OP_DIV_ASSIGN   : '/=' ;
+OP_ADD          : '+' ;
+OP_SUB          : '-' ;
+OP_MUL          : '*' ;
+OP_DIV          : '/' ;
 
 // Whitespace And Comments(ignore)
 WS 

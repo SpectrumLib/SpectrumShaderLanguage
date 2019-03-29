@@ -11,7 +11,7 @@ file
 
 // Shader metadata statements
 shaderMetaStatement
-    : 'shader' STRING_LITERAL ';'
+    : 'shader' Name=STRING_LITERAL ';'
     ;
 
 // All top-level statements that can appear in the file scope
@@ -21,35 +21,40 @@ topLevelStatement
     | outputStatement
     | localsStatement
     | stageFunction
+    | standardFunction
     ;
 
 // Uniform statements
 uniformStatement
     : uniformBlockDeclare
+    | uniformHandleDeclare
     ;
 uniformBlockDeclare // Block of data types
-    : uniformDeclare 'block' blockOfTypes
+    : uniformDeclare 'block' typeBlock
     ;
 uniformHandleDeclare // A single opaque handle
-    : uniformDeclare variableDeclareNoAssign
+    : uniformDeclare variableDeclaration
     ;
 uniformDeclare
-    : 'uniform' '(' INTEGER_LITERAL ')'
+    : 'uniform' '(' Index=INTEGER_LITERAL ')'
+    ;
+typeBlock
+    : '{' variableDeclaration* '}'
     ;
 
 // Vertex shader input (attributes)
 inputStatement
-    : 'input' blockOfTypes
+    : 'input' typeBlock
     ;
 
 // Fragment shader output
 outputStatement
-    : 'output' blockOfTypes
+    : 'output' typeBlock
     ;
 
 // Locals (values passed between shader stages)
 localsStatement
-    : 'locals' blockOfTypes
+    : 'locals' typeBlock
     ;
 
 // Stage functions
@@ -58,32 +63,82 @@ stageFunction
     | fragFunction
     ;
 vertFunction
-    : '@vert' statementBlock
+    : '@vert' block
     ;
 fragFunction
-    : '@frag' statementBlock
+    : '@frag' block
     ;
 
 // Standard function (non-stage function)
 standardFunction
-    : TYPE_KEYWORD IDENTIFIER '(' argList? ')' statementBlock
+    : type Name=IDENTIFIER '(' (Params=parameterList|'void')? ')' block
     ;
-argList
-    : TYPE_KEYWORD IDENTIFIER (',' TYPE_KEYWORD IDENTIFIER)*
+parameterList
+    : PList+=parameter (',' PList+=parameter)*
+    ;
+parameter
+    : Access=('in'|'out'|'inout')? type Name=IDENTIFIER
     ;
 
-// Block of statements
-statementBlock
+// Statements (basically, any line that can stand on its own in a function body)
+block
     : '{' statement* '}'
     ;
 statement
-    : variableDeclareNoAssign // TODO: THIS IS THE BASE STATEMENT TYPE, THIS WILL GET EXPANDED A LOT
+    : variableDeclaration
+    | variableDefinition
     ;
 
-// Variable declaration
-blockOfTypes
-    : '{' variableDeclareNoAssign* '}'
+// Declaring new variables
+variableDeclaration
+    : type Name=IDENTIFIER arrayIndexer? ';'
     ;
-variableDeclareNoAssign
-    : TYPE_KEYWORD IDENTIFIER ';'
+variableDefinition
+    : type Name=IDENTIFIER '=' Value=expression ';'                   # ValueDefinition
+    | type Name=IDENTIFIER arrayIndexer '=' Value=arrayLiteral ';'    # ArrayDefinition
+    ;
+arrayLiteral
+    : '{' Values+=expression (',' Values+=expression)* '}'
+    ;
+
+// Array indexer
+arrayIndexer
+    : '[' Index=INTEGER_LITERAL ']'
+    ;
+
+// Expressions (anything that can evaluate to a type value)
+expression
+    : atom
+    ;
+
+// An atom is the basest unit of value, those that evaluate to compile-time constants
+atom
+    : typeConstruction SWIZZLE?
+    | IDENTIFIER SWIZZLE?
+    | valueLiteral
+    ;
+
+// Built-in type construction
+typeConstruction
+    : type '(' Args+=expression (',' Args+=expression)* ')'
+    ;
+
+// Value literals
+valueLiteral
+    : INTEGER_LITERAL
+    | FLOAT_LITERAL
+    | BOOLEAN_LITERAL
+    ;
+
+// Type keywords
+type
+    : KWT_VOID
+    | valueTypeKeyword
+    ;
+valueTypeKeyword
+    : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT | KWT_DOUBLE
+    | KWT_BOOL2 | KWT_INT2 | KWT_UINT2 | KWT_FLOAT2 | KWT_DOUBLE2
+    | KWT_BOOL3 | KWT_INT3 | KWT_UINT3 | KWT_FLOAT3 | KWT_DOUBLE3
+    | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4 | KWT_DOUBLE4
+    | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
     ;
