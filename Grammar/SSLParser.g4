@@ -104,7 +104,7 @@ arrayLiteral
 
 // Assigment
 assignment
-    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=('='|'+='|'-='|'*='|'/=') Value=expression ';'
+    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=OP_ALL_ASSIGN Value=expression ';'
     ;
 
 // Array indexer
@@ -113,32 +113,34 @@ arrayIndexer
     ;
 
 // Expressions (anything that can evaluate to a type value) (enforce order of operation)
-// See http://learnwebgl.brown37.net/12_shader_language/glsl_mathematical_operations.html for GLSL Order of Operations
+// See https://www.khronos.org/files/opengl45-quick-reference-card.pdf for GLSL Order of Operations
 expression
     : atom                              # AtomExpr
     // Unary operators
     | Expr=IDENTIFIER Op=('--'|'++')    # UnOpPostfix
     | Op=('--'|'++') Expr=IDENTIFIER    # UnOpPrefix
     | Op=('+'|'-') Expr=expression      # UnOpFactor
-    | '!' Expr=expression               # UnOpBang
+    | Op=('!'|'~') Expr=expression      # UnOpNegate
     // Binary operators
-    | Left=expression Op=('*'|'/') Right=expression             # BinOpMulDiv
+    | Left=expression Op=('*'|'/'|'%') Right=expression         # BinOpMulDivMod
     | Left=expression Op=('+'|'-') Right=expression             # BinOpAddSub
-    | Left=expression Op=('<'|'>'|'<='|'>=') Right=expression   # BinOpInequality
+    | Left=expression Op=('<<'|'>>') Right=expression           # BinOpBitShift
+    | Left=expression Op=('<'|'>'|'<='|'>=') Right=expression   # BinOpRelational
     | Left=expression Op=('=='|'!=') Right=expression           # BinOpEquality
-    | Left=expression Op=('&&'|'||'|'^^') Right=expression      # BinOpLogic
+    | Left=expression Op=('&'|'|'|'^') Right=expression         # BinOpBitLogic
+    | Left=expression Op=('&&'|'||'|'^^') Right=expression      # BinOpBoolLogic
     // Ternary (selection) operator
     | Cond=expression '?' TVal=expression ':' FVal=expression   # SelectionExpr
     ;
 
 // Atom expression (an expression that cannot be subdivided into further expressions)
 atom
-    : '(' expression ')' SWIZZLE?   # ParenAtom
-    | typeConstruction SWIZZLE?     # ConstructionAtom
-    | builtinFunctionCall SWIZZLE?  # BuiltinCallAtom
-    | functionCall SWIZZLE?         # FunctionCallAtom
-    | valueLiteral                  # LiteralAtom
-    | IDENTIFIER SWIZZLE?           # VariableAtom
+    : '(' expression ')' arrayIndexer? SWIZZLE?     # ParenAtom
+    | typeConstruction arrayIndexer? SWIZZLE?       # ConstructionAtom
+    | builtinFunctionCall arrayIndexer? SWIZZLE?    # BuiltinCallAtom
+    | functionCall arrayIndexer? SWIZZLE?           # FunctionCallAtom
+    | valueLiteral                                  # LiteralAtom
+    | IDENTIFIER arrayIndexer? SWIZZLE?             # VariableAtom
     ;
 typeConstruction // For built-in types, also how casting is performed
     : Type=type '(' Args+=expression (',' Args+=expression)* ')'
@@ -163,9 +165,9 @@ type
     | valueTypeKeyword
     ;
 valueTypeKeyword
-    : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT | KWT_DOUBLE
-    | KWT_BOOL2 | KWT_INT2 | KWT_UINT2 | KWT_FLOAT2 | KWT_DOUBLE2
-    | KWT_BOOL3 | KWT_INT3 | KWT_UINT3 | KWT_FLOAT3 | KWT_DOUBLE3
-    | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4 | KWT_DOUBLE4
+    : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT
+    | KWT_BOOL2 | KWT_INT2 | KWT_UINT2 | KWT_FLOAT2
+    | KWT_BOOL3 | KWT_INT3 | KWT_UINT3 | KWT_FLOAT3
+    | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4
     | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
     ;
