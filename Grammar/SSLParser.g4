@@ -87,6 +87,7 @@ block
 statement
     : variableDeclaration
     | variableDefinition
+    | assignment
     ;
 
 // Declaring new variables
@@ -101,29 +102,49 @@ arrayLiteral
     : '{' Values+=expression (',' Values+=expression)* '}'
     ;
 
+// Assigment
+assignment
+    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=('='|'+='|'-='|'*='|'/=') Value=expression ';'
+    ;
+
 // Array indexer
 arrayIndexer
     : '[' Index=INTEGER_LITERAL ']'
     ;
 
-// Expressions (anything that can evaluate to a type value)
+// Expressions (anything that can evaluate to a type value) (enforce order of operation)
+// See http://learnwebgl.brown37.net/12_shader_language/glsl_mathematical_operations.html for GLSL Order of Operations
 expression
-    : atom
+    : atom                              # AtomExpr
+    // Unary operators
+    | Expr=IDENTIFIER Op=('--'|'++')    # UnOpPostfix
+    | Op=('--'|'++') Expr=IDENTIFIER    # UnOpPrefix
+    | Op=('+'|'-') Expr=expression      # UnOpFactor
+    | '!' Expr=expression               # UnOpBang
+    // Binary operators
+    | Left=expression Op=('*'|'/') Right=expression             # BinOpMulDiv
+    | Left=expression Op=('+'|'-') Right=expression             # BinOpAddSub
+    | Left=expression Op=('<'|'>'|'<='|'>=') Right=expression   # BinOpInequality
+    | Left=expression Op=('=='|'!=') Right=expression           # BinOpEquality
+    | Left=expression Op=('&&'|'||'|'^^') Right=expression      # BinOpLogic
+    // Ternary (selection) operator
+    | Cond=expression '?' TVal=expression ':' FVal=expression   # SelectionExpr
     ;
 
-// An atom is the basest unit of value, those that evaluate to compile-time constants
+// Atom expression (an expression that cannot be subdivided into further expressions)
 atom
-    : typeConstruction SWIZZLE?
-    | IDENTIFIER SWIZZLE?
-    | valueLiteral
+    : '(' expression ')' SWIZZLE?   # ParenAtom
+    | typeConstruction SWIZZLE?     # ConstructionAtom
+    | functionCall SWIZZLE?         # FunctionCallAtom
+    | valueLiteral                  # LiteralAtom
+    | IDENTIFIER SWIZZLE?           # VariableAtom
     ;
-
-// Built-in type construction
-typeConstruction
-    : type '(' Args+=expression (',' Args+=expression)* ')'
+typeConstruction // For built-in types, also how casting is performed
+    : Type=type '(' Args+=expression (',' Args+=expression)* ')'
     ;
-
-// Value literals
+functionCall
+    : FName=IDENTIFIER '(' (Args+=expression (',' Args+=expression)*)? ')'
+    ;
 valueLiteral
     : INTEGER_LITERAL
     | FLOAT_LITERAL

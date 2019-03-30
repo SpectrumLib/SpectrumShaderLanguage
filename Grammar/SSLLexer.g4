@@ -82,20 +82,16 @@ LBRACE          : '{' ;
 RBRACE          : '}' ;
 LBRACKET        : '[' ;
 RBRACKET        : ']' ;
+COLON           : ':' ;
 COMMA           : ',' ;
 DOUBLE_QUOTE    : '"' ;
 LPAREN          : '(' ;
+Q_MARK          : '?' ;
 RPAREN          : ')' ;
 PERIOD          : '.' ;
 SEMI_COLON      : ';' ;
 
 // Operators
-ASSIGN_OP
-    : OP_ASSIGN | OP_ADD_ASSIGN | OP_SUB_ASSIGN | OP_MUL_ASSIGN | OP_DIV_ASSIGN
-    ;
-BINARY_OP
-    : OP_ADD | OP_SUB | OP_MUL | OP_DIV
-    ;
 OP_ASSIGN       : '=' ;
 OP_ADD_ASSIGN   : '+=' ;
 OP_SUB_ASSIGN   : '-=' ;
@@ -105,6 +101,18 @@ OP_ADD          : '+' ;
 OP_SUB          : '-' ;
 OP_MUL          : '*' ;
 OP_DIV          : '/' ;
+OP_AND          : '&&' ;
+OP_OR           : '||' ;
+OP_XOR          : '^^' ;
+OP_INC          : '++' ;
+OP_DEC          : '--' ;
+OP_BANG         : '!' ;
+OP_LT           : '<' ;
+OP_GT           : '>' ;
+OP_LE           : '<=' ;
+OP_GE           : '>=' ;
+OP_EQ           : '==' ;
+OP_NE           : '!=' ;
 
 // Whitespace And Comments(ignore)
 WS 
