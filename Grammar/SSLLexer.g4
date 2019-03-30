@@ -55,6 +55,67 @@ KWT_MAT2        : 'mat2' ;
 KWT_MAT3        : 'mat3' ;
 KWT_MAT4        : 'mat4' ;
 
+// Built-in Functions
+// Taken from http://www.shaderific.com/glsl-functions/ and adjusted to the functions that Vulkan supports
+BIF_ALL_ARG1 // All 1-argument builtin functions
+    : BIF_DEG2RAD | BIF_RAD2DEG | BIF_SIN | BIF_COS | BIF_TAN | BIF_ASIN | BIF_ACOS | BIF_ATAN | BIF_EXP
+    | BIF_LOG | BIF_EXP2 | BIF_LOG2 | BIF_SQRT | BIF_INVSQRT | BIF_ABS | BIF_SIGN | BIF_FLOOR | BIF_CEIL
+    | BIF_FRACT | BIF_LENGTH | BIF_NORMALIZE | BIF_VECANY | BIF_VECALL | BIF_VECNOT
+    ;
+BIF_ALL_ARG2 // All 2-argument builtin functions
+    : BIF_ATAN2 | BIF_POW | BIF_MOD | BIF_MIN | BIF_MAX | BIF_STEP | BIF_DISTANCE | BIF_DOT | BIF_CROSS
+    | BIF_REFLECT | BIF_MATCOMPMUL | BIF_VECLT | BIF_VECLE | BIF_VECGT | BIF_VECGE | BIF_VECEQ | BIF_VECNE
+    ;
+BIF_ALL_ARG3 // All 3-argument builtin functions
+    : BIF_CLAMP | BIF_MIX | BIF_SSTEP | BIF_FFORWARD | BIF_REFRACT
+    ;
+BIF_DEG2RAD     : 'deg2rad' ; // GLSL: radians
+BIF_RAD2DEG     : 'rad2deg' ; // GLSL: degrees
+BIF_SIN         : 'sin' ;
+BIF_COS         : 'cos' ;
+BIF_TAN         : 'tan' ;
+BIF_ASIN        : 'asin' ;
+BIF_ACOS        : 'acos' ;
+BIF_ATAN        : 'atan' ;
+BIF_ATAN2       : 'atan2' ; // GLSL: atan(x, y)
+BIF_POW         : 'pow' ;
+BIF_EXP         : 'exp' ;
+BIF_LOG         : 'log' ;
+BIF_EXP2        : 'exp2' ;
+BIF_LOG2        : 'log2' ;
+BIF_SQRT        : 'sqrt' ;
+BIF_INVSQRT     : 'invsqrt' ; // GLSL: inversesqrt
+BIF_ABS         : 'abs' ;
+BIF_SIGN        : 'sign' ;
+BIF_FLOOR       : 'floor' ;
+BIF_CEIL        : 'ceil' ;
+BIF_FRACT       : 'fract' ;
+BIF_MOD         : 'mod' ;
+BIF_MIN         : 'min' ;
+BIF_MAX         : 'max' ;
+BIF_CLAMP       : 'clamp';
+BIF_MIX         : 'mix' ;
+BIF_STEP        : 'step' ;
+BIF_SSTEP       : 'smoothstep' ;
+BIF_LENGTH      : 'length';
+BIF_DISTANCE    : 'distance' ;
+BIF_DOT         : 'dot' ;
+BIF_CROSS       : 'cross' ;
+BIF_NORMALIZE   : 'normalize' ;
+BIF_FFORWARD    : 'faceforward' ;
+BIF_REFLECT     : 'reflect' ;
+BIF_REFRACT     : 'refract' ;
+BIF_MATCOMPMUL  : 'matCompMul' ; // GLSL: matrixCompMult(vec, vec)
+BIF_VECLT       : 'vecLT' ; // GLSL: lessThan(vec, vec)
+BIF_VECLE       : 'vecLE' ; // GLSL: lessThanEqual(vec, vec)
+BIF_VECGT       : 'vecGT' ; // GLSL: greaterThan(vec, vec)
+BIF_VECGE       : 'vecGE' ; // GLSL: greaterThanEqual(vec, vec)
+BIF_VECEQ       : 'vecEQ' ; // GLSL: equal(vec, vec)
+BIF_VECNE       : 'vecNE' ; // GLSL: notEqual(vec, vec)
+BIF_VECANY      : 'vecAny' ; // GLSL: any(bvec)
+BIF_VECALL      : 'vecAll' ; // GLSL: all(bvec)
+BIF_VECNOT      : 'vecNot' ; // GLSL: not(bvec)
+
 // Swizzles
 SWIZZLE
     : '.' ([xyzw]+ | [rbga]+ | [stpq]+)

@@ -135,12 +135,18 @@ expression
 atom
     : '(' expression ')' SWIZZLE?   # ParenAtom
     | typeConstruction SWIZZLE?     # ConstructionAtom
+    | builtinFunctionCall SWIZZLE?  # BuiltinCallAtom
     | functionCall SWIZZLE?         # FunctionCallAtom
     | valueLiteral                  # LiteralAtom
     | IDENTIFIER SWIZZLE?           # VariableAtom
     ;
 typeConstruction // For built-in types, also how casting is performed
     : Type=type '(' Args+=expression (',' Args+=expression)* ')'
+    ;
+builtinFunctionCall
+    : FName=BIF_ALL_ARG1 '(' A1=expression ')'                                      # BuiltinCall1
+    | FName=BIF_ALL_ARG2 '(' A1=expression ',' A2=expression ')'                    # BuiltinCall2
+    | FName=BIF_ALL_ARG3 '(' A1=expression ',' A2=expression ',' A3=expression ')'  # BuiltinCall3
     ;
 functionCall
     : FName=IDENTIFIER '(' (Args+=expression (',' Args+=expression)*)? ')'
