@@ -38,7 +38,7 @@ KW_WHILE            : 'while' ;
 KW_STAGE_VERT       : '@vert' ;
 KW_STAGE_FRAG       : '@frag' ;
 
-// Type keywords
+// Type keywords (data)
 KWT_VOID        : 'void' ;
 KWT_BOOL        : 'bool' ;
 KWT_INT         : 'int' ;
@@ -60,6 +60,20 @@ KWT_MAT2        : 'mat2' ;
 KWT_MAT3        : 'mat3' ;
 KWT_MAT4        : 'mat4' ;
 
+// Type keywords (handle)
+KWT_SAMP1       : 'sampler1D' ;
+KWT_SAMP2       : 'sampler2D' ;
+KWT_SAMP3       : 'sampler3D' ;
+KWT_SAMPCUBE    : 'samplerCube' ;
+KWT_SAMP1ARR    : 'sampler1DArray' ;
+KWT_SAMP2ARR    : 'sampler2DArray' ;
+KWT_IMAGE1      : 'image1D' ;
+KWT_IMAGE2      : 'image2D' ;
+KWT_IMAGE3      : 'image3D' ;
+KWT_IMAGECUBE   : 'imageCube' ;
+KWT_IMAGE1ARR   : 'image1DArray' ;
+KWT_IMAGE2ARR   : 'image2DArray' ;
+
 // Built-in Functions
 // Taken from https://www.khronos.org/files/opengl45-quick-reference-card.pdf, and adjusted to a smaller subset of
 //    functions 
@@ -67,14 +81,15 @@ BIF_ALL_ARG1 // All 1-argument builtin functions
     : BIF_DEG2RAD | BIF_RAD2DEG | BIF_SIN | BIF_COS | BIF_TAN | BIF_ASIN | BIF_ACOS | BIF_ATAN | BIF_EXP
     | BIF_LOG | BIF_EXP2 | BIF_LOG2 | BIF_SQRT | BIF_INVSQRT | BIF_ABS | BIF_SIGN | BIF_FLOOR | BIF_TRUNC
     | BIF_ROUND | BIF_ROUNDEVEN | BIF_CEIL | BIF_FRACT | BIF_LENGTH | BIF_NORMALIZE | BIF_TRANSPOSE
-    | BIF_DETERMINANT | BIF_INVERSE | BIF_VECANY | BIF_VECALL | BIF_VECNOT
+    | BIF_DETERMINANT | BIF_INVERSE | BIF_VECANY | BIF_VECALL | BIF_VECNOT | BIF_TEXSIZE | BIF_IMAGESIZE
     ;
 BIF_ALL_ARG2 // All 2-argument builtin functions
     : BIF_ATAN2 | BIF_POW | BIF_MOD | BIF_MIN | BIF_MAX | BIF_STEP | BIF_DISTANCE | BIF_DOT | BIF_CROSS
     | BIF_REFLECT | BIF_MATCOMPMUL | BIF_VECLT | BIF_VECLE | BIF_VECGT | BIF_VECGE | BIF_VECEQ | BIF_VECNE
+    | BIF_TEXTURE | BIF_TEXFETCH | BIF_IMAGELOAD
     ;
 BIF_ALL_ARG3 // All 3-argument builtin functions
-    : BIF_CLAMP | BIF_MIX | BIF_SSTEP | BIF_FFORWARD | BIF_REFRACT
+    : BIF_CLAMP | BIF_MIX | BIF_SSTEP | BIF_FFORWARD | BIF_REFRACT | BIF_IMAGESTORE
     ;
 BIF_DEG2RAD     : 'deg2rad' ; // GLSL: radians
 BIF_RAD2DEG     : 'rad2deg' ; // GLSL: degrees
@@ -128,6 +143,12 @@ BIF_VECNE       : 'vecNE' ; // GLSL: notEqual(vec, vec)
 BIF_VECANY      : 'vecAny' ; // GLSL: any(bvec)
 BIF_VECALL      : 'vecAll' ; // GLSL: all(bvec)
 BIF_VECNOT      : 'vecNot' ; // GLSL: not(bvec)
+BIF_TEXSIZE     : 'textureSize' ;
+BIF_TEXTURE     : 'texture' ;
+BIF_TEXFETCH    : 'texelFetch' ;
+BIF_IMAGESIZE   : 'imageSize' ;
+BIF_IMAGELOAD   : 'imageLoad' ;
+BIF_IMAGESTORE  : 'imageStore' ;
 
 // Swizzles
 SWIZZLE
