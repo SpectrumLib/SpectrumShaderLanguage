@@ -15,15 +15,24 @@ KW_FALSE    : 'false' ;
 
 // Keywords
 KW_BLOCK            : 'block' ;
+KW_BREAK            : 'break' ;
 KW_CONST            : 'const' ;
+KW_CONTINUE         : 'continue' ;
+KW_DISCARD          : 'discard' ;
+KW_DO               : 'do' ;
+KW_ELSE             : 'else' ;
+KW_FOR              : 'for' ;
+KW_IF               : 'if' ;
 KW_IN               : 'in' ;
 KW_INOUT            : 'inout' ;
 KW_INPUT            : 'input' ;
 KW_LOCALS           : 'locals' ;
 KW_OUT              : 'out' ;
 KW_OUTPUT           : 'output' ;
+KW_RETURN           : 'return' ;
 KW_SHADER           : 'shader' ;
 KW_UNIFORM          : 'uniform' ;
+KW_WHILE            : 'while' ;
 
 // Shader stage function keywords
 KW_STAGE_VERT       : '@vert' ;
@@ -56,9 +65,9 @@ KWT_MAT4        : 'mat4' ;
 //    functions 
 BIF_ALL_ARG1 // All 1-argument builtin functions
     : BIF_DEG2RAD | BIF_RAD2DEG | BIF_SIN | BIF_COS | BIF_TAN | BIF_ASIN | BIF_ACOS | BIF_ATAN | BIF_EXP
-    | BIF_LOG | BIF_EXP2 | BIF_LOG2 | BIF_SQRT | BIF_INVSQRT | BIF_ABS | BIF_SIGN | BIF_FLOOR | BIF_CEIL
-    | BIF_FRACT | BIF_LENGTH | BIF_NORMALIZE | BIF_TRANSPOSE | BIF_DETERMINANT | BIF_INVERSE | BIF_VECANY
-    | BIF_VECALL | BIF_VECNOT
+    | BIF_LOG | BIF_EXP2 | BIF_LOG2 | BIF_SQRT | BIF_INVSQRT | BIF_ABS | BIF_SIGN | BIF_FLOOR | BIF_TRUNC
+    | BIF_ROUND | BIF_ROUNDEVEN | BIF_CEIL | BIF_FRACT | BIF_LENGTH | BIF_NORMALIZE | BIF_TRANSPOSE
+    | BIF_DETERMINANT | BIF_INVERSE | BIF_VECANY | BIF_VECALL | BIF_VECNOT
     ;
 BIF_ALL_ARG2 // All 2-argument builtin functions
     : BIF_ATAN2 | BIF_POW | BIF_MOD | BIF_MIN | BIF_MAX | BIF_STEP | BIF_DISTANCE | BIF_DOT | BIF_CROSS
@@ -86,6 +95,9 @@ BIF_INVSQRT     : 'invsqrt' ; // GLSL: inversesqrt
 BIF_ABS         : 'abs' ;
 BIF_SIGN        : 'sign' ;
 BIF_FLOOR       : 'floor' ;
+BIF_TRUNC       : 'trunc' ;
+BIF_ROUND       : 'round' ;
+BIF_ROUNDEVEN   : 'roundEven' ;
 BIF_CEIL        : 'ceil' ;
 BIF_FRACT       : 'fract' ;
 BIF_MOD         : 'mod' ;

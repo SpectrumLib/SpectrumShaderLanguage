@@ -88,6 +88,11 @@ statement
     : variableDeclaration
     | variableDefinition
     | assignment
+    | ifStatement
+    | forLoop
+    | whileLoop
+    | doLoop
+    | controlFlowStatement
     ;
 
 // Declaring new variables
@@ -95,8 +100,8 @@ variableDeclaration
     : type Name=IDENTIFIER arrayIndexer? ';'
     ;
 variableDefinition
-    : type Name=IDENTIFIER '=' Value=expression ';'                   # ValueDefinition
-    | type Name=IDENTIFIER arrayIndexer '=' Value=arrayLiteral ';'    # ArrayDefinition
+    : 'const'? type Name=IDENTIFIER '=' Value=expression ';'                   # ValueDefinition
+    | 'const'? type Name=IDENTIFIER arrayIndexer '=' Value=arrayLiteral ';'    # ArrayDefinition
     ;
 arrayLiteral
     : '{' Values+=expression (',' Values+=expression)* '}'
@@ -110,6 +115,34 @@ assignment
 // Array indexer
 arrayIndexer
     : '[' Index=INTEGER_LITERAL ']'
+    ;
+
+// Conditional statements
+ifStatement
+    : 'if' '(' Cond=expression ')' (IfBlock=block|IfStatement=statement) ('else' (ElseBlock=block|ElseStatement=statement))?
+    ;
+
+// Looping constructs
+forLoop
+    : 'for' '('
+            (variableDefinition|assignment)* ';'
+            Condition=expression? ';'
+            (assignment)*
+      ')' (block|statement)
+    ;
+whileLoop
+    : 'while' '(' Condition=expression ')' (block|statement)
+    ;
+doLoop
+    : 'do' block 'while' '(' Condition=expression ')' ';'
+    ;
+
+// Control flow statements
+controlFlowStatement
+    : 'return' RVal=expression? ';'
+    | 'break' ';'
+    | 'continue' ';'
+    | 'discard' ';'
     ;
 
 // Expressions (anything that can evaluate to a type value) (enforce order of operation)
