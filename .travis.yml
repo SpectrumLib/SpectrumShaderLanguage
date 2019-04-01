@@ -5,7 +5,7 @@ dist: trusty
 addons:
   apt:
     packages:
-      - oracle-java11-set-default
+      - openjdk-11-jre-headless
 script:
   - dotnet restore
   - cd ./Grammar

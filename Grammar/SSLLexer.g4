@@ -1,3 +1,8 @@
+// This is the lexer grammar for the SpectrumShaderLanguage, used by Antlr to generate a lexer for
+//    the language definition.
+// This file is licensed under the MIT license.
+// Copyright (c) Sean Moss 2019
+
 lexer grammar SSLLexer;
 
 // String literals
