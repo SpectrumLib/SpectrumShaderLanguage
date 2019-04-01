@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>SSLang</RootNamespace>
+    <AssemblyName>SSLang</AssemblyName>
+    <Authors>Sean Moss</Authors>
+    <Product>SSLang</Product>
+    <Copyright>Sean Moss 2019</Copyright>
+    <PackageProjectUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</RepositoryUrl>
+	<LangVersion>7.3</LangVersion>
+    <Description>The API for compiling SpectrumShaderLanuage files into Vulkan-consumable SPIR-V bytecode.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Generated\Generated.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Antlr4">
+      <HintPath>..\Dependencies\Antlr4.Runtime.Standard.dll</HintPath>
+    </Reference>  
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <IsTravisCI>true</IsTravisCI>
+    <IsTravisCI Condition="'$(OS)' != 'Unix' or !Exists('/home/travis/build/SpectrumLib/Spectrum/Spectrum.sln')">false</IsTravisCI>
+  </PropertyGroup>
+  
+  <!-- See https://www.meziantou.net/2018/08/28/merging-assemblies-using-ilrepack -->
+  <Target Name="Repack" AfterTargets="Build" Condition="'$(Configuration)'=='Release' and !$(IsTravisCI)">
+    <PropertyGroup>
+      <RepackPrefix Condition="'$(OS)' == 'Unix'">mono</RepackPrefix>
+      <RepackExe>$(ProjectDir)../Dependencies/ILRepack.exe</RepackExe>
+      <RepackFlags>/target:library /internalize /parallel /log:ILRepack.log</RepackFlags>
+      <RepackInput>SSLang.tmp.dll Generated.dll Antlr4.Runtime.Standard.dll</RepackInput>
+    </PropertyGroup>
+
+    <Move SourceFiles="$(OUTDIR)/SSLang.dll" DestinationFiles="$(OUTDIR)/SSLang.tmp.dll" />
+    <Exec WorkingDirectory="$(OUTDIR)" Command="$(RepackPrefix) $(RepackExe) $(RepackFlags) $(RepackInput) /out:SSLang.dll" />
+    <Delete Files="$(OUTDIR)/SSLang.tmp.dll" />
+  </Target>
+
+</Project>

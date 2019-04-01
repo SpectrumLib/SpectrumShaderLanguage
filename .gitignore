@@ -5,3 +5,6 @@ Grammar/\.antlr/
 
 Generated/obj/
 Generated/bin/
+
+Compiler/obj/
+Compiler/bin/
