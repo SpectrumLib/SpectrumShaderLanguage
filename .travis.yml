@@ -16,3 +16,5 @@ script:
   - dotnet build -c Debug -p:Platform=AnyCPU
   - cd ../Compiler
   - dotnet build -c Debug -p:Platform=AnyCPU
+  - cd ../SLLC
+  - dotnet build -c Debug -p:Platform=AnyCPU
