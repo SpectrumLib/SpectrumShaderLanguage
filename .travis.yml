@@ -2,6 +2,7 @@ language: csharp
 mono: none
 dotnet: 2.1.502
 dist: trusty
+sudo: true
 install:
   - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
   - ./install-jdk.sh -F 11 -L BCL
