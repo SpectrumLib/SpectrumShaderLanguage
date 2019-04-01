@@ -1,5 +1,6 @@
 
 \.vs/
+*.user
 
 Grammar/\.antlr/
 
@@ -9,8 +10,9 @@ Generated/bin/
 Compiler/obj/
 Compiler/bin/
 
-SLLC/obj/
-SLLC/bin/
+SSLC/obj/
+SSLC/bin/
+SSLC/Properties/
 
 # Ignore the generated files, as they are huge and can be quickly regenerated on each computer
 Generated/SSLLexer.cs

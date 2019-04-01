@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Generated", "Generated\Gene
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compiler", "Compiler\Compiler.csproj", "{E9E6CE33-44D0-44F2-9D5B-B970AC295FCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLLC", "SLLC\SLLC.csproj", "{12D80F14-042D-421D-8F16-304C666CED68}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SSLC", "SSLC\SSLC.csproj", "{12D80F14-042D-421D-8F16-304C666CED68}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <AssemblyName>sslc</AssemblyName>
+    <Authors>Sean Moss</Authors>
+    <Product>SSLang</Product>
+    <Copyright>Sean Moss 2019</Copyright>
+    <PackageProjectUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</RepositoryUrl>
+	<LangVersion>7.3</LangVersion>
+    <Description>Command line interface for compiling Spectrum Shader Language files.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Compiler\Compiler.csproj" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <IsTravisCI>true</IsTravisCI>
+    <IsTravisCI Condition="'$(OS)' != 'Unix' or !Exists('/home/travis/build/SpectrumLib/Spectrum/Spectrum.sln')">false</IsTravisCI>
+  </PropertyGroup>
+  
+  <!-- See https://www.meziantou.net/2018/08/28/merging-assemblies-using-ilrepack -->
+  <Target Name="Repack" AfterTargets="Build" Condition="'$(Configuration)'=='Release' and !$(IsTravisCI)">
+    <PropertyGroup>
+      <RepackPrefix Condition="'$(OS)' == 'Unix'">mono</RepackPrefix>
+      <RepackExe>$(ProjectDir)../Dependencies/ILRepack.exe</RepackExe>
+      <RepackFlags>/target:library /internalize /parallel /log:ILRepack.log</RepackFlags>
+      <RepackInput>sslc.tmp.dll SSLang.dll</RepackInput>
+    </PropertyGroup>
+
+    <Move SourceFiles="$(OUTDIR)/sslc.dll" DestinationFiles="$(OUTDIR)/sslc.tmp.dll" />
+    <Exec WorkingDirectory="$(OUTDIR)" Command="$(RepackPrefix) $(RepackExe) $(RepackFlags) $(RepackInput) /out:sslc.dll" />
+    <Delete Files="$(OUTDIR)/sslc.tmp.dll" />
+  </Target>
+
+</Project>
