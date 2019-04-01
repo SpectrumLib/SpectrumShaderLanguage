@@ -195,17 +195,6 @@ valueLiteral
 // Type keywords
 type
     : KWT_VOID
-    | valueTypeKeyword
-    | handleTypeKeyword
-    ;
-valueTypeKeyword
-    : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT
-    | KWT_BOOL2 | KWT_INT2 | KWT_UINT2 | KWT_FLOAT2
-    | KWT_BOOL3 | KWT_INT3 | KWT_UINT3 | KWT_FLOAT3
-    | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4
-    | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
-    ;
-handleTypeKeyword
-    : KWT_SAMP1 | KWT_SAMP2 | KWT_SAMP3 | KWT_SAMPCUBE | KWT_SAMP1ARR | KWT_SAMP2ARR
-    | KWT_IMAGE1 | KWT_IMAGE2 | KWT_IMAGE3 | KWT_IMAGECUBE | KWT_IMAGE1ARR | KWT_IMAGE2ARR
+    | KWT_ALL_DATA
+    | KWT_ALL_HANDLE
     ;

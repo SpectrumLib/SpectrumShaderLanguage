@@ -39,28 +39,39 @@ KW_STAGE_VERT       : '@vert' ;
 KW_STAGE_FRAG       : '@frag' ;
 
 // Type keywords (data)
+KWT_ALL_DATA
+    : KWT_BOOL | KWT_INT | KWT_UINT | KWT_FLOAT
+    | KWT_BOOL2 | KWT_INT2 | KWT_UINT2 | KWT_FLOAT2
+    | KWT_BOOL3 | KWT_INT3 | KWT_UINT3 | KWT_FLOAT3
+    | KWT_BOOL4 | KWT_INT4 | KWT_UINT4 | KWT_FLOAT4
+    | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
+    ;
 KWT_VOID        : 'void' ;
 KWT_BOOL        : 'bool' ;
-KWT_INT         : 'int' ;
-KWT_UINT        : 'uint' ;
-KWT_FLOAT       : 'float' ;
 KWT_BOOL2       : 'bvec2' ;
-KWT_INT2        : 'ivec2' ;
-KWT_UINT2       : 'uvec2' ;
-KWT_FLOAT2      : 'vec2' ;
 KWT_BOOL3       : 'bvec3' ;
-KWT_INT3        : 'ivec3' ;
-KWT_UINT3       : 'uvec3' ;
-KWT_FLOAT3      : 'vec3' ;
 KWT_BOOL4       : 'bvec4' ;
+KWT_INT         : 'int' ;
+KWT_INT2        : 'ivec2' ;
+KWT_INT3        : 'ivec3' ;
 KWT_INT4        : 'ivec4' ;
+KWT_UINT        : 'uint' ;
+KWT_UINT2       : 'uvec2' ;
+KWT_UINT3       : 'uvec3' ;
 KWT_UINT4       : 'uvec4' ;
+KWT_FLOAT       : 'float' ;
+KWT_FLOAT2      : 'vec2' ;
+KWT_FLOAT3      : 'vec3' ;
 KWT_FLOAT4      : 'vec4' ;
 KWT_MAT2        : 'mat2' ;
 KWT_MAT3        : 'mat3' ;
 KWT_MAT4        : 'mat4' ;
 
 // Type keywords (handle)
+KWT_ALL_HANDLE
+    : KWT_SAMP1 | KWT_SAMP2 | KWT_SAMP3 | KWT_SAMPCUBE | KWT_SAMP1ARR | KWT_SAMP2ARR
+    | KWT_IMAGE1 | KWT_IMAGE2 | KWT_IMAGE3 | KWT_IMAGECUBE | KWT_IMAGE1ARR | KWT_IMAGE2ARR
+    ;
 KWT_SAMP1       : 'sampler1D' ;
 KWT_SAMP2       : 'sampler2D' ;
 KWT_SAMP3       : 'sampler3D' ;
@@ -150,6 +161,18 @@ BIF_IMAGESIZE   : 'imageSize' ;
 BIF_IMAGELOAD   : 'imageLoad' ;
 BIF_IMAGESTORE  : 'imageStore' ;
 
+// Built-in variables
+BIV_POSITION    : '$Position' ; // gl_Position
+BIV_VERTEXIDX   : '$VertexIndex' ; // gl_VertexIndex
+BIV_INSTIDX     : '$InstanceIndex' ; // gl_InstanceIndex
+BIV_POINTSIZE   : '$PointSize' ; // gl_PointSize
+BIV_FRAGCOORD   : '$FragCoord' ; // gl_FragCoord
+BIV_FRONTFACE   : '$FrontFacing' ; // gl_FrontFacing
+BIV_POINTCOORD  : '$PointCoord' ; // gl_PointCoord
+BIV_SAMPLEID    : '$SampleId' ; // gl_SampleId
+BIV_SAMPLEPOS   : '$SamplePosition' ; // gl_SamplePosition
+BIV_FRAGDEPTH   : '$FragDepth' ; // gl_FragDepth
+
 // Swizzles
 SWIZZLE
     : '.' ([xyzw]+ | [rbga]+ | [stpq]+)
@@ -167,9 +190,10 @@ fragment DecimalLiteral     : DigitChar+ ;
 fragment HexLiteral         : '0x' HexDigitChar+ ;
 fragment ExponentPart       : [eE] ('-'|'+')? DigitChar+ ;
 
-// Identifiers (variable and member names)
+// Identifiers (variable and member names), also includes the built-in variables
 IDENTIFIER
     : AlphaChar (AlphaNumericChar|'_')*
+    | '$' AlphaChar+
     ;
 
 // Punctuators
