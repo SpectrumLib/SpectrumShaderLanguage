@@ -19,5 +19,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Reference Include="Antlr4">
+      <HintPath>..\Dependencies\Antlr4.Runtime.Standard.dll</HintPath>
+    </Reference>  
+  </ItemGroup>
 
 </Project>
