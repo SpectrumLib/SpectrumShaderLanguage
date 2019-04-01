@@ -1,0 +1,16 @@
+language: csharp
+mono: none
+dotnet: 2.1.502
+dist: trusty
+addons:
+  apt:
+    packages:
+      - oracle-java11-set-default
+script:
+  - dotnet restore
+  - cd ./Grammar
+  - ./build.sh
+  - cd ../Generated
+  - dotnet build -c Debug -p:Platform=AnyCPU
+  - cd ../Compiler
+  - dotnet build -c Debug -p:Platform=AnyCPU
