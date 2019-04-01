@@ -10,6 +10,7 @@ before_install:
 script:
   - dotnet restore
   - cd ./Grammar
+  - chmod +x build.sh
   - ./build.sh
   - cd ../Generated
   - dotnet build -c Debug -p:Platform=AnyCPU
