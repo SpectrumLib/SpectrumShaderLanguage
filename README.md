@@ -18,10 +18,18 @@ In order to compile SSL into SPIRV, the Vulkan SDK must be installed and in the 
 
 More information will be provided as development progresses.
 
+## Contributing
+
+We welcome feature implementations and bugfixes through pull requests. When working on the source code, please follow the style and comment quality/quantity that you see in existing source code.
+
+All changes, additions, and removals from the SSL grammar must be approved first by one of the lead developers. All changes must follow the goal of keeping SSL simpler than GLSL, and changes must be backwards compatible (no removals after the initial SSL interface is fully defined).
+
+Before working on the source code, you must run the `build` script for your OS in the `Grammar/` folder to regenerate the Antlr source files. These files are very large, and are designed to be easily regenerated at any point, so they are not tracked in version control.
+
 ## Limitations
 
 This language is designed to minimally cover only the features that are required by Spectrum. This makes it unable to support advanced features and shading tricks. However, it can be used for a larget subset of standard shader effects, such as texturing, lighting, shadows, deferred rendering, ect...
 
 ## Acknowledgements
 
-This library uses [ANTLR](https://www.antlr.org/) for lexing and parsing SSL for translation into GLSL.
+This library uses [Antlr](https://www.antlr.org/) for lexing and parsing SSL for translation into GLSL.
