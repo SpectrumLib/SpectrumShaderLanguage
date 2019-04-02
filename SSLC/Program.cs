@@ -22,27 +22,22 @@ namespace SLLC
 
 			try
 			{
-				using (var compiler = new SSLCompiler(args[0]))
+				using (var compiler = SSLCompiler.FromFile(args[args.Length - 1]))
 				{
-					if (!compiler.Compile(new CompileOptions(), out var error))
-					{
-						Console.WriteLine("ERROR");
-						return;
-					}
-					Console.WriteLine("SUCCESS");
+
 				}
 			}
 			catch (ArgumentException e) // Bad filename
 			{
-				CConsole.Error($"ERROR: {e.Message}");
+				CConsole.Error(e);
 			}
 			catch (FileNotFoundException e) // Input file does not exist
 			{
-				CConsole.Error($"ERROR: {e.Message}");
+				CConsole.Error(e);
 			}
 			catch (Exception e) // Unknown error
 			{
-				CConsole.Error($"EXCEPTION: ({e.GetType()}) {e.Message}");
+				CConsole.Error($"({e.GetType()}) {e.Message}");
 			}
 		}
 

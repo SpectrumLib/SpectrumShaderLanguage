@@ -28,5 +28,13 @@ namespace SLLC
 			Console.WriteLine($"ERROR: {msg}");
 			Console.ForegroundColor = DefaultFGColor;
 		}
+
+		public static void Error(Exception e)
+		{
+			Console.ForegroundColor = ConsoleColor.Red;
+			var nlp = e.Message.IndexOf('\n');
+			Console.WriteLine($"ERROR: {((nlp >= 0) ? e.Message.Substring(0, nlp) : e.Message)}");
+			Console.ForegroundColor = DefaultFGColor;
+		}
 	}
 }

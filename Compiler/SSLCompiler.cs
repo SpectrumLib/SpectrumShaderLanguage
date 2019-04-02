@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using Antlr4.Runtime;
+using SSLang.Generated;
 
 namespace SSLang
 {
@@ -10,40 +12,63 @@ namespace SSLang
 	public sealed class SSLCompiler : IDisposable
 	{
 		#region Fields
-
-		// The input file info
-		private readonly FileInfo _inputFile;
 		/// <summary>
-		/// The name of the input file.
+		/// The SSL source code to compile.
 		/// </summary>
-		public string InputFile => _inputFile.Name;
+		public readonly string Source;
 
 		private bool _isDisposed = false;
 		#endregion // Fields
 
-		/// <summary>
-		/// Creates a new compiler instance to manage the compilation of a single .ssl file.
-		/// </summary>
-		/// <param name="file">The path to the .ssl file to compile with this instance.</param>
-		public SSLCompiler(string file)
+		private SSLCompiler(string src)
 		{
-			if (String.IsNullOrWhiteSpace(file))
-				throw new ArgumentException("Cannot pass a null or empty string for the file path.", nameof(file));
-			
-			try
-			{
-				_inputFile = new FileInfo(Path.GetFullPath(file));
-			}
-			catch
-			{
-				throw new ArgumentException($"The path '{file}' is not a valid filesystem path.", nameof(file));
-			}
-			if (!_inputFile.Exists)
-				throw new FileNotFoundException("The input file was not found.", _inputFile.FullName);
+			Source = src;
 		}
 		~SSLCompiler()
 		{
 			dispose(false);
+		}
+
+		/// <summary>
+		/// Creates a new compiler instance to manage the compilation of a single .ssl file.
+		/// </summary>
+		/// <param name="file">The path to the file to compile.</param>
+		/// <returns>A new compiler instance.</returns>
+		/// <exception cref="ArgumentException">The path is not a valid filesystem path.</exception>
+		/// <exception cref="FileNotFoundException">The path does not point towards a file that exists.</exception>
+		/// <exception cref="IOException">The program could not read the text from the file.</exception>
+		public static SSLCompiler FromFile(string file)
+		{
+			if (String.IsNullOrWhiteSpace(file))
+				throw new ArgumentException("Cannot pass a null or empty string for the file path.", nameof(file));
+			if (!Uri.IsWellFormedUriString(file, UriKind.RelativeOrAbsolute))
+				throw new ArgumentException($"The path '{file}' is not a valid filesystem path.", nameof(file));
+
+			var inFile = new FileInfo(Path.GetFullPath(file));
+			if (!inFile.Exists)
+				throw new FileNotFoundException($"The input file '{inFile.FullName}' does not exist.", file);
+
+			try
+			{
+				return new SSLCompiler(File.ReadAllText(inFile.FullName));
+			}
+			catch (Exception e)
+			{
+				throw new IOException($"Could not load input file: {e.Message}");
+			}
+		}
+
+		/// <summary>
+		/// Creates a new compiler instance to manage the compilation of the passed source code.
+		/// </summary>
+		/// <param name="source">The SSL source code to compile.</param>
+		/// <returns>A new compiler instance.</returns>
+		/// <exception cref="ArgumentException">The passed source code is null or empty.</exception>
+		public static SSLCompiler FromSource(string source)
+		{
+			if (String.IsNullOrWhiteSpace(source))
+				throw new ArgumentException("The source code cannot be null or empty.", nameof(source));
+			return new SSLCompiler(source);
 		}
 
 		/// <summary>
@@ -57,6 +82,12 @@ namespace SSLang
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 			error = null;
+
+			// Create the lexer and parser
+			AntlrInputStream inStream = new AntlrInputStream(Source);
+			SSLLexer lexer = new SSLLexer(inStream);
+			CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+			SSLParser parser = new SSLParser(tokenStream);
 
 			return true;
 		}
