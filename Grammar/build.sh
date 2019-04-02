@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/usr/bin/env sh 
 # This is the grammar build script for Unix.
 # This file is public domain.
 

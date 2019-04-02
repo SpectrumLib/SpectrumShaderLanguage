@@ -9,6 +9,10 @@ namespace SSLang
 	{
 		#region Fields
 		/// <summary>
+		/// The compilation stage that generated this error.
+		/// </summary>
+		public readonly ErrorSource Source;
+		/// <summary>
 		/// The source code line that the error occured on.
 		/// </summary>
 		public readonly uint Line;
@@ -18,10 +22,30 @@ namespace SSLang
 		public readonly string Message;
 		#endregion // Fields
 
-		internal CompileError(uint l, string m)
+		internal CompileError(ErrorSource es, uint l, string m)
 		{
+			Source = es;
 			Line = l;
 			Message = m;
 		}
+	}
+
+	/// <summary>
+	/// Represents the different compiler stages that can generate errors.
+	/// </summary>
+	public enum ErrorSource
+	{
+		/// <summary>
+		/// The error is encountered during the initial lexing and parsing phase.
+		/// </summary>
+		Parser,
+		/// <summary>
+		/// The error is encountered while translating the source into GLSL.
+		/// </summary>
+		Translator,
+		/// <summary>
+		/// The error is encountered while compiling the generated GLSL into SPIR-V bytecode.
+		/// </summary>
+		Compiler
 	}
 }

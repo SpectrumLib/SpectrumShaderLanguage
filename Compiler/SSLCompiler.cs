@@ -89,6 +89,16 @@ namespace SSLang
 			CommonTokenStream tokenStream = new CommonTokenStream(lexer);
 			SSLParser parser = new SSLParser(tokenStream);
 
+			// Register our custom error listener
+			lexer.RemoveErrorListeners();
+			parser.RemoveErrorListeners();
+			var err = new SSLErrorListener();
+			lexer.AddErrorListener(err);
+			parser.AddErrorListener(err);
+
+			// Perform the parsing
+			var fileCtx = parser.file();
+
 			return true;
 		}
 

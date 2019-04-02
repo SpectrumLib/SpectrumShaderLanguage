@@ -48,31 +48,20 @@ namespace SSLang
 		/// </summary>
 		/// <param name="inPath">The path to the SSL source file.</param>
 		/// <returns>The default bytecode path.</returns>
-		public static string MakeDefaultOutputPath(string inPath) => ReplaceExtension(inPath, ".spv");
+		public static string MakeDefaultOutputPath(string inPath) => Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".spv"));
 
 		/// <summary>
 		/// Creates the default reflection info output path using the given SSL source path.
 		/// </summary>
 		/// <param name="inPath">The path to the SSL source file.</param>
 		/// <returns>The default reflection info path.</returns>
-		public static string MakeDefaultReflectionPath(string inPath) => ReplaceExtension(inPath, ".refl");
+		public static string MakeDefaultReflectionPath(string inPath) => Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".refl"));
 
 		/// <summary>
 		/// Creates the default generated GLSL output path using the given SSL source path.
 		/// </summary>
 		/// <param name="inPath">The path to the SSL source file.</param>
 		/// <returns>The default generated GLSL path.</returns>
-		public static string MakeDefaultGLSLPath(string inPath) => ReplaceExtension(inPath, ".glsl");
-
-		private static string ReplaceExtension(string inPath, string ext)
-		{
-			if (String.IsNullOrEmpty(inPath))
-				throw new ArgumentException("The input path cannot be null or empty.", nameof(inPath));
-			if (!Uri.IsWellFormedUriString(inPath, UriKind.RelativeOrAbsolute))
-				throw new IOException($"The path '{inPath}' is not a valid filesystem path.");
-
-			inPath = Path.GetFullPath(inPath);
-			return Path.GetFileNameWithoutExtension(inPath) + ext;
-		}
+		public static string MakeDefaultGLSLPath(string inPath) => Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".glsl"));
 	}
 }
