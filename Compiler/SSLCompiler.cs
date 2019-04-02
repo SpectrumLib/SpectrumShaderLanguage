@@ -13,7 +13,7 @@ namespace SSLang
 	{
 		#region Fields
 		/// <summary>
-		/// The SSL source code to compile.
+		/// The SSL source code that will be compiled.
 		/// </summary>
 		public readonly string Source;
 
