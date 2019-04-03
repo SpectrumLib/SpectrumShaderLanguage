@@ -16,6 +16,12 @@ namespace SSLang
 		/// The SSL source code that will be compiled.
 		/// </summary>
 		public readonly string Source;
+		/// <summary>
+		/// Reflection information about the shader. Will only be available after <see cref="Compile(CompileOptions, out CompileError)"/>
+		/// is called and completes successfully. Reflection info will be available even if it was not requested in the compiler
+		/// options.
+		/// </summary>
+		public ShaderInfo ShaderInfo { get; private set; } = null;
 
 		private bool _isDisposed = false;
 		#endregion // Fields
@@ -109,6 +115,7 @@ namespace SSLang
 			try
 			{
 				visitor.Visit(fileCtx);
+				ShaderInfo = visitor.Info;
 			}
 			catch (VisitException e)
 			{

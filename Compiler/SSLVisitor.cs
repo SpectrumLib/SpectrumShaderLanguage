@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
+using Antlr4.Runtime.Misc;
 using SSLang.Generated;
 
 namespace SSLang
@@ -11,11 +12,19 @@ namespace SSLang
 		#region Fields
 		// Stream of tokens used to generate the visited tree
 		private readonly CommonTokenStream _tokens;
+
+		// The generated GLSL
+		public readonly GLSLBuilder GLSL;
+
+		// The reflection info built by the visitor
+		public readonly ShaderInfo Info;
 		#endregion // Fields
 
 		public SSLVisitor(CommonTokenStream tokens)
 		{
 			_tokens = tokens;
+			GLSL = new GLSLBuilder();
+			Info = new ShaderInfo();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
