@@ -19,6 +19,7 @@ KW_TRUE     : 'true' ;
 KW_FALSE    : 'false' ;
 
 // Keywords
+KW_ATTRIBUTES       : 'attributes' ;
 KW_BLOCK            : 'block' ;
 KW_BREAK            : 'break' ;
 KW_CONST            : 'const' ;
@@ -30,7 +31,6 @@ KW_FOR              : 'for' ;
 KW_IF               : 'if' ;
 KW_IN               : 'in' ;
 KW_INOUT            : 'inout' ;
-KW_INPUT            : 'input' ;
 KW_LOCALS           : 'locals' ;
 KW_OUT              : 'out' ;
 KW_OUTPUT           : 'output' ;

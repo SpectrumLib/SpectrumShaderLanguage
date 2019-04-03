@@ -22,7 +22,7 @@ shaderMetaStatement
 // All top-level statements that can appear in the file scope
 topLevelStatement
     : uniformStatement
-    | inputStatement
+    | attributesStatement
     | outputStatement
     | localsStatement
     | stageFunction
@@ -48,8 +48,8 @@ typeBlock
     ;
 
 // Vertex shader input (attributes)
-inputStatement
-    : 'input' typeBlock ';'
+attributesStatement
+    : 'attributes' typeBlock ';'
     ;
 
 // Fragment shader output

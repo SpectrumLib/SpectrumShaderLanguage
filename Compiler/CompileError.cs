@@ -53,4 +53,15 @@ namespace SSLang
 		/// </summary>
 		Compiler
 	}
+
+	// Used to communicate a compiler error while visiting
+	internal class VisitException : Exception
+	{
+		public readonly CompileError Error;
+
+		public VisitException(CompileError error)
+		{
+			Error = error;
+		}
+	}
 }

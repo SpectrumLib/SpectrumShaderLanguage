@@ -32,6 +32,13 @@ namespace SSLang
 		public string ReflectionPath = null;
 
 		/// <summary>
+		/// If <c>false</c>, the reflection info output will be in a human readable format. If <c>true</c>, the
+		/// reflection info output will be in a easily parseable binary format. Ignored if <see cref="OutputReflection"/>
+		/// is <c>false</c>.
+		/// </summary>
+		public bool UseBinaryReflection = false;
+
+		/// <summary>
 		/// Controls if the compiler will output the generated GLSL source code.
 		/// </summary>
 		public bool OutputGLSL = false;

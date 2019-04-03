@@ -104,6 +104,18 @@ namespace SSLang
 				return false;
 			}
 
+			// Visit the tree (this step actually generates the GLSL)
+			SSLVisitor visitor = new SSLVisitor(tokenStream);
+			try
+			{
+				visitor.Visit(fileCtx);
+			}
+			catch (VisitException e)
+			{
+				error = e.Error;
+				return false;
+			}
+
 			return true;
 		}
 
