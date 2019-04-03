@@ -96,8 +96,13 @@ namespace SSLang
 			lexer.AddErrorListener(err);
 			parser.AddErrorListener(err);
 
-			// Perform the parsing
+			// Perform the parsing, and report the error if there is one
 			var fileCtx = parser.file();
+			if (err.Error != null)
+			{
+				error = err.Error;
+				return false;
+			}
 
 			return true;
 		}

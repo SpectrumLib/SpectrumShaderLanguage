@@ -17,15 +17,20 @@ namespace SSLang
 		/// </summary>
 		public readonly uint Line;
 		/// <summary>
+		/// The character index into the line of the error.
+		/// </summary>
+		public readonly uint Index;
+		/// <summary>
 		/// A message explaining the nature of the error.
 		/// </summary>
 		public readonly string Message;
 		#endregion // Fields
 
-		internal CompileError(ErrorSource es, uint l, string m)
+		internal CompileError(ErrorSource es, uint l, uint i, string m)
 		{
 			Source = es;
 			Line = l;
+			Index = i;
 			Message = m;
 		}
 	}

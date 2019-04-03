@@ -35,7 +35,7 @@ uniformStatement
     | uniformHandleDeclare
     ;
 uniformBlockDeclare // Block of data types
-    : uniformDeclare 'block' typeBlock
+    : uniformDeclare 'block' typeBlock ';'
     ;
 uniformHandleDeclare // A single opaque handle
     : uniformDeclare variableDeclaration
@@ -49,17 +49,17 @@ typeBlock
 
 // Vertex shader input (attributes)
 inputStatement
-    : 'input' typeBlock
+    : 'input' typeBlock ';'
     ;
 
 // Fragment shader output
 outputStatement
-    : 'output' typeBlock
+    : 'output' typeBlock ';'
     ;
 
 // Locals (values passed between shader stages)
 localsStatement
-    : 'locals' typeBlock
+    : 'locals' typeBlock ';'
     ;
 
 // Stage functions

@@ -24,9 +24,11 @@ namespace SLLC
 			{
 				using (var compiler = SSLCompiler.FromFile(args[args.Length - 1]))
 				{
+					var fileName = Path.GetFileName(args[args.Length - 1]);
+
 					if (!compiler.Compile(new CompileOptions { Compile = false, OutputGLSL = true }, out var error))
 					{
-						CConsole.Error($"'{args[args.Length - 1]}'[{error.Line}] - {error.Message}");
+						CConsole.Error($"'{fileName}'[{error.Line}:{error.Index}] - {error.Message}");
 						return;
 					}
 				}
