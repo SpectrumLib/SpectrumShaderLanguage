@@ -31,6 +31,12 @@ namespace SLLC
 						CConsole.Error($"'{fileName}'[{error.Line}:{error.CharIndex}] - {error.Message}");
 						return;
 					}
+
+					// Print the warnings
+					foreach (var warn in compiler.Warnings)
+					{
+						CConsole.Warn($"[line {warn.Line}] - {warn.Message}");
+					}
 				}
 			}
 			catch (ArgumentException e) // Bad filename
@@ -44,6 +50,10 @@ namespace SLLC
 			catch (FileNotFoundException e) // Input file does not exist
 			{
 				CConsole.Error(e);
+			}
+			catch (IOException e) // Error with writing one of the output files
+			{
+				CConsole.Error(e.Message);
 			}
 			catch (Exception e) // Unknown error
 			{

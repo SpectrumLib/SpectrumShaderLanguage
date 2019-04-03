@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Antlr4.Runtime;
 using SSLang.Generated;
@@ -26,6 +27,13 @@ namespace SSLang
 		/// options.
 		/// </summary>
 		public ShaderInfo ShaderInfo { get; private set; } = null;
+
+		private List<(uint, string)> _warnings;
+		/// <summary>
+		/// A list of warning messages, and their source lines, that were generated during compilation. Will only be
+		/// populated after <see cref="Compile(CompileOptions, out CompileError)"/> is called.
+		/// </summary>
+		public IReadOnlyList<(uint Line, string Message)> Warnings => _warnings;
 
 		private bool _isDisposed = false;
 		#endregion // Fields
@@ -124,6 +132,7 @@ namespace SSLang
 			{
 				visitor.Visit(fileCtx);
 				ShaderInfo = visitor.Info;
+				_warnings = visitor.Warnings;
 			}
 			catch (VisitException e)
 			{
@@ -143,7 +152,10 @@ namespace SSLang
 						File.Delete(glslPath);
 					File.WriteAllText(glslPath, visitor.GLSL.GetSource());
 				}
-				catch { throw; } // TODO: Use logging to report this instead of re-throwing
+				catch (Exception e)
+				{
+					throw new IOException($"Unable to write GLSL file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+				}
 			}
 
 			return true;
