@@ -33,5 +33,23 @@ namespace SSLang
 			var tk = _tokens.Get(ctx.SourceInterval.a);
 			throw new VisitException(new CompileError(ErrorSource.Translator, (uint)tk.Line, (uint)tk.Column, msg));
 		}
+
+		public override object VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
+		{
+			var name = context.Name.Text;
+			name = name.Substring(1, name.Length - 2);
+
+			if (name.Length > 0)
+			{
+				GLSL.EmitComment($"Shader name: \"{name}\"");
+				GLSL.EmitBlankLine();
+			}
+			else
+			{
+				// TODO: use the message callbacks
+			}
+
+			return null;
+		}
 	}
 }
