@@ -16,7 +16,7 @@ namespace SSLang
 
 		/// <summary>
 		/// The path to the output file for the compiled SPIR-V bytecode. A value of <c>null</c> will use the input 
-		/// path with the extension `.spv`. Ignored if <see cref="Compile"/> is <c>false</c>.
+		/// path with the extension `.spv`, or `[name].spv`. Ignored if <see cref="Compile"/> is <c>false</c>.
 		/// </summary>
 		public string OutputPath = null;
 
@@ -27,7 +27,7 @@ namespace SSLang
 		
 		/// <summary>
 		/// The path to the output file for the reflection info. A value of <c>null</c> will use the input path with
-		/// the extension `.refl`. Ignored if <see cref="OutputReflection"/> is <c>false</c>.
+		/// the extension `.refl`, or `[name].refl`. Ignored if <see cref="OutputReflection"/> is <c>false</c>.
 		/// </summary>
 		public string ReflectionPath = null;
 
@@ -45,30 +45,64 @@ namespace SSLang
 
 		/// <summary>
 		/// The path to the output file for the generated GLSL code. A value of <c>null</c> will use the input path with
-		/// the extension `.glsl`. Ignored if <see cref="OutputGLSL"/> is <c>false</c>.
+		/// the extension `.glsl`, or `[name].glsl`. Ignored if <see cref="OutputGLSL"/> is <c>false</c>.
 		/// </summary>
 		public string GLSLPath = null;
 		#endregion // Fields
+
+		// Checks the options for validity, and throws exceptions if invalid
+		internal void Validate()
+		{
+			if (Compile && (OutputPath != null) && !PathUtils.IsValid(OutputPath))
+				throw new CompileOptionException(nameof(OutputPath), "invalid filesystem path.");
+			if (OutputReflection && (ReflectionPath != null) && !PathUtils.IsValid(ReflectionPath))
+				throw new CompileOptionException(nameof(ReflectionPath), "invalid filesystem path.");
+			if (OutputGLSL && (GLSLPath != null) && !PathUtils.IsValid(GLSLPath))
+				throw new CompileOptionException(nameof(GLSLPath), "invalid filesystem path.");
+
+			OutputPath = (OutputPath != null) ? Path.GetFullPath(OutputPath) : null;
+			ReflectionPath = (ReflectionPath != null) ? Path.GetFullPath(ReflectionPath) : null;
+			GLSLPath = (GLSLPath != null) ? Path.GetFullPath(GLSLPath) : null;
+		}
 
 		/// <summary>
 		/// Creates the default SPIR-V bytecode output path using the given SSL source path.
 		/// </summary>
 		/// <param name="inPath">The path to the SSL source file.</param>
-		/// <returns>The default bytecode path.</returns>
-		public static string MakeDefaultOutputPath(string inPath) => Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".spv"));
+		/// <returns>The default bytecode path, or <c>null</c> if the input was null.</returns>
+		public static string MakeDefaultOutputPath(string inPath) => (inPath != null) ? Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".spv")) : null;
 
 		/// <summary>
 		/// Creates the default reflection info output path using the given SSL source path.
 		/// </summary>
 		/// <param name="inPath">The path to the SSL source file.</param>
-		/// <returns>The default reflection info path.</returns>
-		public static string MakeDefaultReflectionPath(string inPath) => Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".refl"));
+		/// <returns>The default reflection info path, or <c>null</c> if the input was null.</returns>
+		public static string MakeDefaultReflectionPath(string inPath) => (inPath != null) ? Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".refl")) : null;
 
 		/// <summary>
 		/// Creates the default generated GLSL output path using the given SSL source path.
 		/// </summary>
 		/// <param name="inPath">The path to the SSL source file.</param>
-		/// <returns>The default generated GLSL path.</returns>
-		public static string MakeDefaultGLSLPath(string inPath) => Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".glsl"));
+		/// <returns>The default generated GLSL path, or <c>null</c> if the input was null.</returns>
+		public static string MakeDefaultGLSLPath(string inPath) => (inPath != null) ? Path.GetFullPath(PathUtils.ReplaceExtension(inPath, ".glsl")) : null;
+	}
+
+	/// <summary>
+	/// Thrown when a member of a <see cref="CompileOptions"/> instance has an invalid value.
+	/// </summary>
+	public class CompileOptionException : Exception
+	{
+		#region Fields
+		/// <summary>
+		/// The name of the option that contained the invalid value.
+		/// </summary>
+		public readonly string OptionName;
+		#endregion // Fields
+
+		internal CompileOptionException(string name, string msg) :
+			base($"Bad compiler option '{name}' - {msg}.")
+		{
+			OptionName = name;
+		}
 	}
 }

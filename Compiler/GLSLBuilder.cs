@@ -7,7 +7,7 @@ namespace SSLang
 	internal class GLSLBuilder
 	{
 		private static readonly string GENERATED_COMMENT =
-			"// Generated from SpectrumShaderLanguage input using sslc.";
+			"// Generated from Spectrum Shader Language input using sslc.";
 		private static readonly string VERSION_STRING = "#version 450";
 
 		#region Fields
@@ -18,9 +18,14 @@ namespace SSLang
 		public GLSLBuilder()
 		{
 			_source = new StringBuilder(8192);
-			_source.Append(GENERATED_COMMENT);
+			_source.AppendLine(GENERATED_COMMENT);
 			_source.AppendLine(VERSION_STRING);
 			_source.AppendLine();
+		}
+
+		public string GetSource()
+		{
+			return _source.ToString();
 		}
 
 		public void EmitBlankLine() => _source.AppendLine();

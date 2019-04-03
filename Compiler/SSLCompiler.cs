@@ -17,6 +17,10 @@ namespace SSLang
 		/// </summary>
 		public readonly string Source;
 		/// <summary>
+		/// If this compiler was created for a file, this will be the full path to the file. Otherwise, it will be null.
+		/// </summary>
+		public readonly string SourceFile;
+		/// <summary>
 		/// Reflection information about the shader. Will only be available after <see cref="Compile(CompileOptions, out CompileError)"/>
 		/// is called and completes successfully. Reflection info will be available even if it was not requested in the compiler
 		/// options.
@@ -26,9 +30,10 @@ namespace SSLang
 		private bool _isDisposed = false;
 		#endregion // Fields
 
-		private SSLCompiler(string src)
+		private SSLCompiler(string src, string sf)
 		{
 			Source = src;
+			SourceFile = sf;
 		}
 		~SSLCompiler()
 		{
@@ -56,7 +61,7 @@ namespace SSLang
 
 			try
 			{
-				return new SSLCompiler(File.ReadAllText(inFile.FullName));
+				return new SSLCompiler(File.ReadAllText(inFile.FullName), inFile.FullName);
 			}
 			catch (Exception e)
 			{
@@ -74,7 +79,7 @@ namespace SSLang
 		{
 			if (String.IsNullOrWhiteSpace(source))
 				throw new ArgumentException("The source code cannot be null or empty.", nameof(source));
-			return new SSLCompiler(source);
+			return new SSLCompiler(source, null);
 		}
 
 		/// <summary>
@@ -88,6 +93,9 @@ namespace SSLang
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
 			error = null;
+
+			// Validate the build options
+			options.Validate();
 
 			// Create the lexer and parser
 			AntlrInputStream inStream = new AntlrInputStream(Source);
@@ -121,6 +129,21 @@ namespace SSLang
 			{
 				error = e.Error;
 				return false;
+			}
+
+			// Output the GLSL if requested
+			if (options.OutputGLSL)
+			{
+				var glslPath = options.GLSLPath ?? CompileOptions.MakeDefaultGLSLPath(SourceFile)
+					?? Path.Combine(Directory.GetCurrentDirectory(), $"{ShaderInfo.Name ?? "shader"}.glsl");
+
+				try
+				{
+					if (File.Exists(glslPath))
+						File.Delete(glslPath);
+					File.WriteAllText(glslPath, visitor.GLSL.GetSource());
+				}
+				catch { throw; } // TODO: Use logging to report this instead of re-throwing
 			}
 
 			return true;

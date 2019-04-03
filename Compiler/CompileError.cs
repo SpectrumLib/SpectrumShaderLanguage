@@ -19,7 +19,7 @@ namespace SSLang
 		/// <summary>
 		/// The character index into the line of the error.
 		/// </summary>
-		public readonly uint Index;
+		public readonly uint CharIndex;
 		/// <summary>
 		/// A message explaining the nature of the error.
 		/// </summary>
@@ -30,7 +30,7 @@ namespace SSLang
 		{
 			Source = es;
 			Line = l;
-			Index = i;
+			CharIndex = i;
 			Message = m;
 		}
 	}

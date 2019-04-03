@@ -28,7 +28,7 @@ namespace SLLC
 
 					if (!compiler.Compile(new CompileOptions { Compile = false, OutputGLSL = true }, out var error))
 					{
-						CConsole.Error($"'{fileName}'[{error.Line}:{error.Index}] - {error.Message}");
+						CConsole.Error($"'{fileName}'[{error.Line}:{error.CharIndex}] - {error.Message}");
 						return;
 					}
 				}
@@ -36,6 +36,10 @@ namespace SLLC
 			catch (ArgumentException e) // Bad filename
 			{
 				CConsole.Error(e);
+			}
+			catch (CompileOptionException e) // Bad compiler option
+			{
+				CConsole.Error(e.Message);
 			}
 			catch (FileNotFoundException e) // Input file does not exist
 			{
