@@ -48,6 +48,41 @@ namespace SSLang
 		private uint GetContextLine(RuleContext ctx) => (uint)_tokens.Get(ctx.SourceInterval.a).Line;
 		#endregion // Utilities
 
+		// This has to be overridden because we must manually visit all of the variable blocks before the functions
+		public override object VisitFile([NotNull] SSLParser.FileContext context)
+		{
+			// Visit the meta statement first
+			var meta = context.shaderMetaStatement();
+			if (meta != null)
+				Visit(meta);
+
+			// Visit all of the blocks that create named variables first
+			foreach (var ch in context.children)
+			{
+				var cctx = ch as SSLParser.TopLevelStatementContext;
+				if (cctx == null)
+					continue;
+
+				bool isFunc = (cctx.stageFunction() != null) || (cctx.standardFunction() != null);
+				if (!isFunc)
+					Visit(cctx);
+			}
+
+			// Visit all functions
+			foreach (var ch in context.children)
+			{
+				var cctx = ch as SSLParser.TopLevelStatementContext;
+				if (cctx == null)
+					continue;
+
+				bool isFunc = (cctx.stageFunction() != null) || (cctx.standardFunction() != null);
+				if (isFunc)
+					Visit(cctx);
+			}
+
+			return null;
+		}
+
 		public override object VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
 		{
 			var name = context.Name.Text;
