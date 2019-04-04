@@ -38,13 +38,13 @@ uniformBlockDeclare // Block of data types
     : uniformDeclare 'block' typeBlock ';'
     ;
 uniformHandleDeclare // A single opaque handle
-    : uniformDeclare variableDeclaration
+    : uniformDeclare variableDeclaration ';'
     ;
 uniformDeclare
     : 'uniform' '(' Index=INTEGER_LITERAL ')'
     ;
 typeBlock
-    : '{' variableDeclaration* '}'
+    : '{' (Types+=variableDeclaration ';')* '}'
     ;
 
 // Vertex shader input (attributes)
@@ -90,9 +90,9 @@ block
     : '{' statement* '}'
     ;
 statement
-    : variableDeclaration
-    | variableDefinition
-    | assignment
+    : variableDeclaration ';'
+    | variableDefinition ';'
+    | assignment ';'
     | ifStatement
     | forLoop
     | whileLoop
@@ -102,11 +102,11 @@ statement
 
 // Declaring new variables
 variableDeclaration
-    : type Name=IDENTIFIER arrayIndexer? ';'
+    : type Name=IDENTIFIER arrayIndexer?
     ;
 variableDefinition
-    : 'const'? type Name=IDENTIFIER '=' Value=expression ';'                   # ValueDefinition
-    | 'const'? type Name=IDENTIFIER arrayIndexer '=' Value=arrayLiteral ';'    # ArrayDefinition
+    : 'const'? type Name=IDENTIFIER '=' Value=expression                   # ValueDefinition
+    | 'const'? type Name=IDENTIFIER arrayIndexer '=' Value=arrayLiteral    # ArrayDefinition
     ;
 arrayLiteral
     : '{' Values+=expression (',' Values+=expression)* '}'
@@ -114,7 +114,7 @@ arrayLiteral
 
 // Assigment
 assignment
-    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=OP_ALL_ASSIGN Value=expression ';'
+    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=OP_ALL_ASSIGN Value=expression
     ;
 
 // Array indexer
@@ -130,10 +130,16 @@ ifStatement
 // Looping constructs
 forLoop
     : 'for' '('
-            (variableDefinition|assignment)* ';'
+            forLoopInit? ';'
             Condition=expression? ';'
-            (assignment)*
+            forLoopUpdate?
       ')' (block|statement)
+    ;
+forLoopInit
+    : (variableDefinition|assignment) (',' (variableDefinition|assignment))*
+    ;
+forLoopUpdate
+    : assignment (',' assignment)*
     ;
 whileLoop
     : 'while' '(' Condition=expression ')' (block|statement)
