@@ -11,25 +11,28 @@ namespace SSLang
 		private static readonly string VERSION_STRING = "#version 450";
 
 		#region Fields
-		// Contains the glsl source as it is built
-		private readonly StringBuilder _source;
+		// Contains the variable listings - the inputs, outputs, uniforms, and locals
+		private readonly StringBuilder _varSource;
+		// Contains the functions and their code
+		private readonly StringBuilder _funcSource;
 		#endregion // Fields
 
 		public GLSLBuilder()
 		{
-			_source = new StringBuilder(8192);
-			_source.AppendLine(GENERATED_COMMENT);
-			_source.AppendLine(VERSION_STRING);
-			_source.AppendLine();
+			_varSource = new StringBuilder(2048);
+			_funcSource = new StringBuilder(8192);
+			_varSource.AppendLine(GENERATED_COMMENT);
+			_varSource.AppendLine(VERSION_STRING);
+			_varSource.AppendLine();
+			_funcSource.AppendLine();
 		}
 
-		public string GetSource()
-		{
-			return _source.ToString();
-		}
+		public string GetSource() => _varSource.ToString() + _funcSource.ToString();
 
-		public void EmitBlankLine() => _source.AppendLine();
+		public void EmitBlankLineVar() => _varSource.AppendLine();
+		public void EmitBlankLineFunc() => _funcSource.AppendLine();
 
-		public void EmitComment(string cmt) => _source.AppendLine("// " + cmt);
+		public void EmitCommentVar(string cmt) => _varSource.AppendLine("// " + cmt);
+		public void EmitCommentFunc(string cmt) => _funcSource.AppendLine("// " + cmt);
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
@@ -90,8 +90,8 @@ namespace SSLang
 
 			if (name.Length > 0)
 			{
-				GLSL.EmitComment($"Shader name: \"{name}\"");
-				GLSL.EmitBlankLine();
+				GLSL.EmitCommentVar($"Shader name: \"{name}\"");
+				GLSL.EmitBlankLineVar();
 				Info.Name = name;
 			}
 			else
