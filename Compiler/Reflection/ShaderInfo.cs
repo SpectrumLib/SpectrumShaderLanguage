@@ -26,6 +26,15 @@ namespace SSLang.Reflection
 		/// The fragment stage outputs in this shader. They are in the order of their binding locations.
 		/// </summary>
 		public IReadOnlyList<Variable> Outputs => _outputs;
+
+		internal readonly List<(Variable, uint, uint)> _uniforms = new List<(Variable, uint, uint)>();
+		/// <summary>
+		/// The uniforms for the shader. Each entry has its binding location (all entries in the same block will have
+		/// the same location), and its index (order) within the block. The index for handle types will be zero.
+		/// Each location will never be repeated outside of the same block, and each index will never be repeated
+		/// inside of any block.
+		/// </summary>
+		public IReadOnlyList<(Variable Variable, uint Location, uint Index)> Uniforms => _uniforms;
 		#endregion // Fields
 	}
 

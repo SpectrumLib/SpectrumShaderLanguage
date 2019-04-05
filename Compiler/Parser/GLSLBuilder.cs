@@ -36,10 +36,23 @@ namespace SSLang
 		public void EmitCommentVar(string cmt) => _varSource.AppendLine("// " + cmt);
 		public void EmitCommentFunc(string cmt) => _funcSource.AppendLine("// " + cmt);
 
+		#region Variables
 		public void EmitVertexAttribute(Variable vrbl, uint loc) => 
-			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.Type.ToGLSL()} {vrbl.Name}{(vrbl.IsArray ? $"[{vrbl.ArraySize}]" : "")};");
+			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl()};");
 
 		public void EmitFragmentOutput(Variable vrbl, uint loc) => // Wont ever be an array
-			_varSource.AppendLine($"layout(location = {loc}) out {vrbl.Type.ToGLSL()} {vrbl.Name};");
+			_varSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl()};");
+
+		public void EmitUniform(Variable vrbl, uint loc) =>
+			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl()};");
+
+		public void EmitUniformBlockHeader(string name, uint loc) =>
+			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {name} {{");
+
+		public void EmitUniformBlockMember(Variable vrbl) =>
+			_varSource.AppendLine($"\t{vrbl.GetGLSLDecl()};");
+
+		public void EmitUniformBlockClose() => _varSource.AppendLine("}");
+		#endregion // Variables
 	}
 }

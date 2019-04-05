@@ -31,16 +31,9 @@ topLevelStatement
 
 // Uniform statements
 uniformStatement
-    : uniformBlockDeclare
-    | uniformHandleDeclare
+    : uniformHeader (('block' typeBlock)|variableDeclaration) ';'
     ;
-uniformBlockDeclare // Block of data types
-    : uniformDeclare 'block' typeBlock ';'
-    ;
-uniformHandleDeclare // A single opaque handle
-    : uniformDeclare variableDeclaration ';'
-    ;
-uniformDeclare
+uniformHeader
     : 'uniform' '(' Index=INTEGER_LITERAL ')'
     ;
 typeBlock

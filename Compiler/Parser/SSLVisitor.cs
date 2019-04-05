@@ -198,6 +198,36 @@ namespace SSLang
 
 			return null;
 		}
+
+		public override object VisitUniformStatement([NotNull] SSLParser.UniformStatementContext context)
+		{
+			var head = context.uniformHeader();
+			var loc = ParseIntegerLiteral(head.Index.Text, out var isUnsigned, out var error);
+			if (!loc.HasValue)
+				_THROW(context, error);
+			if (loc.Value < 0)
+				_THROW(context, $"Uniforms cannot have a negative location.");
+
+			GLSL.EmitCommentVar($"Uniform binding {loc.Value}");
+			bool isHandle = context.variableDeclaration() != null;
+			if (isHandle)
+			{
+				var vdec = context.variableDeclaration();
+				if (!ScopeManager.TryAddUniform(vdec, out var vrbl, out error))
+					_THROW(vdec, error);
+				if (!vrbl.Type.IsHandleType())
+					_THROW(context, $"The uniform '{vrbl.Name}' must be a handle type if declared outside of a block.");
+				Info._uniforms.Add((vrbl, (uint)loc.Value, 0));
+				GLSL.EmitUniform(vrbl, (uint)loc.Value);
+			}
+			else
+			{
+
+			}
+			GLSL.EmitBlankLineVar();
+
+			return null;
+		}
 		#endregion // Top-Level
 	}
 }
