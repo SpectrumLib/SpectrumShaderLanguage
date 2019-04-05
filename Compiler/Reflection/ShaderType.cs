@@ -1,6 +1,7 @@
 ﻿using System;
+using SSLang.Generated;
 
-namespace SSLang
+namespace SSLang.Reflection
 {
 	/// <summary>
 	/// Represents the data and handle types available in SSL.
@@ -214,6 +215,20 @@ namespace SSLang
 		{
 			if ((type >= ShaderType.Tex1D) && (type <= ShaderType.Tex2DArray)) return GLSL_KEYWORDS[(int)(type - ShaderType.Tex1D)];
 			else return ToKeyword(type);
+		}
+
+		// Used to convert parsed tokens into enum values
+		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
+		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)
+		{
+			var token = ctx.Start.TokenIndex;
+
+			if (token == SSLParser.KWT_VOID) return ShaderType.Void;
+			if (token <= SSLParser.KWT_DMAT4) return (ShaderType)((token - SSLParser.KWT_BOOL) + (int)ShaderType.Bool); // Value types
+			if (token < SSLParser.KWT_TEX1D) return ShaderType.Error; // Unassigned values between value and handle types
+			if (token <= SSLParser.KWT_IMAGE2D_ARR) return (ShaderType)((token - SSLParser.KWT_TEX1D) + (int)ShaderType.Tex1D); // Handle types
+
+			return ShaderType.Error;
 		}
 	}
 }

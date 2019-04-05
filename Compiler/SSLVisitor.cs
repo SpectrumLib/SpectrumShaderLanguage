@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using SSLang.Generated;
+using SSLang.Reflection;
 
 namespace SSLang
 {
@@ -47,6 +49,40 @@ namespace SSLang
 		private IToken GetContextToken(RuleContext ctx, uint index) => _tokens.Get(ctx.SourceInterval.a + (int)index);
 		private uint GetContextLine(RuleContext ctx) => (uint)_tokens.Get(ctx.SourceInterval.a).Line;
 		#endregion // Utilities
+
+		#region Public Helpers
+		// Returns a long, but the value is guarenteed to be in the valid 32-bit range for the signedness
+		public static long? ParseIntegerLiteral(string text, out bool isUnsigned, out string error)
+		{
+			string orig = text;
+			bool isNeg = text.StartsWith("-");
+			isUnsigned = text.EndsWith("u") || text.EndsWith("U");
+			text = isNeg ? text.Substring(1) : text;
+			text = isUnsigned ? text.Substring(0, text.Length - 1) : text;
+			bool isHex = text.StartsWith("0x");
+			text = isHex ? text.Substring(2) : text;
+
+			uint res = 0;
+			try
+			{
+				res = Convert.ToUInt32(text, isHex ? 16 : 10);
+			}
+			catch
+			{
+				error = $"Could not convert the text '{orig}' to an integer literal";
+				return null;
+			}
+
+			if (isNeg && (res > ((uint)Int32.MaxValue + 1)))
+			{
+				error = $"The value {orig} is too large for a signed 32-bit integer";
+				return null;
+			}
+
+			error = null;
+			return isNeg ? -res : res;
+		}
+		#endregion // Public Helpers
 
 		// This has to be overridden because we must manually visit all of the variable blocks before the functions
 		public override object VisitFile([NotNull] SSLParser.FileContext context)

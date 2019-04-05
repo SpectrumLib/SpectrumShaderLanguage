@@ -191,11 +191,11 @@ SWIZZLE
 
 // Numeric literals
 INTEGER_LITERAL
-    : DecimalLiteral
-    | HexLiteral
+    : '-'? DecimalLiteral ('u'|'U')?
+    | '-'? HexLiteral ('u'|'U')?
     ;
 FLOAT_LITERAL
-    : DigitChar* '.' DigitChar+ ExponentPart?
+    : '-'? DigitChar* '.' DigitChar+ ExponentPart?
     ;
 fragment DecimalLiteral     : DigitChar+ ;
 fragment HexLiteral         : '0x' HexDigitChar+ ;
