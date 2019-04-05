@@ -23,7 +23,7 @@ shaderMetaStatement
 topLevelStatement
     : uniformStatement
     | attributesStatement
-    | outputStatement
+    | outputsStatement
     | localsStatement
     | stageFunction
     | standardFunction
@@ -53,8 +53,8 @@ attributesStatement
     ;
 
 // Fragment shader output
-outputStatement
-    : 'output' typeBlock ';'
+outputsStatement
+    : 'outputs' typeBlock ';'
     ;
 
 // Locals (values passed between shader stages)

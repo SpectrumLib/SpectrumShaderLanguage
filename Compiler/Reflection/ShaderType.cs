@@ -221,6 +221,27 @@ namespace SSLang.Reflection
 			return (uint)Math.Ceiling(GetSize(type) / 16f) * arrSize;
 		}
 
+		/// <summary>
+		/// Gets if the type is a value type (numeric/boolean values or collections).
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a value type.</returns>
+		public static bool IsValueType(this ShaderType type) => (type >= ShaderType.Bool) && (type <= ShaderType.Mat4);
+
+		/// <summary>
+		/// Gets if the type is a handle type (samplers/images/buffers).
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a handle type.</returns>
+		public static bool IsHandleType(this ShaderType type) => (type >= ShaderType.Tex1D) && (type <= ShaderType.Image2DArray);
+
+		/// <summary>
+		/// Gets if the type is an error type, which represents an error and not an actual valid type.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type represents an error.</returns>
+		public static bool IsError(this ShaderType type) => (type == ShaderType.Error);
+
 		// Used to convert parsed tokens into enum values
 		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
 		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)

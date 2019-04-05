@@ -33,7 +33,7 @@ KW_IN               : 'in' ;
 KW_INOUT            : 'inout' ;
 KW_LOCALS           : 'locals' ;
 KW_OUT              : 'out' ;
-KW_OUTPUT           : 'output' ;
+KW_OUTPUTS          : 'outputs' ;
 KW_RETURN           : 'return' ;
 KW_SHADER           : 'shader' ;
 KW_UNIFORM          : 'uniform' ;
@@ -43,7 +43,7 @@ KW_WHILE            : 'while' ;
 KW_STAGE_VERT       : '@vert' ;
 KW_STAGE_FRAG       : '@frag' ;
 
-// Type keywords (data)
+// Type keywords (value)
 KWT_VOID        : 'void' ;
 KWT_BOOL        : 'bool' ;
 KWT_BOOL2       : 'bvec2' ;
@@ -134,7 +134,7 @@ BIF_NORMALIZE   : 'normalize' ;
 BIF_FFORWARD    : 'faceforward' ;
 BIF_REFLECT     : 'reflect' ;
 BIF_REFRACT     : 'refract' ;
-BIF_MATCOMPMUL  : 'matCompMul' ; // GLSL: matrixCompMult(vec, vec)
+BIF_MATCOMPMUL  : 'matCompMul' ; // GLSL: matrixCompMult(mat, mat)
 BIF_TRANSPOSE   : 'transpose' ;
 BIF_DETERMINANT : 'determinant' ;
 BIF_INVERSE     : 'inverse' ;

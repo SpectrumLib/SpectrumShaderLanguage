@@ -36,7 +36,10 @@ namespace SSLang
 		public void EmitCommentVar(string cmt) => _varSource.AppendLine("// " + cmt);
 		public void EmitCommentFunc(string cmt) => _funcSource.AppendLine("// " + cmt);
 
-		public void EmitVertexAttribute(Variable @var, uint loc) => 
-			_varSource.AppendLine($"layout(location = {loc}) in {var.Type.ToGLSL()} {var.Name}{(@var.IsArray ? $"[{var.ArraySize}]" : "")};");
+		public void EmitVertexAttribute(Variable vrbl, uint loc) => 
+			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.Type.ToGLSL()} {vrbl.Name}{(vrbl.IsArray ? $"[{vrbl.ArraySize}]" : "")};");
+
+		public void EmitFragmentOutput(Variable vrbl, uint loc) => // Wont ever be an array
+			_varSource.AppendLine($"layout(location = {loc}) out {vrbl.Type.ToGLSL()} {vrbl.Name};");
 	}
 }

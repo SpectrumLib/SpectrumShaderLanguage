@@ -20,6 +20,12 @@ namespace SSLang.Reflection
 		/// they appear in the shader 'attributes' block.
 		/// </summary>
 		public IReadOnlyList<(Variable Variable, uint Location)> Attributes => _attributes;
+
+		internal readonly List<Variable> _outputs = new List<Variable>();
+		/// <summary>
+		/// The fragment stage outputs in this shader. They are in the order of their binding locations.
+		/// </summary>
+		public IReadOnlyList<Variable> Outputs => _outputs;
 		#endregion // Fields
 	}
 

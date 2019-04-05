@@ -110,6 +110,8 @@ namespace SSLang
 			// Validate that the required blocks are present
 			if (ScopeManager.Attributes.Count == 0)
 				_THROW(context, "A shader is required to have an 'attributes' block to describe the vertex input.");
+			if (ScopeManager.Outputs.Count == 0)
+				_THROW(context, "A shader is required to have an 'output' block to describe the fragment stage output.");
 
 			// Visit all functions
 			foreach (var ch in context.children)
@@ -159,9 +161,38 @@ namespace SSLang
 			{
 				if (!ScopeManager.TryAddAttribute(tctx, out var vrbl, out var error))
 					_THROW(tctx, error);
+				if (!vrbl.Type.IsValueType())
+					_THROW(tctx, $"The variable '{vrbl.Name}' cannot have type '{vrbl.Type.ToKeyword()}', only value types are allowed as attributes.");
 				GLSL.EmitVertexAttribute(vrbl, loc);
 				Info._attributes.Add((vrbl, loc));
 				loc += vrbl.Type.GetSlotCount(vrbl.ArraySize);
+			}
+			GLSL.EmitBlankLineVar();
+
+			return null;
+		}
+
+		public override object VisitOutputsStatement([NotNull] SSLParser.OutputsStatementContext context)
+		{
+			if (ScopeManager.Outputs.Count > 0) // Already encountered an outputs block
+				_THROW(context, "A shader cannot have more than one 'outputs' block.");
+
+			var block = context.typeBlock();
+			if (block._Types.Count == 0)
+				_THROW(context, "The 'output' block cannot be empty.");
+
+			GLSL.EmitCommentVar("Fragment stage outputs");
+			uint loc = 0;
+			foreach (var tctx in block._Types)
+			{
+				if (!ScopeManager.TryAddOutput(tctx, out var vrbl, out var error))
+					_THROW(tctx, error);
+				if (!vrbl.Type.IsValueType())
+					_THROW(tctx, $"The variable '{vrbl.Name}' cannot have type '{vrbl.Type.ToKeyword()}', only value types are allowed as outputs.");
+				if (vrbl.IsArray)
+					_THROW(tctx, $"The output variable '{vrbl.Name}' cannot be an array.");
+				GLSL.EmitFragmentOutput(vrbl, loc++);
+				Info._outputs.Add(vrbl);
 			}
 			GLSL.EmitBlankLineVar();
 
