@@ -128,7 +128,7 @@ namespace SSLang
 			}
 
 			// Visit the tree (this step actually generates the GLSL)
-			SSLVisitor visitor = new SSLVisitor(tokenStream);
+			SSLVisitor visitor = new SSLVisitor(tokenStream, options);
 			try
 			{
 				visitor.Visit(fileCtx);

@@ -26,15 +26,19 @@ namespace SSLang
 
 		// The scope/variable manager
 		public readonly ScopeManager ScopeManager;
+
+		// The options to compile with
+		public readonly CompileOptions Options;
 		#endregion // Fields
 
-		public SSLVisitor(CommonTokenStream tokens)
+		public SSLVisitor(CommonTokenStream tokens, CompileOptions options)
 		{
 			_tokens = tokens;
 			GLSL = new GLSLBuilder();
 			Info = new ShaderInfo();
 			Warnings = new List<(uint, string)>();
 			ScopeManager = new ScopeManager();
+			Options = options;
 		}
 
 		#region Utilities
@@ -112,6 +116,8 @@ namespace SSLang
 				_THROW(context, "A shader is required to have an 'attributes' block to describe the vertex input.");
 			if (ScopeManager.Outputs.Count == 0)
 				_THROW(context, "A shader is required to have an 'output' block to describe the fragment stage output.");
+			if ((ScopeManager.Uniforms.Count > 0) && !Info.AreUniformsContiguous())
+				_WARN(0, "The uniforms are not contiguous, which will result in sub-optimal performance.");
 
 			// Visit all functions
 			foreach (var ch in context.children)
@@ -208,6 +214,11 @@ namespace SSLang
 			if (loc.Value < 0)
 				_THROW(context, $"Uniforms cannot have a negative location.");
 
+			// Check if the location is already taken
+			var fidx = Info._uniforms.FindIndex(u => u.l == loc.Value);
+			if (fidx >= 0)
+				_THROW(context, $"The uniform location {loc.Value} is already bound.");
+
 			GLSL.EmitCommentVar($"Uniform binding {loc.Value}");
 			bool isHandle = context.variableDeclaration() != null;
 			if (isHandle)
@@ -217,12 +228,25 @@ namespace SSLang
 					_THROW(vdec, error);
 				if (!vrbl.Type.IsHandleType())
 					_THROW(context, $"The uniform '{vrbl.Name}' must be a handle type if declared outside of a block.");
-				Info._uniforms.Add((vrbl, (uint)loc.Value, 0));
+				Info._uniforms.Add((vrbl, (uint)loc.Value, 0, 0));
 				GLSL.EmitUniform(vrbl, (uint)loc.Value);
 			}
 			else
 			{
-
+				var tblock = context.typeBlock();
+				uint idx = 0, offset = 0;
+				GLSL.EmitUniformBlockHeader($"Block{loc.Value}", (uint)loc.Value);
+				foreach (var tctx in tblock._Types)
+				{
+					if (!ScopeManager.TryAddUniform(tctx, out var vrbl, out error))
+						_THROW(tctx, error);
+					if (!vrbl.Type.IsValueType())
+						_THROW(context, $"The uniform '{vrbl.Name}' must be a value type if declared inside of a block.");
+					Info._uniforms.Add((vrbl, (uint)loc.Value, idx++, offset));
+					offset += vrbl.Size;
+					GLSL.EmitUniformBlockMember(vrbl);
+				}
+				GLSL.EmitUniformBlockClose();
 			}
 			GLSL.EmitBlankLineVar();
 

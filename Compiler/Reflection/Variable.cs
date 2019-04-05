@@ -44,6 +44,11 @@ namespace SSLang.Reflection
 		public bool IsArray => (ArraySize > 0);
 
 		/// <summary>
+		/// The size of the variable, in bytes.
+		/// </summary>
+		public uint Size => Type.GetSize() * (IsArray ? ArraySize : 1);
+
+		/// <summary>
 		/// Gets if this variable is a uniform in the shader program.
 		/// </summary>
 		public bool IsUniform => (Scope == ScopeType.Uniform);
