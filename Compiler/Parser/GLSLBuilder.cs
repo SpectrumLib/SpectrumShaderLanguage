@@ -10,6 +10,9 @@ namespace SSLang
 		private static readonly string GENERATED_COMMENT =
 			"// Generated from Spectrum Shader Language input using sslc.";
 		private static readonly string VERSION_STRING = "#version 450";
+		private static readonly string[] EXTENSIONS = {
+			"GL_EXT_scalar_block_layout"
+		};
 
 		#region Fields
 		// Contains the variable listings - the inputs, outputs, uniforms, and locals
@@ -24,6 +27,8 @@ namespace SSLang
 			_funcSource = new StringBuilder(8192);
 			_varSource.AppendLine(GENERATED_COMMENT);
 			_varSource.AppendLine(VERSION_STRING);
+			foreach (var ext in EXTENSIONS)
+				_varSource.AppendLine($"#extension {ext} : require");
 			_varSource.AppendLine();
 			_funcSource.AppendLine();
 		}
@@ -47,12 +52,12 @@ namespace SSLang
 			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl()};");
 
 		public void EmitUniformBlockHeader(string name, uint loc) =>
-			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {name} {{");
+			_varSource.AppendLine($"layout(scalar, set = 0, binding = {loc}) uniform {name} {{");
 
-		public void EmitUniformBlockMember(Variable vrbl) =>
-			_varSource.AppendLine($"\t{vrbl.GetGLSLDecl()};");
+		public void EmitUniformBlockMember(Variable vrbl, uint offset) =>
+			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl()};");
 
-		public void EmitUniformBlockClose() => _varSource.AppendLine("}");
+		public void EmitUniformBlockClose() => _varSource.AppendLine("};");
 		#endregion // Variables
 	}
 }

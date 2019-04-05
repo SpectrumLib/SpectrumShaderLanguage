@@ -48,6 +48,12 @@ namespace SSLang
 		/// the extension `.glsl`, or `[name].glsl`. Ignored if <see cref="OutputGLSL"/> is <c>false</c>.
 		/// </summary>
 		public string GLSLPath = null;
+
+		/// <summary>
+		/// If <c>true</c>, all uniforms must be contiguous from zero, or a compiler error is thrown. Non-contiguous uniforms
+		/// are valid, but result in sub-optimal performance.
+		/// </summary>
+		public bool ForceContiguousUniforms = false;
 		#endregion // Fields
 
 		// Checks the options for validity, and throws exceptions if invalid

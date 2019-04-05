@@ -40,6 +40,14 @@ namespace SSLang.Reflection
 		/// </para>
 		/// </summary>
 		public IReadOnlyList<(Variable Variable, uint Location, uint Index, uint Offset)> Uniforms => _uniforms;
+
+		internal readonly List<(uint l, uint s, uint[] m)> _blocks = new List<(uint, uint, uint[])>();
+		/// <summary>
+		/// The uniform blocks in the shader. For each block, the binding location, size (in bytes), and list
+		/// of members is given. The members are given as a list of indicies into the <see cref="Uniforms"/>
+		/// list.
+		/// </summary>
+		public IReadOnlyList<(uint Location, uint Size, uint[] Members)> Blocks => _blocks;
 		#endregion // Fields
 
 		/// <summary>

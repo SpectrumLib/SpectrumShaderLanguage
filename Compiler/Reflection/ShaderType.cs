@@ -156,8 +156,7 @@ namespace SSLang.Reflection
 		internal static readonly string[] SSL_KEYWORDS = {
 			"void",
 			"bool", "bvec2", "bvec3", "bvec4", "int", "ivec2", "ivec3", "ivec4", "uint", "uvec2", "uvec3", "uvec4",
-			"float", "vec2", "vec3", "vec4", "double", "dvec2", "dvec3", "dvec4", "mat2", "mat3", "mat4", "dmat2",
-			"dmat3", "dmat4",
+			"float", "vec2", "vec3", "vec4", "mat2", "mat3", "mat4",
 			"tex1D", "tex2D", "tex3D", "texCube", "tex1dArray", "tex2DArray", "image1D", "image2D", "image3D",
 			"image1dArray", "image2DArray",
 		};

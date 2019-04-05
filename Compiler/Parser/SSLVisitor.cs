@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
@@ -117,7 +118,12 @@ namespace SSLang
 			if (ScopeManager.Outputs.Count == 0)
 				_THROW(context, "A shader is required to have an 'output' block to describe the fragment stage output.");
 			if ((ScopeManager.Uniforms.Count > 0) && !Info.AreUniformsContiguous())
-				_WARN(0, "The uniforms are not contiguous, which will result in sub-optimal performance.");
+			{
+				if (Options.ForceContiguousUniforms)
+					_THROW(context, "The shader uniform locations must be contiguous from zero.");
+				else
+					_WARN(0, "The uniforms are not contiguous, which will result in sub-optimal performance.");
+			}
 
 			// Visit all functions
 			foreach (var ch in context.children)
@@ -234,7 +240,9 @@ namespace SSLang
 			else
 			{
 				var tblock = context.typeBlock();
-				uint idx = 0, offset = 0;
+				if (tblock._Types.Count == 0)
+					_THROW(context, "Uniform blocks must have at least once member.");
+				uint idx = 0, offset = 0, sIdx = (uint)Info.Uniforms.Count;
 				GLSL.EmitUniformBlockHeader($"Block{loc.Value}", (uint)loc.Value);
 				foreach (var tctx in tblock._Types)
 				{
@@ -243,9 +251,10 @@ namespace SSLang
 					if (!vrbl.Type.IsValueType())
 						_THROW(context, $"The uniform '{vrbl.Name}' must be a value type if declared inside of a block.");
 					Info._uniforms.Add((vrbl, (uint)loc.Value, idx++, offset));
+					GLSL.EmitUniformBlockMember(vrbl, offset);
 					offset += vrbl.Size;
-					GLSL.EmitUniformBlockMember(vrbl);
 				}
+				Info._blocks.Add(((uint)loc.Value, offset, Enumerable.Range((int)sIdx, tblock._Types.Count).Select(i => (uint)i).ToArray()));
 				GLSL.EmitUniformBlockClose();
 			}
 			GLSL.EmitBlankLineVar();
