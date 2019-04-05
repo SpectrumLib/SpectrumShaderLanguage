@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
@@ -24,6 +23,9 @@ namespace SSLang
 
 		// A list of warning messages generated during the translation process
 		public readonly List<(uint, string)> Warnings;
+
+		// The scope/variable manager
+		public readonly ScopeManager ScopeManager;
 		#endregion // Fields
 
 		public SSLVisitor(CommonTokenStream tokens)
@@ -32,6 +34,7 @@ namespace SSLang
 			GLSL = new GLSLBuilder();
 			Info = new ShaderInfo();
 			Warnings = new List<(uint, string)>();
+			ScopeManager = new ScopeManager();
 		}
 
 		#region Utilities
@@ -94,7 +97,7 @@ namespace SSLang
 
 			// Visit all of the blocks that create named variables first
 			foreach (var ch in context.children)
-			{
+			{ 
 				var cctx = ch as SSLParser.TopLevelStatementContext;
 				if (cctx == null)
 					continue;
@@ -103,6 +106,10 @@ namespace SSLang
 				if (!isFunc)
 					Visit(cctx);
 			}
+
+			// Validate that the required blocks are present
+			if (ScopeManager.Attributes.Count == 0)
+				_THROW(context, "A shader is required to have an 'attributes' block to describe the vertex input.");
 
 			// Visit all functions
 			foreach (var ch in context.children)
@@ -119,6 +126,7 @@ namespace SSLang
 			return null;
 		}
 
+		#region Top-Level
 		public override object VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
 		{
 			var name = context.Name.Text;
@@ -135,5 +143,24 @@ namespace SSLang
 
 			return null;
 		}
+
+		public override object VisitAttributesStatement([NotNull] SSLParser.AttributesStatementContext context)
+		{
+			if (ScopeManager.Attributes.Count > 0) // Already encountered an attributes block
+				_THROW(context, "A shader cannot have more than one 'attributes' block.");
+
+			var block = context.typeBlock();
+			if (block._Types.Count == 0)
+				_THROW(context, "The 'attributes' block cannot be empty.");
+
+			foreach (var tctx in block._Types)
+			{
+				if (!ScopeManager.TryAddAttribute(tctx, out var error))
+					_THROW(tctx, error);
+			}
+
+			return null;
+		}
+		#endregion // Top-Level
 	}
 }

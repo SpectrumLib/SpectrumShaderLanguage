@@ -89,15 +89,21 @@ namespace SSLang.Reflection
 			error = null;
 
 			var name = ctx.Name.Text;
+			if (name[0] == '$')
+			{
+				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
+				return false;
+			}
+
 			var type = ShaderTypeHelper.FromTypeContext(ctx.type());
 			if (type == ShaderType.Void)
 			{
-				error = $"The variable '{name}' cannot be of type 'void'";
+				error = $"The variable '{name}' cannot be of type 'void'.";
 				return false;
 			}
 			if (type == ShaderType.Error)
 			{
-				error = $"Unable to convert variable '{name}' to internal type";
+				error = $"Unable to convert variable '{name}' to internal type.";
 				return false;
 			}
 
@@ -110,7 +116,7 @@ namespace SSLang.Reflection
 
 				if (val.Value <= 0)
 				{
-					error = $"The variable '{name}' cannot have a negative or zero array size";
+					error = $"The variable '{name}' cannot have a negative or zero array size.";
 					return false;
 				}
 				asize = (uint)val.Value;
@@ -129,15 +135,21 @@ namespace SSLang.Reflection
 			var actx = ctx as SSLParser.ArrayDefinitionContext;
 
 			var name = (vctx?.Name ?? actx.Name).Text;
+			if (name[0] == '$')
+			{
+				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
+				return false;
+			}
+
 			var type = ShaderTypeHelper.FromTypeContext(vctx?.type() ?? actx.type());
 			if (type == ShaderType.Void)
 			{
-				error = $"The variable '{name}' cannot be of type 'void'";
+				error = $"The variable '{name}' cannot be of type 'void'.";
 				return false;
 			}
 			if (type == ShaderType.Error)
 			{
-				error = $"Unable to convert variable '{name}' to internal type";
+				error = $"Unable to convert variable '{name}' to internal type.";
 				return false;
 			}
 
@@ -150,7 +162,7 @@ namespace SSLang.Reflection
 
 				if (val.Value <= 0)
 				{
-					error = $"The variable '{name}' cannot have a negative or zero array size";
+					error = $"The variable '{name}' cannot have a negative or zero array size.";
 					return false;
 				}
 				asize = (uint)val.Value;

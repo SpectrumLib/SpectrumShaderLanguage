@@ -221,11 +221,10 @@ namespace SSLang.Reflection
 		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
 		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)
 		{
-			var token = ctx.Start.TokenIndex;
+			var token = ctx.Start.Type;
 
 			if (token == SSLParser.KWT_VOID) return ShaderType.Void;
 			if (token <= SSLParser.KWT_DMAT4) return (ShaderType)((token - SSLParser.KWT_BOOL) + (int)ShaderType.Bool); // Value types
-			if (token < SSLParser.KWT_TEX1D) return ShaderType.Error; // Unassigned values between value and handle types
 			if (token <= SSLParser.KWT_IMAGE2D_ARR) return (ShaderType)((token - SSLParser.KWT_TEX1D) + (int)ShaderType.Tex1D); // Handle types
 
 			return ShaderType.Error;
