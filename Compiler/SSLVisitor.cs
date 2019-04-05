@@ -153,11 +153,17 @@ namespace SSLang
 			if (block._Types.Count == 0)
 				_THROW(context, "The 'attributes' block cannot be empty.");
 
+			GLSL.EmitCommentVar("Vertex attributes");
+			uint loc = 0;
 			foreach (var tctx in block._Types)
 			{
-				if (!ScopeManager.TryAddAttribute(tctx, out var error))
+				if (!ScopeManager.TryAddAttribute(tctx, out var vrbl, out var error))
 					_THROW(tctx, error);
+				GLSL.EmitVertexAttribute(vrbl, loc);
+				Info._attributes.Add((vrbl, loc));
+				loc += vrbl.Type.GetSlotCount(vrbl.ArraySize);
 			}
+			GLSL.EmitBlankLineVar();
 
 			return null;
 		}

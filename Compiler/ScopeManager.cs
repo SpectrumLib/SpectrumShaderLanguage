@@ -26,9 +26,9 @@ namespace SSLang
 
 		#region Attributes
 		// Attempts to add a variable to the vertex attributes scope
-		public bool TryAddAttribute(SSLParser.VariableDeclarationContext ctx, out string error)
+		public bool TryAddAttribute(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Attribute, out var v, out error))
+			if (!Variable.TryFromContext(ctx, ScopeType.Attribute, out v, out error))
 				return false;
 
 			var pre = FindGlobal(v.Name);

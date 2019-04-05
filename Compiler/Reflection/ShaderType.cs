@@ -81,22 +81,6 @@ namespace SSLang.Reflection
 		/// </summary>
 		Float4,
 		/// <summary>
-		/// Single 64-bit floating-point value (double).
-		/// </summary>
-		Double,
-		/// <summary>
-		/// A 2-component vector of 64-bit floating-point values (dvec2).
-		/// </summary>
-		Double2,
-		/// <summary>
-		/// A 3-component vector of 64-bit floating-point values (dvec3).
-		/// </summary>
-		Double3,
-		/// <summary>
-		/// A 4-component vector of 64-bit floating-point values (dvec4).
-		/// </summary>
-		Double4,
-		/// <summary>
 		/// A 2x2 matrix of 32-bit floating point values (mat2).
 		/// </summary>
 		Mat2,
@@ -108,18 +92,6 @@ namespace SSLang.Reflection
 		/// A 4x4 matrix of 32-bit floating point values (mat4).
 		/// </summary>
 		Mat4,
-		/// <summary>
-		/// A 2x2 matrix of 64-bit floating point values (dmat2).
-		/// </summary>
-		DMat2,
-		/// <summary>
-		/// A 3x3 matrix of 64-bit floating point values (dmat3).
-		/// </summary>
-		DMat3,
-		/// <summary>
-		/// A 4x4 matrix of 64-bit floating point values (dmat4).
-		/// </summary>
-		DMat4,
 
 		// =====================================================================
 		// HANDLE TYPES
@@ -201,8 +173,8 @@ namespace SSLang.Reflection
 		/// <returns>The SSL type keyword.</returns>
 		public static string ToKeyword(this ShaderType type)
 		{
-			if (type <= ShaderType.DMat4) return SSL_KEYWORDS[(int)type];
-			else if (type <= ShaderType.Image2DArray) return SSL_KEYWORDS[(int)(type - ShaderType.Tex1D + ShaderType.DMat4) + 1];
+			if (type <= ShaderType.Mat4) return SSL_KEYWORDS[(int)type];
+			else if (type <= ShaderType.Image2DArray) return SSL_KEYWORDS[(int)(type - ShaderType.Tex1D + ShaderType.Mat4) + 1];
 			else return "ERROR";
 		}
 
@@ -217,6 +189,38 @@ namespace SSLang.Reflection
 			else return ToKeyword(type);
 		}
 
+		/// <summary>
+		/// Gets the size of the shader type, in bytes.
+		/// </summary>
+		/// <param name="type">The type to get the size of. All handle types return 4. Void and error types return 0.</param>
+		/// <returns>The type size.</returns>
+		public static uint GetSize(this ShaderType type)
+		{
+			if (type == ShaderType.Void || type == ShaderType.Error)
+				return 0;
+			if (type >= ShaderType.Tex1D) // All handle types
+				return 4;
+
+			if (type >= ShaderType.Mat2) // All matrix types
+				return (type == ShaderType.Mat2) ? 16u : (type == ShaderType.Mat3) ? 36u : 64u;
+
+			// All other value types (easy, as all are 32-bits internally)
+			var vecSize = (int)(type - ShaderType.Bool) % 4;
+			return (uint)(4 * (vecSize + 1));
+		}
+
+		/// <summary>
+		/// Gets the number of location slots the type takes up in GLSL (each slot is 16 bytes).
+		/// </summary>
+		/// <param name="type">The type to get the slot count for.</param>
+		/// <param name="arrSize">The size of the array, or 0 if there is no array.</param>
+		/// <returns>The number of 16-byte 'location' slots the type takes.</returns>
+		public static uint GetSlotCount(this ShaderType type, uint arrSize = 0)
+		{
+			arrSize = Math.Max(arrSize, 1);
+			return (uint)Math.Ceiling(GetSize(type) / 16f) * arrSize;
+		}
+
 		// Used to convert parsed tokens into enum values
 		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
 		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)
@@ -224,7 +228,7 @@ namespace SSLang.Reflection
 			var token = ctx.Start.Type;
 
 			if (token == SSLParser.KWT_VOID) return ShaderType.Void;
-			if (token <= SSLParser.KWT_DMAT4) return (ShaderType)((token - SSLParser.KWT_BOOL) + (int)ShaderType.Bool); // Value types
+			if (token <= SSLParser.KWT_MAT4) return (ShaderType)((token - SSLParser.KWT_BOOL) + (int)ShaderType.Bool); // Value types
 			if (token <= SSLParser.KWT_IMAGE2D_ARR) return (ShaderType)((token - SSLParser.KWT_TEX1D) + (int)ShaderType.Tex1D); // Handle types
 
 			return ShaderType.Error;

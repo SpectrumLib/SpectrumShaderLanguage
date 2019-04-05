@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SSLang.Reflection
 {
@@ -12,6 +13,13 @@ namespace SSLang.Reflection
 		/// The optional name of the shader. This will be null unless a shader name is given in the source code.
 		/// </summary>
 		public string Name { get; internal set; } = null;
+
+		internal readonly List<(Variable, uint)> _attributes = new List<(Variable, uint)>();
+		/// <summary>
+		/// The vertex attributes that are used to pass vertex information to the shader. They are in the order
+		/// they appear in the shader 'attributes' block.
+		/// </summary>
+		public IReadOnlyList<(Variable Variable, uint Location)> Attributes => _attributes;
 		#endregion // Fields
 	}
 

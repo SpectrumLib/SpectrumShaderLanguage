@@ -61,16 +61,9 @@ KWT_FLOAT       : 'float' ;
 KWT_FLOAT2      : 'vec2' ;
 KWT_FLOAT3      : 'vec3' ;
 KWT_FLOAT4      : 'vec4' ;
-KWT_DOUBLE      : 'double' ;
-KWT_DOUBLE2     : 'dvec2' ;
-KWT_DOUBLE3     : 'dvec3' ;
-KWT_DOUBLE4     : 'dvec4' ;
 KWT_MAT2        : 'mat2' ;
 KWT_MAT3        : 'mat3' ;
 KWT_MAT4        : 'mat4' ;
-KWT_DMAT2       : 'dmat2' ;
-KWT_DMAT3       : 'dmat3' ;
-KWT_DMAT4       : 'dmat4' ;
 
 // Type keywords (handle)
 KWT_TEX1D       : 'tex1D' ;

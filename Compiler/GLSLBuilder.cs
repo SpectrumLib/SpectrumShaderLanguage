@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using SSLang.Reflection;
 
 namespace SSLang
 {
@@ -34,5 +35,8 @@ namespace SSLang
 
 		public void EmitCommentVar(string cmt) => _varSource.AppendLine("// " + cmt);
 		public void EmitCommentFunc(string cmt) => _funcSource.AppendLine("// " + cmt);
+
+		public void EmitVertexAttribute(Variable @var, uint loc) => 
+			_varSource.AppendLine($"layout(location = {loc}) in {var.Type.ToGLSL()} {var.Name}{(@var.IsArray ? $"[{var.ArraySize}]" : "")};");
 	}
 }
