@@ -19,7 +19,7 @@ namespace SSLang
 		/// </summary>
 		public readonly string Source;
 		/// <summary>
-		/// If this compiler was created for a file, this will be the full path to the file. Otherwise, it will be null.
+		/// If this compiler was created for a file, this will be the name of the file. Otherwise, it will be null.
 		/// </summary>
 		public readonly string SourceFile;
 		/// <summary>
@@ -28,13 +28,6 @@ namespace SSLang
 		/// options.
 		/// </summary>
 		public ShaderInfo ShaderInfo { get; private set; } = null;
-
-		private List<(uint, string)> _warnings;
-		/// <summary>
-		/// A list of warning messages, and their source lines, that were generated during compilation. Will only be
-		/// populated after <see cref="Compile(CompileOptions, out CompileError)"/> is called.
-		/// </summary>
-		public IReadOnlyList<(uint Line, string Message)> Warnings => _warnings;
 
 		private bool _isDisposed = false;
 		#endregion // Fields
@@ -70,7 +63,7 @@ namespace SSLang
 
 			try
 			{
-				return new SSLCompiler(File.ReadAllText(inFile.FullName), inFile.FullName);
+				return new SSLCompiler(File.ReadAllText(inFile.FullName), inFile.Name);
 			}
 			catch (Exception e)
 			{
@@ -128,12 +121,11 @@ namespace SSLang
 			}
 
 			// Visit the tree (this step actually generates the GLSL)
-			SSLVisitor visitor = new SSLVisitor(tokenStream, options);
+			SSLVisitor visitor = new SSLVisitor(tokenStream, this, options);
 			try
 			{
 				visitor.Visit(fileCtx);
 				ShaderInfo = visitor.Info;
-				_warnings = visitor.Warnings;
 			}
 			catch (VisitException e)
 			{
@@ -155,7 +147,9 @@ namespace SSLang
 				}
 				catch (Exception e)
 				{
-					throw new IOException($"Unable to write GLSL file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+					error = new CompileError(ErrorSource.Output, 0, 0,
+						$"Unable to write GLSL file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+					return false;
 				}
 			}
 

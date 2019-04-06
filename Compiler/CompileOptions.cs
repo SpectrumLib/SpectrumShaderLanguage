@@ -10,6 +10,11 @@ namespace SSLang
 	{
 		#region Fields
 		/// <summary>
+		/// The optional callback to use to communicate warning messages to the client application.
+		/// </summary>
+		public CompilerMessageCallback WarnCallback = null;
+
+		/// <summary>
 		/// Controls if the source code is compiled into SPIR-V. If <c>false</c>, no SPIR-V bytecode will be generated.
 		/// </summary>
 		public bool Compile = true;
@@ -111,4 +116,13 @@ namespace SSLang
 			OptionName = name;
 		}
 	}
+
+	/// <summary>
+	/// Callback type for communicating warning messages from the compiler to the user application.
+	/// </summary>
+	/// <param name="compiler">The compiler that generated the message.</param>
+	/// <param name="source">The source compiler stage of the message.</param>
+	/// <param name="line">If applicable, the line of the source code that generated the warning.</param>
+	/// <param name="message">The text of the message.</param>
+	public delegate void CompilerMessageCallback(SSLCompiler compiler, ErrorSource source, uint line, string message);
 }

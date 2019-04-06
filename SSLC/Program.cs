@@ -26,16 +26,16 @@ namespace SLLC
 				{
 					var fileName = Path.GetFileName(args[args.Length - 1]);
 
-					if (!compiler.Compile(new CompileOptions { Compile = false, OutputGLSL = true }, out var error))
+					var options = new CompileOptions {
+						WarnCallback = WarnCallback,
+						Compile = false,
+						OutputGLSL = true
+					};
+
+					if (!compiler.Compile(options, out var error))
 					{
 						CConsole.Error($"'{fileName}'[{error.Line}:{error.CharIndex}] - {error.Message}");
 						return;
-					}
-
-					// Print the warnings
-					foreach (var warn in compiler.Warnings)
-					{
-						CConsole.Warn($"[line {warn.Line}] - {warn.Message}");
 					}
 				}
 			}
@@ -59,6 +59,14 @@ namespace SLLC
 			{
 				CConsole.Error($"({e.GetType()}) {e.Message}");
 			}
+		}
+
+		private static void WarnCallback(SSLCompiler compiler, ErrorSource source, uint line, string msg)
+		{
+			if ((source == ErrorSource.Parser) || (source == ErrorSource.Translator))
+				CConsole.Warn($"'{compiler.SourceFile}'[line {line}] - {msg}");
+			else
+				CConsole.Warn($"'{compiler.SourceFile}' - {msg}");
 		}
 
 		private static void PrintHelp()

@@ -13,11 +13,13 @@ namespace SSLang
 		/// </summary>
 		public readonly ErrorSource Source;
 		/// <summary>
-		/// The source code line that the error occured on.
+		/// The source code line that the error occured on. Only valid if <see cref="Source"/> is not
+		/// <see cref="ErrorSource.Output"/>
 		/// </summary>
 		public readonly uint Line;
 		/// <summary>
-		/// The character index into the line of the error.
+		/// The character index into the line of the error. Only valid if <see cref="Source"/> is not
+		/// <see cref="ErrorSource.Output"/>
 		/// </summary>
 		public readonly uint CharIndex;
 		/// <summary>
@@ -51,7 +53,11 @@ namespace SSLang
 		/// <summary>
 		/// The error is encountered while compiling the generated GLSL into SPIR-V bytecode.
 		/// </summary>
-		Compiler
+		Compiler,
+		/// <summary>
+		/// An error is encountered while attempting to write any compiler output to a file.
+		/// </summary>
+		Output
 	}
 
 	// Used to communicate a compiler error while visiting

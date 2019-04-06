@@ -16,14 +16,14 @@ namespace SSLang
 		// Stream of tokens used to generate the visited tree
 		private readonly CommonTokenStream _tokens;
 
+		// The compiler using this visitor
+		public readonly SSLCompiler Compiler;
+
 		// The generated GLSL
 		public readonly GLSLBuilder GLSL;
 
 		// The reflection info built by the visitor
 		public readonly ShaderInfo Info;
-
-		// A list of warning messages generated during the translation process
-		public readonly List<(uint, string)> Warnings;
 
 		// The scope/variable manager
 		public readonly ScopeManager ScopeManager;
@@ -32,19 +32,19 @@ namespace SSLang
 		public readonly CompileOptions Options;
 		#endregion // Fields
 
-		public SSLVisitor(CommonTokenStream tokens, CompileOptions options)
+		public SSLVisitor(CommonTokenStream tokens, SSLCompiler compiler, CompileOptions options)
 		{
 			_tokens = tokens;
+			Compiler = compiler;
 			GLSL = new GLSLBuilder();
 			Info = new ShaderInfo();
-			Warnings = new List<(uint, string)>();
 			ScopeManager = new ScopeManager();
 			Options = options;
 		}
 
 		#region Utilities
-		private void _WARN(uint line, string msg) => Warnings.Add((line, msg));
-		private void _WARN(RuleContext ctx, string msg) => Warnings.Add((GetContextLine(ctx), msg));
+		private void _WARN(uint line, string msg) => Options.WarnCallback?.Invoke(Compiler, ErrorSource.Translator, line, msg);
+		private void _WARN(RuleContext ctx, string msg) => Options.WarnCallback?.Invoke(Compiler, ErrorSource.Translator, GetContextLine(ctx), msg);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void _THROW(RuleContext ctx, string msg)
