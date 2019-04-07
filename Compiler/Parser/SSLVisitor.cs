@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Tree;
 using SSLang.Generated;
 using SSLang.Reflection;
 
@@ -100,8 +101,10 @@ namespace SSLang
 			if (meta != null)
 				Visit(meta);
 
+			var childs = context.children as List<IParseTree>;
+
 			// Visit all of the blocks that create named variables first
-			foreach (var ch in context.children)
+			foreach (var ch in childs)
 			{ 
 				var cctx = ch as SSLParser.TopLevelStatementContext;
 				if (cctx == null)
@@ -125,19 +128,47 @@ namespace SSLang
 					_WARN(0, "The uniforms are not contiguous, which will result in sub-optimal performance.");
 			}
 
-			// Visit all functions
-			foreach (var ch in context.children)
+			// Visit all standard functions
+			foreach (var ch in childs)
 			{
 				var cctx = ch as SSLParser.TopLevelStatementContext;
 				if (cctx == null)
 					continue;
-
-				bool isFunc = (cctx.stageFunction() != null) || (cctx.standardFunction() != null);
-				if (isFunc)
+				if (cctx.standardFunction() != null)
 					Visit(cctx);
 			}
 
+			// Visit the stage functions (in order, but not necessary)
+			var vert = childs.FindAll(ipt => IsStageFunction(ipt, ShaderStages.Vertex));
+			var tesc = childs.FindAll(ipt => IsStageFunction(ipt, ShaderStages.TessControl));
+			var tese = childs.FindAll(ipt => IsStageFunction(ipt, ShaderStages.TessEval));
+			var geom = childs.FindAll(ipt => IsStageFunction(ipt, ShaderStages.Geometry));
+			var frag = childs.FindAll(ipt => IsStageFunction(ipt, ShaderStages.Fragment));
+			if (vert.Count == 0) _THROW(context, "A vertex stage is required for the shader.");
+			if (vert.Count > 1) _THROW(vert[1] as RuleContext, "Only one vertex stage is allowed in a shader.");
+			if (frag.Count == 0) _THROW(context, "A fragment stage is required for the shader.");
+			if (frag.Count > 1) _THROW(frag[1] as RuleContext, "Only one fragment stage is allowed in a shader.");
+			if (tesc.Count > 0) _THROW(tesc[0] as RuleContext, "Tessellation control stages are not yet implemented.");
+			if (tese.Count > 0) _THROW(tese[0] as RuleContext, "Tessellation evaluation stages are not yet implemented.");
+			if (geom.Count > 0) _THROW(geom[0] as RuleContext, "Geometry stages are not yet implemented.");
+			Visit(vert[0]);
+			Visit(frag[0]);
+
 			return null;
+		}
+
+		private static bool IsStageFunction(IParseTree ctx, ShaderStages stage)
+		{
+			var sctx = (ctx as SSLParser.TopLevelStatementContext)?.stageFunction();
+			if (sctx == null)
+				return false;
+
+			switch (stage)
+			{
+				case ShaderStages.Vertex: return sctx is SSLParser.VertFunctionContext;
+				case ShaderStages.Fragment: return sctx is SSLParser.FragFunctionContext;
+				default: return false;
+			}
 		}
 
 		#region Top-Level
@@ -275,6 +306,25 @@ namespace SSLang
 
 			return null;
 		}
+
+		public override object VisitStandardFunction([NotNull] SSLParser.StandardFunctionContext context)
+		{
+			return null;
+		}
 		#endregion // Top-Level
+
+		#region Stage Functions
+		public override object VisitVertFunction([NotNull] SSLParser.VertFunctionContext context)
+		{
+			Info.Stages |= ShaderStages.Vertex;
+			return null;
+		}
+
+		public override object VisitFragFunction([NotNull] SSLParser.FragFunctionContext context)
+		{
+			Info.Stages |= ShaderStages.Fragment;
+			return null;
+		}
+		#endregion // Stage Functions
 	}
 }
