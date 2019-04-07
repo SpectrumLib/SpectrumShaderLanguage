@@ -61,22 +61,26 @@ namespace SSLang.Reflection
 		/// </summary>
 		public bool IsFragmentOutput => (Scope == ScopeType.FragmentOutput);
 		/// <summary>
-		/// Gets if this variable is a local in the shader program.
+		/// Gets if this variable is an internal in the shader program.
 		/// </summary>
-		public bool IsLocal => (Scope == ScopeType.Local);
+		public bool IsInternal => (Scope == ScopeType.Internal);
 		/// <summary>
 		/// Gets if this variable is a builtin variable in the shader program.
 		/// </summary>
 		public bool IsBuiltin => (Scope == ScopeType.Builtin);
 		/// <summary>
-		/// Gets if this variable is a function local in the shader program.
+		/// Gets if the variable is an argument to a function.
 		/// </summary>
-		public bool IsFunction => (Scope == ScopeType.Function);
+		public bool IsArgument => (Scope == ScopeType.Argument);
+		/// <summary>
+		/// Gets if this variable is local within a function (does not include arguments).
+		/// </summary>
+		public bool IsLocal => (Scope == ScopeType.Local);
 
 		/// <summary>
 		/// Gets if the variable appears in the global scope in the program.
 		/// </summary>
-		public bool IsGlobal => (Scope != ScopeType.Function);
+		public bool IsGlobal => (Scope != ScopeType.Local) && (Scope != ScopeType.Argument);
 		#endregion // Fields
 
 		internal Variable(ShaderType type, string name, ScopeType scope, bool @const = false, uint asize = 0)
@@ -200,14 +204,18 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// The variable appears in the global scope as a value passed internally between stages.
 		/// </summary>
-		Local,
+		Internal,
 		/// <summary>
 		/// The variable appears in the global scope as one of the reserved built-in variables.
 		/// </summary>
 		Builtin,
 		/// <summary>
-		/// The variable appears locally within a function. Includes function arguments.
+		/// The variable appears locally within a function as an argument to that function.
 		/// </summary>
-		Function
+		Argument,
+		/// <summary>
+		/// The variable appears locally within a function as a variable within the function body.
+		/// </summary>
+		Local
 	}
 }

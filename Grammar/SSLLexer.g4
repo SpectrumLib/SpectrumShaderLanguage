@@ -31,7 +31,7 @@ KW_FOR              : 'for' ;
 KW_IF               : 'if' ;
 KW_IN               : 'in' ;
 KW_INOUT            : 'inout' ;
-KW_LOCALS           : 'locals' ;
+KW_INTERNALS        : 'internals' ;
 KW_OUT              : 'out' ;
 KW_OUTPUTS          : 'outputs' ;
 KW_RETURN           : 'return' ;

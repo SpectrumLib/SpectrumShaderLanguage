@@ -24,7 +24,7 @@ topLevelStatement
     : uniformStatement
     | attributesStatement
     | outputsStatement
-    | localsStatement
+    | internalsStatement
     | stageFunction
     | standardFunction
     ;
@@ -50,9 +50,9 @@ outputsStatement
     : 'outputs' typeBlock ';'
     ;
 
-// Locals (values passed between shader stages)
-localsStatement
-    : 'locals' typeBlock ';'
+// Internals (values passed between shader stages)
+internalsStatement
+    : 'internals' typeBlock ';'
     ;
 
 // Stage functions
