@@ -261,6 +261,20 @@ namespace SSLang
 
 			return null;
 		}
+
+		public override object VisitLocalsStatement([NotNull] SSLParser.LocalsStatementContext context)
+		{
+			var types = context.typeBlock()._Types;
+			foreach (var tctx in types)
+			{
+				if (!ScopeManager.TryAddLocal(tctx, out var vrbl, out var error))
+					_THROW(tctx, error);
+				if (!vrbl.Type.IsValueType())
+					_THROW(context, $"The local '{vrbl.Name}' must be a value type.");
+			}
+
+			return null;
+		}
 		#endregion // Top-Level
 	}
 }

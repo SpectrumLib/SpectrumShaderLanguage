@@ -57,14 +57,8 @@ localsStatement
 
 // Stage functions
 stageFunction
-    : vertFunction
-    | fragFunction
-    ;
-vertFunction
-    : '@vert' block
-    ;
-fragFunction
-    : '@frag' block
+    : '@vert' block     #vertFunction
+    | '@frag' block     #fragFunction
     ;
 
 // Standard function (non-stage function)

@@ -52,7 +52,7 @@ namespace SSLang.Reflection
 
 		/// <summary>
 		/// Gets if the uniforms in the shader have contiguous bindings. Non-contigous bindings are allowed by SPIR-V,
-		/// but are less inefficient and may result in diminished shader performance.
+		/// but are less efficient and may result in diminished shader performance.
 		/// </summary>
 		/// <remarks>
 		/// Internally, this function caches it's result, so it must not be called until all uniforms are added.

@@ -21,6 +21,10 @@ namespace SSLang
 		// The uniforms
 		private readonly Dictionary<string, Variable> _uniforms;
 		public IReadOnlyDictionary<string, Variable> Uniforms => _uniforms;
+
+		// The locals
+		private readonly Dictionary<string, Variable> _locals;
+		public IReadOnlyDictionary<string, Variable> Locals => _locals;
 		#endregion // Fields
 
 		public ScopeManager()
@@ -28,6 +32,7 @@ namespace SSLang
 			_attributes = new Dictionary<string, Variable>();
 			_outputs = new Dictionary<string, Variable>();
 			_uniforms = new Dictionary<string, Variable>();
+			_locals = new Dictionary<string, Variable>();
 		}
 
 		// Will search all of the global scopes for a variable with the matching name
@@ -82,6 +87,22 @@ namespace SSLang
 			}
 
 			_uniforms.Add(v.Name, v);
+			return true;
+		}
+
+		public bool TryAddLocal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
+		{
+			if (!Variable.TryFromContext(ctx, ScopeType.Local, out v, out error))
+				return false;
+
+			var pre = FindGlobal(v.Name);
+			if (pre != null)
+			{
+				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
+				return false;
+			}
+
+			_locals.Add(v.Name, v);
 			return true;
 		}
 		#endregion // Globals
