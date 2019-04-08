@@ -309,6 +309,9 @@ namespace SSLang
 
 		public override object VisitStandardFunction([NotNull] SSLParser.StandardFunctionContext context)
 		{
+			if (!ScopeManager.TryAddFunction(context, out var func, out var error))
+				_THROW(context, error);
+
 			return null;
 		}
 		#endregion // Top-Level

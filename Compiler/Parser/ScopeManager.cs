@@ -21,6 +21,9 @@ namespace SSLang
 
 		private readonly Dictionary<string, Variable> _internals;
 		public IReadOnlyDictionary<string, Variable> Internals => _internals;
+
+		private readonly Dictionary<string, StandardFunction> _functions;
+		public IReadOnlyDictionary<string, StandardFunction> Functions => _functions;
 		#endregion // Fields
 
 		public ScopeManager()
@@ -29,6 +32,7 @@ namespace SSLang
 			_outputs = new Dictionary<string, Variable>();
 			_uniforms = new Dictionary<string, Variable>();
 			_internals = new Dictionary<string, Variable>();
+			_functions = new Dictionary<string, StandardFunction>();
 		}
 
 		// Will search all of the global scopes for a variable with the matching name
@@ -37,6 +41,9 @@ namespace SSLang
 			_outputs.ContainsKey(name) ? _outputs[name] :
 			_uniforms.ContainsKey(name) ? _uniforms[name] :
 			_internals.ContainsKey(name) ? _internals[name] : null;
+
+		// Attempts to get a standard function
+		public StandardFunction FindFunction(string name) => _functions.ContainsKey(name) ? _functions[name] : null;
 
 		#region Globals
 		public bool TryAddAttribute(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
@@ -100,6 +107,22 @@ namespace SSLang
 			}
 
 			_internals.Add(v.Name, v);
+			return true;
+		}
+
+		public bool TryAddFunction(SSLParser.StandardFunctionContext ctx, out StandardFunction func, out string error)
+		{
+			if (!StandardFunction.TryFromContext(ctx, out func, out error))
+				return false;
+
+			var pre = FindFunction(func.Name);
+			if (pre != null)
+			{
+				error = $"A function with the name '{func.Name}' already exists in the shader.";
+				return false;
+			}
+
+			_functions.Add(func.Name, func);
 			return true;
 		}
 		#endregion // Globals
