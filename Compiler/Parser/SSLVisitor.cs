@@ -175,6 +175,7 @@ namespace SSLang
 		{
 			GLSL.EmitCloseBlock();
 			GLSL.EmitBlankLineFunc();
+			ScopeManager.PopScope();
 		}
 
 		#region Top-Level
@@ -321,6 +322,7 @@ namespace SSLang
 			GLSL.EmitCommentFunc($"Standard function: \"{func.Name}\"");
 			GLSL.EmitFunctionHeader(func);
 			GLSL.EmitOpenBlock();
+			ScopeManager.PushScope();
 
 			// TODO: VISIT
 
@@ -335,6 +337,7 @@ namespace SSLang
 			GLSL.EmitCommentFunc($"Shader stage function ({stage})");
 			GLSL.EmitStageFunctionHeader(stage);
 			GLSL.EmitOpenBlock();
+			ScopeManager.PushScope();
 			Info.Stages |= stage;
 		}
 

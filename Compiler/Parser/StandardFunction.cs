@@ -44,7 +44,7 @@ namespace SSLang
 					var pname = pctx.Name.Text;
 					var aidx = pctx.Access?.Type ?? SSLParser.KW_IN;
 					var acs = (aidx == SSLParser.KW_OUT) ? Access.Out : (aidx == SSLParser.KW_INOUT) ? Access.InOut : Access.In;
-					var ptype = ShaderTypeHelper.FromTypeContext(ctx.type());
+					var ptype = ShaderTypeHelper.FromTypeContext(pctx.type());
 					if (ptype == ShaderType.Void)
 					{
 						error = $"The parameter '{pname}' cannot have type 'void'.";
