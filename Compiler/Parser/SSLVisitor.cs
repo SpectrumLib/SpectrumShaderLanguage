@@ -345,6 +345,7 @@ namespace SSLang
 			GLSL.EmitStageFunctionHeader(stage);
 			GLSL.EmitOpenBlock();
 			ScopeManager.PushScope();
+			ScopeManager.AddBuiltins(stage);
 			Info.Stages |= stage;
 		}
 

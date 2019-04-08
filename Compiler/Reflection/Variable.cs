@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using SSLang.Generated;
 
 namespace SSLang.Reflection
@@ -8,6 +9,13 @@ namespace SSLang.Reflection
 	/// </summary>
 	public sealed class Variable
 	{
+		private readonly Dictionary<string, string> BUILTIN_MAP = new Dictionary<string, string>() {
+			{ "$Position", "gl_Position" }, { "$VertexIndex", "gl_VertexIndex" }, { "$InstanceIndex", "gl_InstanceIndex" },
+			{ "$PointSize", "gl_PointSize" }, { "$FragCoord", "gl_FragCoord" }, { "$FrontFacing", "gl_FrontFacing" },
+			{ "$PointCoord", "gl_PointCoord" }, { "$SampleId", "gl_SampleId" }, { "$SamplePosition", "gl_SamplePosition" },
+			{ "$FragDepth", "gl_FragDepth" }
+		};
+
 		#region Fields
 		/// <summary>
 		/// The name of the variable.
@@ -37,6 +45,12 @@ namespace SSLang.Reflection
 		/// The size of the array, if the variable is an array of values. Will be zero if it is not an array.
 		/// </summary>
 		public readonly uint ArraySize;
+
+		/// <summary>
+		/// The variable name that should be used when writing the variable to GLSL. Only affects built-in
+		/// variables.
+		/// </summary>
+		public string OutputName => (Scope == ScopeType.Builtin) ? BUILTIN_MAP[Name] : Name;
 
 		/// <summary>
 		/// Gets if the variable is an array of values.
@@ -92,7 +106,7 @@ namespace SSLang.Reflection
 			ArraySize = asize;
 		}
 
-		internal string GetGLSLDecl() => $"{Type.ToGLSL()} {Name}{(IsArray ? $"[{ArraySize}]" : "")}";
+		internal string GetGLSLDecl() => $"{Type.ToGLSL()} {OutputName}{(IsArray ? $"[{ArraySize}]" : "")}";
 
 		internal static bool TryFromContext(SSLParser.VariableDeclarationContext ctx, ScopeType scope, out Variable v, out string error)
 		{

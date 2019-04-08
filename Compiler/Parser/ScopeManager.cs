@@ -176,6 +176,27 @@ namespace SSLang
 				return null;
 			return v;
 		}
+
+		public void AddBuiltins(ShaderStages stage)
+		{
+			var scope = _scopes.Peek();
+			if (stage == ShaderStages.Vertex)
+			{
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", ScopeType.Builtin, false, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", ScopeType.Builtin, false, 0));
+			}
+			else
+			{
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$FragCoord", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Bool, "$FrontFacing", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", ScopeType.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", ScopeType.Builtin, false, 0));
+			}
+		}
 		#endregion // Functions
 	}
 
@@ -189,6 +210,9 @@ namespace SSLang
 		private readonly Dictionary<string, Variable> _locals;
 		public IReadOnlyDictionary<string, Variable> Locals => _locals;
 
+		private readonly Dictionary<string, Variable> _builtins;
+		public IReadOnlyDictionary<string, Variable> BuiltIns => _builtins;
+
 		public readonly ScopeManager Manager;
 		#endregion // Fields
 
@@ -197,11 +221,15 @@ namespace SSLang
 			Manager = m;
 			_params = new Dictionary<string, (Variable, StandardFunction.Param)>();
 			_locals = new Dictionary<string, Variable>();
+			_builtins = new Dictionary<string, Variable>();
 		}
 
 		public Variable FindVariable(string name) =>
+			_builtins.ContainsKey(name) ? _builtins[name] :
 			_locals.ContainsKey(name) ? _locals[name] :
 			_params.ContainsKey(name) ? _params[name].Item1 : null;
+
+		public void AddBuiltin(Variable v) => _builtins.Add(v.Name, v);
 
 		public bool TryAddVariable(Variable v, out string error)
 		{
