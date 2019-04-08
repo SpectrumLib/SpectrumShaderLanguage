@@ -18,6 +18,7 @@ namespace SSLang
 		// The arguments to the function
 		public readonly Param[] Params;
 
+		public uint ParamCount => (uint)Params.Length;
 		public bool HasParams => Params.Length > 0;
 		#endregion // Fields
 

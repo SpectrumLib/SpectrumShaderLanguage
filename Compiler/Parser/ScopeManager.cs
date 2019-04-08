@@ -27,6 +27,9 @@ namespace SSLang
 
 		private readonly Stack<Scope> _scopes;
 		public IReadOnlyCollection<Scope> ScopeStack => _scopes;
+
+		// Index for SSA locals
+		private uint _ssaIndex = 0;
 		#endregion // Fields
 
 		public ScopeManager()
@@ -148,6 +151,31 @@ namespace SSLang
 		#region Functions
 		public void PushScope() => _scopes.Push(new Scope(this));
 		public void PopScope() => _scopes.Pop();
+
+		public bool TryAddParameter(StandardFunction.Param p, out string error) =>
+			_scopes.Peek().TryAddParam(p, out error);
+
+		public bool TryAddLocal(SSLParser.VariableDeclarationContext ctx, out string error)
+		{
+			if (!Variable.TryFromContext(ctx, ScopeType.Local, out var v, out error))
+				return false;
+			return _scopes.Peek().TryAddVariable(v, out error);
+		}
+
+		public bool TryAddLocal(SSLParser.VariableDefinitionContext ctx, out string error)
+		{
+			if (!Variable.TryFromContext(ctx, ScopeType.Local, out var v, out error))
+				return false;
+			return _scopes.Peek().TryAddVariable(v, out error);
+		}
+
+		public Variable TryAddSSALocal(ShaderType type, uint arrSize = 0)
+		{
+			var v = new Variable(type, $"_r{_ssaIndex++}", ScopeType.Local, true, arrSize);
+			if (!_scopes.Peek().TryAddVariable(v, out var error))
+				return null;
+			return v;
+		}
 		#endregion // Functions
 	}
 
@@ -193,7 +221,7 @@ namespace SSLang
 			var pre = Manager.FindGlobal(p.Name);
 			if (pre != null) // Will probably get caught when the param is being created, but just to be sure
 			{
-				error = $"A variable with the name '{p.Name}' already exists.";
+				error = $"A variable with the name '{p.Name}' already exists in the global scope.";
 				return false;
 			}
 

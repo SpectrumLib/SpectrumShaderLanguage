@@ -322,7 +322,14 @@ namespace SSLang
 			GLSL.EmitCommentFunc($"Standard function: \"{func.Name}\"");
 			GLSL.EmitFunctionHeader(func);
 			GLSL.EmitOpenBlock();
+
+			// Push the arguments
 			ScopeManager.PushScope();
+			foreach (var par in func.Params)
+			{
+				if (!ScopeManager.TryAddParameter(par, out error))
+					_THROW(context, error);
+			}
 
 			// TODO: VISIT
 
