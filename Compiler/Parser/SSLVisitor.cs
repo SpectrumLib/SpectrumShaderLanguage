@@ -171,6 +171,12 @@ namespace SSLang
 			}
 		}
 
+		private void exitFunction()
+		{
+			GLSL.EmitCloseBlock();
+			GLSL.EmitBlankLineFunc();
+		}
+
 		#region Top-Level
 		public override object VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
 		{
@@ -312,20 +318,43 @@ namespace SSLang
 			if (!ScopeManager.TryAddFunction(context, out var func, out var error))
 				_THROW(context, error);
 
+			GLSL.EmitCommentFunc($"Standard function: \"{func.Name}\"");
+			GLSL.EmitFunctionHeader(func);
+			GLSL.EmitOpenBlock();
+
+			// TODO: VISIT
+
+			exitFunction();
 			return null;
 		}
 		#endregion // Top-Level
 
 		#region Stage Functions
+		private void enterStageFunction(ShaderStages stage)
+		{
+			GLSL.EmitCommentFunc($"Shader stage function ({stage})");
+			GLSL.EmitStageFunctionHeader(stage);
+			GLSL.EmitOpenBlock();
+			Info.Stages |= stage;
+		}
+
 		public override object VisitVertFunction([NotNull] SSLParser.VertFunctionContext context)
 		{
-			Info.Stages |= ShaderStages.Vertex;
+			enterStageFunction(ShaderStages.Vertex);
+
+			// TODO: visit
+
+			exitFunction();
 			return null;
 		}
 
 		public override object VisitFragFunction([NotNull] SSLParser.FragFunctionContext context)
 		{
-			Info.Stages |= ShaderStages.Fragment;
+			enterStageFunction(ShaderStages.Fragment);
+
+			// TODO: visit
+
+			exitFunction();
 			return null;
 		}
 		#endregion // Stage Functions

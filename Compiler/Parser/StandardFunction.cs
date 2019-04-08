@@ -11,6 +11,8 @@ namespace SSLang
 		#region Fields
 		// The name of the function
 		public readonly string Name;
+		// The mangled name used in the GLSL output
+		public readonly string OutputName;
 		// The return type of the function
 		public readonly ShaderType ReturnType;
 		// The arguments to the function
@@ -22,6 +24,7 @@ namespace SSLang
 		public StandardFunction(string n, ShaderType rt, Param[] pars)
 		{
 			Name = n;
+			OutputName = $"__func_{n}";
 			ReturnType = rt;
 			Params = pars;
 		}
@@ -39,7 +42,7 @@ namespace SSLang
 				foreach (var pctx in ctx.Params._PList)
 				{
 					var pname = pctx.Name.Text;
-					var aidx = pctx.Access?.TokenIndex ?? SSLParser.KW_IN;
+					var aidx = pctx.Access?.Type ?? SSLParser.KW_IN;
 					var acs = (aidx == SSLParser.KW_OUT) ? Access.Out : (aidx == SSLParser.KW_INOUT) ? Access.InOut : Access.In;
 					var ptype = ShaderTypeHelper.FromTypeContext(ctx.type());
 					if (ptype == ShaderType.Void)
