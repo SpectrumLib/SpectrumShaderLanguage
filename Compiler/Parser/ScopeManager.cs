@@ -155,16 +155,16 @@ namespace SSLang
 		public bool TryAddParameter(StandardFunction.Param p, out string error) =>
 			_scopes.Peek().TryAddParam(p, out error);
 
-		public bool TryAddLocal(SSLParser.VariableDeclarationContext ctx, out string error)
+		public bool TryAddLocal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Local, out var v, out error))
+			if (!Variable.TryFromContext(ctx, ScopeType.Local, out v, out error))
 				return false;
 			return _scopes.Peek().TryAddVariable(v, out error);
 		}
 
-		public bool TryAddLocal(SSLParser.VariableDefinitionContext ctx, out string error)
+		public bool TryAddLocal(SSLParser.VariableDefinitionContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Local, out var v, out error))
+			if (!Variable.TryFromContext(ctx, ScopeType.Local, out v, out error))
 				return false;
 			return _scopes.Peek().TryAddVariable(v, out error);
 		}

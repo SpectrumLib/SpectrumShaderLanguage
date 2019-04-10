@@ -51,19 +51,19 @@ namespace SSLang
 
 		#region Variables
 		public void EmitVertexAttribute(Variable vrbl, uint loc) => 
-			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl()};");
+			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitFragmentOutput(Variable vrbl, uint loc) => // Wont ever be an array
-			_varSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl()};");
+			_varSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitUniform(Variable vrbl, uint loc) =>
-			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl()};");
+			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitUniformBlockHeader(string name, uint loc) =>
 			_varSource.AppendLine($"layout(scalar, set = 0, binding = {loc}) uniform {name} {{");
 
 		public void EmitUniformBlockMember(Variable vrbl, uint offset) =>
-			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl()};");
+			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitUniformBlockClose() => _varSource.AppendLine("};");
 		#endregion // Variables
@@ -96,6 +96,8 @@ namespace SSLang
 			}
 			_funcSource.AppendLine($"void {fname}(void)");
 		}
+
+		public void EmitDeclaration(Variable v) => _funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()};");
 		#endregion // Functions
 	}
 }

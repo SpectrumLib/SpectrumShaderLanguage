@@ -106,7 +106,8 @@ namespace SSLang.Reflection
 			ArraySize = asize;
 		}
 
-		internal string GetGLSLDecl() => $"{Type.ToGLSL()} {OutputName}{(IsArray ? $"[{ArraySize}]" : "")}";
+		internal string GetGLSLDecl(bool @const = true) => 
+			$"{((@const && Constant) ? "const " : "")}{Type.ToGLSL()} {OutputName}{(IsArray ? $"[{ArraySize}]" : "")}";
 
 		internal static bool TryFromContext(SSLParser.VariableDeclarationContext ctx, ScopeType scope, out Variable v, out string error)
 		{

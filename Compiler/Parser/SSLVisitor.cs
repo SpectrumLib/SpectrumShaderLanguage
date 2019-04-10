@@ -11,7 +11,7 @@ using SSLang.Reflection;
 namespace SSLang
 {
 	// The root type that handles stepping through a parsed ssl file
-	internal class SSLVisitor : SSLParserBaseVisitor<object>
+	internal class SSLVisitor : SSLParserBaseVisitor<ExprResult>
 	{
 		#region Fields
 		// Stream of tokens used to generate the visited tree
@@ -94,7 +94,7 @@ namespace SSLang
 		#endregion // Public Helpers
 
 		// This has to be overridden because we must manually visit all of the variable blocks before the functions
-		public override object VisitFile([NotNull] SSLParser.FileContext context)
+		public override ExprResult VisitFile([NotNull] SSLParser.FileContext context)
 		{
 			// Visit the meta statement first
 			var meta = context.shaderMetaStatement();
@@ -179,7 +179,7 @@ namespace SSLang
 		}
 
 		#region Top-Level
-		public override object VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
+		public override ExprResult VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
 		{
 			var name = context.Name.Text;
 			name = name.Substring(1, name.Length - 2);
@@ -196,7 +196,7 @@ namespace SSLang
 			return null;
 		}
 
-		public override object VisitAttributesStatement([NotNull] SSLParser.AttributesStatementContext context)
+		public override ExprResult VisitAttributesStatement([NotNull] SSLParser.AttributesStatementContext context)
 		{
 			if (ScopeManager.Attributes.Count > 0) // Already encountered an attributes block
 				_THROW(context, "A shader cannot have more than one 'attributes' block.");
@@ -222,7 +222,7 @@ namespace SSLang
 			return null;
 		}
 
-		public override object VisitOutputsStatement([NotNull] SSLParser.OutputsStatementContext context)
+		public override ExprResult VisitOutputsStatement([NotNull] SSLParser.OutputsStatementContext context)
 		{
 			if (ScopeManager.Outputs.Count > 0) // Already encountered an outputs block
 				_THROW(context, "A shader cannot have more than one 'outputs' block.");
@@ -249,7 +249,7 @@ namespace SSLang
 			return null;
 		}
 
-		public override object VisitUniformStatement([NotNull] SSLParser.UniformStatementContext context)
+		public override ExprResult VisitUniformStatement([NotNull] SSLParser.UniformStatementContext context)
 		{
 			var head = context.uniformHeader();
 			var loc = ParseIntegerLiteral(head.Index.Text, out var isUnsigned, out var error);
@@ -300,7 +300,7 @@ namespace SSLang
 			return null;
 		}
 
-		public override object VisitInternalsStatement([NotNull] SSLParser.InternalsStatementContext context)
+		public override ExprResult VisitInternalsStatement([NotNull] SSLParser.InternalsStatementContext context)
 		{
 			var types = context.typeBlock()._Types;
 			foreach (var tctx in types)
@@ -314,7 +314,7 @@ namespace SSLang
 			return null;
 		}
 
-		public override object VisitStandardFunction([NotNull] SSLParser.StandardFunctionContext context)
+		public override ExprResult VisitStandardFunction([NotNull] SSLParser.StandardFunctionContext context)
 		{
 			if (!ScopeManager.TryAddFunction(context, out var func, out var error))
 				_THROW(context, error);
@@ -331,7 +331,11 @@ namespace SSLang
 					_THROW(context, error);
 			}
 
-			// TODO: VISIT
+			// Visit the statements
+			foreach (var stmt in context.block().statement())
+			{
+				Visit(stmt);
+			}
 
 			exitFunction();
 			return null;
@@ -349,25 +353,50 @@ namespace SSLang
 			Info.Stages |= stage;
 		}
 
-		public override object VisitVertFunction([NotNull] SSLParser.VertFunctionContext context)
+		public override ExprResult VisitVertFunction([NotNull] SSLParser.VertFunctionContext context)
 		{
 			enterStageFunction(ShaderStages.Vertex);
 
-			// TODO: visit
+			// Visit the statements
+			foreach (var stmt in context.block().statement())
+			{
+				Visit(stmt);
+			}
 
 			exitFunction();
 			return null;
 		}
 
-		public override object VisitFragFunction([NotNull] SSLParser.FragFunctionContext context)
+		public override ExprResult VisitFragFunction([NotNull] SSLParser.FragFunctionContext context)
 		{
 			enterStageFunction(ShaderStages.Fragment);
 
-			// TODO: visit
+			// Visit the statements
+			foreach (var stmt in context.block().statement())
+			{
+				Visit(stmt);
+			}
 
 			exitFunction();
 			return null;
 		}
 		#endregion // Stage Functions
+
+		#region Statements
+		public override ExprResult VisitStatement([NotNull] SSLParser.StatementContext context)
+		{
+			if (context.variableDeclaration() != null)
+			{
+				if (!ScopeManager.TryAddLocal(context.variableDeclaration(), out var vrbl, out var error))
+					_THROW(context.variableDeclaration(), error);
+				GLSL.EmitDeclaration(vrbl);
+			}
+
+			return null;
+		}
+		#endregion // Statements
+
+		#region Expressions
+		#endregion // Expressions
 	}
 }
