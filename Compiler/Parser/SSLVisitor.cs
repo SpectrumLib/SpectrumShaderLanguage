@@ -31,6 +31,9 @@ namespace SSLang
 
 		// The options to compile with
 		public readonly CompileOptions Options;
+
+		// The current stage (if inside of a stage function)
+		private ShaderStages _currStage = ShaderStages.None;
 		#endregion // Fields
 
 		public SSLVisitor(CommonTokenStream tokens, SSLCompiler compiler, CompileOptions options)
@@ -44,13 +47,18 @@ namespace SSLang
 		}
 
 		#region Utilities
-		private void _WARN(uint line, string msg) => Options.WarnCallback?.Invoke(Compiler, ErrorSource.Translator, line, msg);
-		private void _WARN(RuleContext ctx, string msg) => Options.WarnCallback?.Invoke(Compiler, ErrorSource.Translator, GetContextLine(ctx), msg);
+		public void _WARN(uint line, string msg) => Options.WarnCallback?.Invoke(Compiler, ErrorSource.Translator, line, msg);
+		public void _WARN(RuleContext ctx, string msg) => Options.WarnCallback?.Invoke(Compiler, ErrorSource.Translator, GetContextLine(ctx), msg);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void _THROW(RuleContext ctx, string msg)
+		public void _THROW(RuleContext ctx, string msg)
 		{
 			var tk = _tokens.Get(ctx.SourceInterval.a);
+			throw new VisitException(new CompileError(ErrorSource.Translator, (uint)tk.Line, (uint)tk.Column, msg));
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void _THROW(IToken tk, string msg)
+		{
 			throw new VisitException(new CompileError(ErrorSource.Translator, (uint)tk.Line, (uint)tk.Column, msg));
 		}
 
@@ -176,6 +184,7 @@ namespace SSLang
 			GLSL.EmitCloseBlock();
 			GLSL.EmitBlankLineFunc();
 			ScopeManager.PopScope();
+			_currStage = ShaderStages.None;
 		}
 
 		#region Top-Level
@@ -351,6 +360,7 @@ namespace SSLang
 			ScopeManager.PushScope();
 			ScopeManager.AddBuiltins(stage);
 			Info.Stages |= stage;
+			_currStage = stage;
 		}
 
 		public override ExprResult VisitVertFunction([NotNull] SSLParser.VertFunctionContext context)
@@ -397,6 +407,19 @@ namespace SSLang
 		#endregion // Statements
 
 		#region Expressions
+		public override ExprResult VisitAtomExpr([NotNull] SSLParser.AtomExprContext context)
+		{
+			return Visit(context.atom());
+		}
 		#endregion // Expressions
+
+		#region Atoms
+		public override ExprResult VisitParenAtom([NotNull] SSLParser.ParenAtomContext context)
+		{
+			var inner = Visit(context.expression());
+			var res = TypeManager.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
+			return res;
+		}
+		#endregion // Atoms
 	}
 }

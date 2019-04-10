@@ -241,6 +241,80 @@ namespace SSLang.Reflection
 		/// <returns>If the type represents an error.</returns>
 		public static bool IsError(this ShaderType type) => (type == ShaderType.Error);
 
+		/// <summary>
+		/// Gets if the type represents a vector type.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a vector.</returns>
+		public static bool IsVectorType(this ShaderType type)
+		{
+			if (type == ShaderType.Void || type == ShaderType.Error)
+				return false;
+			if (type <= ShaderType.Float4) return (((int)type % 4) != 1);
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the number of components in the type. If the type is a scalar type, then this function returns 1.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>The number of vector components, or 1.</returns>
+		public static uint GetVectorSize(this ShaderType type)
+		{
+			if (type == ShaderType.Void || type == ShaderType.Error)
+				return 0;
+			if (type <= ShaderType.Float4) return (uint)(((int)type - 1) % 4) + 1;
+			return 1;
+		}
+
+		/// <summary>
+		/// Gets if the swizzle character is valid for the type. Will always return false for non-vector types or
+		/// invalid swizzle characters.
+		/// </summary>
+		/// <param name="type">The type to check the swizzle against.</param>
+		/// <param name="swizzle">
+		/// The swizzle character. Must be one of ('x', 'y', 'z', 'w'), ('r', 'g', 'b', 'a'), ('s', 't', 'p', or 'q').
+		/// </param>
+		/// <returns>If the swizzle character is valid for the type.</returns>
+		public static bool IsSwizzleValid(this ShaderType type, char swizzle)
+		{
+			var sidx = (swizzle == 'x' || swizzle == 'r' || swizzle == 's') ? 1 :
+					   (swizzle == 'y' || swizzle == 'g' || swizzle == 't') ? 2 :
+					   (swizzle == 'z' || swizzle == 'b' || swizzle == 'p') ? 3 :
+					   (swizzle == 'w' || swizzle == 'a' || swizzle == 'q') ? 4 :
+					   0;
+			if (sidx == 0)
+				return false;
+			return type.IsVectorType() && (sidx >= type.GetVectorSize());
+		}
+
+		/// <summary>
+		/// Gets the type of the components of a vector type.
+		/// </summary>
+		/// <param name="type">The type to get the component type of.</param>
+		/// <returns>The component type, or the same type if the type is not a vector.</returns>
+		public static ShaderType GetComponentType(this ShaderType type)
+		{
+			if (type == ShaderType.Void || type == ShaderType.Error)
+				return type;
+			if (type <= ShaderType.Float4) return (ShaderType)(((((int)type - 1) / 4) * 4) + 1);
+			return type;
+		}
+
+		/// <summary>
+		/// Expands/resizes between scalar and vector types to the given number of components.
+		/// </summary>
+		/// <param name="type">The scalar type to expand, or vector type to resize.</param>
+		/// <param name="count">The number of components. Must be between 1 and 4, inclusive.</param>
+		/// <returns>The expanded type, or the same type if the type cannot be expanded.</returns>
+		public static ShaderType ToVectorType(this ShaderType type, uint count)
+		{
+			if (type == ShaderType.Void || type == ShaderType.Error)
+				return type;
+			if (type <= ShaderType.Float4) return (ShaderType)((uint)GetComponentType(type) + (count - 1));
+			return type;
+		}
+
 		// Used to convert parsed tokens into enum values
 		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
 		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)
