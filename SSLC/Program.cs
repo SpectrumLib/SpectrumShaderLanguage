@@ -35,6 +35,8 @@ namespace SLLC
 					if (!compiler.Compile(options, out var error))
 					{
 						CConsole.Error($"'{fileName}'[{error.Line}:{error.CharIndex}] - {error.Message}");
+						if (error.RuleStack != null)
+							CConsole.Error($"    Rule Stack:  {String.Join(" -> ", error.RuleStack)}");
 						return;
 					}
 				}

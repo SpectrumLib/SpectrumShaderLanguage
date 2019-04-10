@@ -26,14 +26,20 @@ namespace SSLang
 		/// A message explaining the nature of the error.
 		/// </summary>
 		public readonly string Message;
+		/// <summary>
+		/// A list of the parser rules names, in the order that they were entered before the error occured. Only
+		/// valid for errors in the <see cref="ErrorSource.Parser"/> stage.
+		/// </summary>
+		public readonly string[] RuleStack;
 		#endregion // Fields
 
-		internal CompileError(ErrorSource es, uint l, uint i, string m)
+		internal CompileError(ErrorSource es, uint l, uint i, string m, string[] rs = null)
 		{
 			Source = es;
 			Line = l;
 			CharIndex = i;
 			Message = m;
+			RuleStack = rs;
 		}
 	}
 

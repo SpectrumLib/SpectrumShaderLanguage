@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Atn;
 using Antlr4.Runtime.Dfa;
@@ -51,7 +52,9 @@ namespace SSLang
 					errMsg = $"(Rule '{((ridx == -1) ? "none" : SSLParser.ruleNames[ridx])}') - {msg}";
 			}
 
-			Error = new CompileError(ErrorSource.Parser, (uint)line, (uint)charPositionInLine, errMsg);
+			var stack = ((SSLParser)recognizer).GetRuleInvocationStack().ToList();
+			stack.Reverse();
+			Error = new CompileError(ErrorSource.Parser, (uint)line, (uint)charPositionInLine, errMsg, stack.ToArray());
 		}
 
 		// Called from the lexer

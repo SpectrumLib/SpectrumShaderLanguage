@@ -157,17 +157,14 @@ namespace SSLang.Reflection
 			v = null;
 			error = null;
 
-			var vctx = ctx as SSLParser.ValueDefinitionContext;
-			var actx = ctx as SSLParser.ArrayDefinitionContext;
-
-			var name = (vctx?.Name ?? actx.Name).Text;
+			var name = ctx.Name.Text;
 			if (name[0] == '$')
 			{
 				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
 				return false;
 			}
 
-			var type = ShaderTypeHelper.FromTypeContext(vctx?.type() ?? actx.type());
+			var type = ShaderTypeHelper.FromTypeContext(ctx.type());
 			if (type == ShaderType.Void)
 			{
 				error = $"The variable '{name}' cannot be of type 'void'.";
@@ -180,9 +177,9 @@ namespace SSLang.Reflection
 			}
 
 			uint asize = 0;
-			if (actx != null)
+			if (ctx.arrayIndexer() != null)
 			{
-				var val = SSLVisitor.ParseIntegerLiteral(actx.arrayIndexer().Index.Text, out var isUnsigned, out error);
+				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out error);
 				if (!val.HasValue)
 					return false;
 

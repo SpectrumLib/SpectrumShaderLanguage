@@ -92,8 +92,7 @@ variableDeclaration
     : type Name=IDENTIFIER arrayIndexer?
     ;
 variableDefinition
-    : 'const'? type Name=IDENTIFIER '=' Value=expression                   # ValueDefinition
-    | 'const'? type Name=IDENTIFIER arrayIndexer '=' Value=arrayLiteral    # ArrayDefinition
+    : 'const'? type Name=IDENTIFIER arrayIndexer? '=' (expression|arrayLiteral)
     ;
 arrayLiteral
     : '{' Values+=expression (',' Values+=expression)* '}'

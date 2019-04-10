@@ -10,32 +10,28 @@ namespace SSLang
 		public readonly ShaderType Type;
 		// The size of the array, if the result is an array
 		public readonly uint ArraySize;
-		// The variable holding the expr result, if any, which will be either a predefined variable or a new SSA variable.
-		public readonly Variable Variable;
-		// This is the GLSL text used to initialize the SSA
+		// The SSA variable holding the expr result, if any
+		public readonly Variable SSA;
+		// This is the GLSL text used to initialize the SSA, or to inline the value
 		public readonly string InitText;
-		// The GLSL source used to reference these results, either the variable name or inline value
-		public readonly string RefText;
 
 		public bool IsArray => ArraySize != 0;
-		public bool HasVariable => Variable != null;
+		public bool HasSSA => SSA != null;
 
 		public ExprResult(ShaderType type, uint asize, string text)
 		{
 			Type = type;
 			ArraySize = asize;
-			Variable = null;
+			SSA = null;
 			InitText = text;
-			RefText = text;
 		}
 
-		public ExprResult(Variable var, string text)
+		public ExprResult(Variable ssa, string text)
 		{
-			Type = var.Type;
-			ArraySize = var.ArraySize;
-			Variable = var;
+			Type = ssa.Type;
+			ArraySize = ssa.ArraySize;
+			SSA = ssa;
 			InitText = text;
-			RefText = var.Name;
 		}
 	}
 }
