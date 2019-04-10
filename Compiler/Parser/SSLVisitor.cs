@@ -407,10 +407,6 @@ namespace SSLang
 		#endregion // Statements
 
 		#region Expressions
-		public override ExprResult VisitAtomExpr([NotNull] SSLParser.AtomExprContext context)
-		{
-			return Visit(context.atom());
-		}
 		#endregion // Expressions
 
 		#region Atoms
@@ -418,6 +414,18 @@ namespace SSLang
 		{
 			var inner = Visit(context.expression());
 			var res = TypeManager.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
+			if (res.HasSSA) GLSL.EmitDefinition(res.SSA, res);
+			return res;
+		}
+
+		public override ExprResult VisitVariableAtom([NotNull] SSLParser.VariableAtomContext context)
+		{
+			var vname = context.IDENTIFIER().Symbol.Text;
+			var vrbl = ScopeManager.FindAny(vname);
+			if (vrbl == null)
+				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
+			var res = TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vname), context.arrayIndexer(), context.SWIZZLE());
+			if (res.HasSSA) GLSL.EmitDefinition(res.SSA, res);
 			return res;
 		}
 		#endregion // Atoms

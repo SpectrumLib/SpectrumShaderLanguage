@@ -100,7 +100,7 @@ arrayLiteral
 
 // Assigment
 assignment
-    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=OP_ALL_ASSIGN Value=expression
+    : Name=IDENTIFIER arrayIndexer? SWIZZLE? Op=('='|'+='|'-='|'*='|'/='|'%='|'<<='|'>>='|'&='|'|='|'^=') Value=expression
     ;
 
 // Array indexer
@@ -176,9 +176,9 @@ typeConstruction // For built-in types, also how casting is performed
     : Type=type '(' Args+=expression (',' Args+=expression)* ')'
     ;
 builtinFunctionCall
-    : FName=BIF_ALL_ARG1 '(' A1=expression ')'                                      # BuiltinCall1
-    | FName=BIF_ALL_ARG2 '(' A1=expression ',' A2=expression ')'                    # BuiltinCall2
-    | FName=BIF_ALL_ARG3 '(' A1=expression ',' A2=expression ',' A3=expression ')'  # BuiltinCall3
+    : FName=builtinArg1 '(' A1=expression ')'                                      # BuiltinCall1
+    | FName=builtinArg2 '(' A1=expression ',' A2=expression ')'                    # BuiltinCall2
+    | FName=builtinArg3 '(' A1=expression ',' A2=expression ',' A3=expression ')'  # BuiltinCall3
     ;
 functionCall
     : FName=IDENTIFIER '(' (Args+=expression (',' Args+=expression)*)? ')'
@@ -199,4 +199,20 @@ type
     | KWT_MAT2 | KWT_MAT3 | KWT_MAT4
     | KWT_TEX1D | KWT_TEX2D | KWT_TEX3D | KWT_TEXCUBE | KWT_TEX1D_ARR | KWT_TEX2D_ARR
     | KWT_IMAGE1D | KWT_IMAGE2D | KWT_IMAGE3D | KWT_IMAGE1D_ARR | KWT_IMAGE2D_ARR
+    ;
+
+// Built-in functions
+builtinArg1 // All 1-argument builtin functions
+    : BIF_DEG2RAD | BIF_RAD2DEG | BIF_SIN | BIF_COS | BIF_TAN | BIF_ASIN | BIF_ACOS | BIF_ATAN | BIF_EXP
+    | BIF_LOG | BIF_EXP2 | BIF_LOG2 | BIF_SQRT | BIF_INVSQRT | BIF_ABS | BIF_SIGN | BIF_FLOOR | BIF_TRUNC
+    | BIF_ROUND | BIF_ROUNDEVEN | BIF_CEIL | BIF_FRACT | BIF_LENGTH | BIF_NORMALIZE | BIF_TRANSPOSE
+    | BIF_DETERMINANT | BIF_INVERSE | BIF_VECANY | BIF_VECALL | BIF_VECNOT | BIF_TEXSIZE | BIF_IMAGESIZE
+    ;
+builtinArg2 // All 2-argument builtin functions
+    : BIF_ATAN2 | BIF_POW | BIF_MOD | BIF_MIN | BIF_MAX | BIF_STEP | BIF_DISTANCE | BIF_DOT | BIF_CROSS
+    | BIF_REFLECT | BIF_MATCOMPMUL | BIF_VECLT | BIF_VECLE | BIF_VECGT | BIF_VECGE | BIF_VECEQ | BIF_VECNE
+    | BIF_TEXTURE | BIF_TEXFETCH | BIF_IMAGELOAD
+    ;
+builtinArg3 // All 3-argument builtin functions
+    : BIF_CLAMP | BIF_MIX | BIF_SSTEP | BIF_FFORWARD | BIF_REFRACT | BIF_IMAGESTORE
     ;

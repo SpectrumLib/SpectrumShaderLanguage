@@ -98,6 +98,8 @@ namespace SSLang
 		}
 
 		public void EmitDeclaration(Variable v) => _funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()};");
+		public void EmitDefinition(Variable v, ExprResult expr) =>
+			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()} = {expr.InitText};");
 		#endregion // Functions
 	}
 }
