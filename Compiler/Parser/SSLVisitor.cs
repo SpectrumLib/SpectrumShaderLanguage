@@ -479,6 +479,23 @@ namespace SSLang
 			return TypeManager.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
 		}
 
+		public override ExprResult VisitConstructionAtom([NotNull] SSLParser.ConstructionAtomContext context)
+		{
+			var tctx = context.typeConstruction();
+			var ntype = ShaderTypeHelper.FromTypeContext(tctx.Type);
+			if (ntype == ShaderType.Error)
+				_THROW(tctx, $"Did not understand the type '{tctx.Type.Start.Text}' in type construction.");
+
+			var args = tctx._Args.Select(e => Visit(e)).ToList();
+			if (!TypeManager.CanConstructType(ntype, args, out var error))
+				_THROW(tctx, error);
+
+			var ssa = ScopeManager.TryAddSSALocal(ntype, 0);
+			var expr = new ExprResult(ssa, $"{tctx.Type.Start.Text}( {String.Join(", ", args.Select(a => a.RefText))} )");
+			GLSL.EmitDefinition(expr.SSA, expr);
+			return TypeManager.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
+		}
+
 		public override ExprResult VisitFunctionCallAtom([NotNull] SSLParser.FunctionCallAtomContext context)
 		{
 			var fc = context.functionCall();

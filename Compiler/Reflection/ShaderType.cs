@@ -268,6 +268,26 @@ namespace SSLang.Reflection
 		}
 
 		/// <summary>
+		/// Gets if the type is one of the matrix types.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a matrix.</returns>
+		public static bool IsMatrixType(this ShaderType type)
+		{
+			return (type >= ShaderType.Mat2) && (type <= ShaderType.Mat4);
+		}
+
+		/// <summary>
+		/// Gets if the type is one of the scalar types.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a one component scalar.</returns>
+		public static bool IsScalarType(this ShaderType type)
+		{
+			return (type >= ShaderType.Bool) && (type <= ShaderType.Float4) & (((int)type % 4) == 1);
+		}
+
+		/// <summary>
 		/// Gets if the swizzle character is valid for the type. Will always return false for non-vector types or
 		/// invalid swizzle characters.
 		/// </summary>
