@@ -25,7 +25,7 @@ namespace SSLang
 				var asize = res.IsArray ? res.ArraySize : res.Type.GetVectorSize();
 				if (aidx.Value >= asize)
 					vis._THROW(actx.Index, "The array indexer is too large for the preceeding expression.");
-				res = new ExprResult(res.Type, 0, $"{res.InitText}[{aidx.Value}]");
+				res = new ExprResult(res.Type, 0, $"{res.RefText}[{aidx.Value}]");
 			}
 
 			if (hass)
@@ -40,13 +40,10 @@ namespace SSLang
 					if (!res.Type.IsSwizzleValid(swc))
 						vis._THROW(swizzle.Symbol, $"The swizzle character '{swc}' is not valid for this type.");
 				}
-				res = new ExprResult(res.Type.ToVectorType((uint)stxt.Length), 0, $"{res.InitText}.{stxt}");
+				res = new ExprResult(res.Type.ToVectorType((uint)stxt.Length), 0, $"{res.RefText}.{stxt}");
 			}
 
-			if (hasa || hass)
-				return new ExprResult(vis.ScopeManager.TryAddSSALocal(res.Type, 0), res.InitText);
-			else
-				return res;
+			return res;
 		}
 	}
 }

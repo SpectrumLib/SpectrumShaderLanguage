@@ -168,7 +168,7 @@ atom
     : '(' expression ')' arrayIndexer? SWIZZLE?     # ParenAtom
     | typeConstruction arrayIndexer? SWIZZLE?       # ConstructionAtom
     | builtinFunctionCall arrayIndexer? SWIZZLE?    # BuiltinCallAtom
-    | functionCall arrayIndexer? SWIZZLE?           # FunctionCallAtom
+    | functionCall SWIZZLE?                         # FunctionCallAtom
     | valueLiteral                                  # LiteralAtom
     | IDENTIFIER arrayIndexer? SWIZZLE?             # VariableAtom
     ;

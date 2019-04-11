@@ -13,7 +13,10 @@ namespace SSLang
 		// The SSA variable holding the expr result, if any
 		public readonly Variable SSA;
 		// This is the GLSL text used to initialize the SSA, or to inline the value
-		public readonly string InitText;
+		public readonly string ValueText;
+
+		// Used to reference the value, either be the ssa name or inlined code
+		public string RefText => SSA?.Name ?? ValueText;
 
 		public bool IsArray => ArraySize != 0;
 		public bool HasSSA => SSA != null;
@@ -23,7 +26,7 @@ namespace SSLang
 			Type = type;
 			ArraySize = asize;
 			SSA = null;
-			InitText = text;
+			ValueText = text;
 		}
 
 		public ExprResult(Variable ssa, string text)
@@ -31,7 +34,7 @@ namespace SSLang
 			Type = ssa.Type;
 			ArraySize = ssa.ArraySize;
 			SSA = ssa;
-			InitText = text;
+			ValueText = text;
 		}
 	}
 }

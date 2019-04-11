@@ -397,9 +397,37 @@ namespace SSLang
 		{
 			if (context.variableDeclaration() != null)
 			{
-				if (!ScopeManager.TryAddLocal(context.variableDeclaration(), out var vrbl, out var error))
-					_THROW(context.variableDeclaration(), error);
+				var varDec = context.variableDeclaration();
+				if (!ScopeManager.TryAddLocal(varDec, out var vrbl, out var error))
+					_THROW(varDec, error);
 				GLSL.EmitDeclaration(vrbl);
+			}
+			else if (context.variableDefinition() != null)
+			{
+				var varDef = context.variableDefinition();
+				if (!ScopeManager.TryAddLocal(varDef, out var vrbl, out var error))
+					_THROW(varDef, error);
+				if (varDef.arrayIndexer() != null) // We are creating a new array
+				{
+					if (varDef.arrayLiteral() != null)
+					{
+						// TODO
+					}
+					else
+						_THROW(varDef.expression(), "An array type must be initialized with an array literal.");
+				}
+				else
+				{
+					if (varDef.arrayLiteral() != null)
+						_THROW(varDef.arrayLiteral(), "A non-array type cannot be initialized with an array literal.");
+					else
+					{
+						var exp = Visit(varDef.expression());
+						if (!exp.Type.CanCastTo(vrbl.Type))
+							_THROW(varDef.expression(), $"Cannot assign the type '{exp.Type}' to the type '{vrbl.Type}'.");
+						GLSL.EmitDefinition(vrbl, exp);
+					}
+				}
 			}
 
 			return null;
@@ -413,9 +441,48 @@ namespace SSLang
 		public override ExprResult VisitParenAtom([NotNull] SSLParser.ParenAtomContext context)
 		{
 			var inner = Visit(context.expression());
-			var res = TypeManager.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
-			if (res.HasSSA) GLSL.EmitDefinition(res.SSA, res);
-			return res;
+			return TypeManager.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
+		}
+
+		public override ExprResult VisitFunctionCallAtom([NotNull] SSLParser.FunctionCallAtomContext context)
+		{
+			var fc = context.functionCall();
+			var func = ScopeManager.FindFunction(fc.FName.Text);
+			if (func == null)
+				_THROW(fc.FName, $"There is no user defined function with the name '{fc.FName.Text}'.");
+
+			if (func.Params.Length != fc._Args.Count)
+				_THROW(context, $"Function ('{func.Name}') call expected {func.Params.Length} arguments, but {fc._Args.Count} were given.");
+			var ptypes = func.Params;
+			var avars = fc._Args.Select(arg => Visit(arg)).ToList();
+			for (int i = 0; i < ptypes.Length; ++i)
+			{
+				if (!avars[i].Type.CanCastTo(ptypes[i].Type))
+					_THROW(fc._Args[i], $"Function ('{func.Name}') argument {i} expected '{ptypes[i].Type}' type, but got non-castable type '{avars[i].Type}'.");
+			}
+
+			var ssa = ScopeManager.TryAddSSALocal(func.ReturnType, 0);
+			var ret = new ExprResult(ssa, $"{func.OutputName}({String.Join(", ", avars.Select(arg => arg.RefText))})");
+			GLSL.EmitDefinition(ret.SSA, ret);
+			return TypeManager.ApplyModifiers(this, ret, null, context.SWIZZLE());
+		}
+
+		public override ExprResult VisitLiteralAtom([NotNull] SSLParser.LiteralAtomContext context)
+		{
+			var vl = context.valueLiteral();
+			if (vl.BOOLEAN_LITERAL() != null)
+				return new ExprResult(ShaderType.Bool, 0, vl.BOOLEAN_LITERAL().Symbol.Text);
+			if (vl.FLOAT_LITERAL() != null)
+				return new ExprResult(ShaderType.Float, 0, vl.FLOAT_LITERAL().Symbol.Text);
+			if (vl.INTEGER_LITERAL() != null)
+			{
+				var ltxt = vl.INTEGER_LITERAL().Symbol.Text;
+				var val = ParseIntegerLiteral(ltxt, out bool isus, out var error);
+				if (!val.HasValue)
+					_THROW(vl.INTEGER_LITERAL().Symbol, "Unable to parse the integer literal.");
+				return new ExprResult(isus ? ShaderType.UInt : ShaderType.Int, 0, val.Value.ToString());
+			}
+			return null; // Never reached
 		}
 
 		public override ExprResult VisitVariableAtom([NotNull] SSLParser.VariableAtomContext context)
@@ -424,9 +491,7 @@ namespace SSLang
 			var vrbl = ScopeManager.FindAny(vname);
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
-			var res = TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vname), context.arrayIndexer(), context.SWIZZLE());
-			if (res.HasSSA) GLSL.EmitDefinition(res.SSA, res);
-			return res;
+			return TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vname), context.arrayIndexer(), context.SWIZZLE());
 		}
 		#endregion // Atoms
 	}

@@ -285,7 +285,7 @@ namespace SSLang.Reflection
 					   0;
 			if (sidx == 0)
 				return false;
-			return type.IsVectorType() && (sidx >= type.GetVectorSize());
+			return type.IsVectorType() && (sidx <= type.GetVectorSize());
 		}
 
 		/// <summary>
@@ -313,6 +313,38 @@ namespace SSLang.Reflection
 				return type;
 			if (type <= ShaderType.Float4) return (ShaderType)((uint)GetComponentType(type) + (count - 1));
 			return type;
+		}
+
+		/// <summary>
+		/// Checks if the first type can be automatically promoted to the second type through implicit casting.
+		/// </summary>
+		/// <param name="srcType">The source type to cast from.</param>
+		/// <param name="dstType">The destination type to cast to.</param>
+		/// <returns>If the implicit cast dstType(srcType) is valid.</returns>
+		public static bool CanCastTo(this ShaderType srcType, ShaderType dstType)
+		{
+			if (srcType == dstType) return true;
+			if (srcType.GetVectorSize() != dstType.GetVectorSize())
+				return false; // Can only cast between value types of the same size
+			if (srcType.IsVectorType())
+			{
+				var dct = dstType.GetComponentType();
+				switch (srcType.GetComponentType())
+				{
+					case ShaderType.Int: return (dct == ShaderType.UInt) || (dct == ShaderType.Float);
+					case ShaderType.UInt: return (dct == ShaderType.Float);
+					default: return false;
+				}
+			}
+			else
+			{
+				switch (srcType)
+				{
+					case ShaderType.Int: return (dstType == ShaderType.UInt) || (dstType == ShaderType.Float);
+					case ShaderType.UInt: return (dstType == ShaderType.Float);
+					default: return false;
+				}
+			}
 		}
 
 		// Used to convert parsed tokens into enum values
