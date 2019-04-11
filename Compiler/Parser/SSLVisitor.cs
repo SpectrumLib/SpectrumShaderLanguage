@@ -396,48 +396,65 @@ namespace SSLang
 		#endregion // Stage Functions
 
 		#region Statements
-		public override ExprResult VisitStatement([NotNull] SSLParser.StatementContext context)
+		public override ExprResult VisitVariableDeclaration([NotNull] SSLParser.VariableDeclarationContext context)
 		{
-			if (context.variableDeclaration() != null)
+			if (!ScopeManager.TryAddLocal(context, out var vrbl, out var error))
+				_THROW(context, error);
+			GLSL.EmitDeclaration(vrbl);
+			return null;
+		}
+
+		public override ExprResult VisitVariableDefinition([NotNull] SSLParser.VariableDefinitionContext context)
+		{
+			if (!ScopeManager.TryAddLocal(context, out var vrbl, out var error))
+				_THROW(context, error);
+			if (context.arrayIndexer() != null) // We are creating a new array
 			{
-				var varDec = context.variableDeclaration();
-				if (!ScopeManager.TryAddLocal(varDec, out var vrbl, out var error))
-					_THROW(varDec, error);
-				GLSL.EmitDeclaration(vrbl);
-			}
-			else if (context.variableDefinition() != null)
-			{
-				var varDef = context.variableDefinition();
-				if (!ScopeManager.TryAddLocal(varDef, out var vrbl, out var error))
-					_THROW(varDef, error);
-				if (varDef.arrayIndexer() != null) // We are creating a new array
+				if (context.arrayLiteral() != null)
 				{
-					if (varDef.arrayLiteral() != null)
-					{
-						_currArrayType = vrbl.Type;
-						var alit = Visit(varDef.arrayLiteral()); // Also validates the array type
-						_currArrayType = ShaderType.Void;
-						if (vrbl.ArraySize != alit.ArraySize)
-							_THROW(varDef.arrayLiteral(), $"Array size mismatch ({vrbl.ArraySize} != {alit.ArraySize}) in definition.");
-						GLSL.EmitDefinition(vrbl, alit);
-					}
-					else
-						_THROW(varDef.expression(), "An array type must be initialized with an array literal.");
+					_currArrayType = vrbl.Type;
+					var alit = Visit(context.arrayLiteral()); // Also validates the array type
+					_currArrayType = ShaderType.Void;
+					if (vrbl.ArraySize != alit.ArraySize)
+						_THROW(context.arrayLiteral(), $"Array size mismatch ({vrbl.ArraySize} != {alit.ArraySize}) in definition.");
+					GLSL.EmitDefinition(vrbl, alit);
 				}
 				else
+					_THROW(context.expression(), "An array type must be initialized with an array literal.");
+			}
+			else
+			{
+				if (context.arrayLiteral() != null)
+					_THROW(context.arrayLiteral(), "A non-array type cannot be initialized with an array literal.");
+				else
 				{
-					if (varDef.arrayLiteral() != null)
-						_THROW(varDef.arrayLiteral(), "A non-array type cannot be initialized with an array literal.");
-					else
-					{
-						var exp = Visit(varDef.expression());
-						if (!exp.Type.CanCastTo(vrbl.Type))
-							_THROW(varDef.expression(), $"Cannot assign the type '{exp.Type}' to the type '{vrbl.Type}'.");
-						GLSL.EmitDefinition(vrbl, exp);
-					}
+					var exp = Visit(context.expression());
+					if (!exp.Type.CanCastTo(vrbl.Type))
+						_THROW(context.expression(), $"Cannot assign the type '{exp.Type}' to the type '{vrbl.Type}'.");
+					GLSL.EmitDefinition(vrbl, exp);
 				}
 			}
+			return null;
+		}
 
+		public override ExprResult VisitAssignment([NotNull] SSLParser.AssignmentContext context)
+		{
+			var vname = context.Name.Text;
+			var vrbl = ScopeManager.FindAny(vname);
+			if (vrbl == null)
+				_THROW(context.Name, $"A variable with the name '{vname}' does not exist in the current context.");
+			if (vrbl.Constant)
+				_THROW(context, $"The variable '{vname}' is read only and cannot be assigned to.");
+			vrbl.WriteStages |= _currStage;
+			var actx = context.arrayIndexer();
+			var swiz = context.SWIZZLE();
+			var ltype = TypeManager.ApplyLValueModifier(this, context.Name, vrbl, actx, swiz, out var arrIndex);
+
+			var expr = Visit(context.Value);
+			if (!expr.Type.CanCastTo(ltype))
+				_THROW(context.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
+
+			GLSL.EmitAssignment(vname, arrIndex, swiz?.Symbol?.Text, expr);
 			return null;
 		}
 
@@ -509,6 +526,7 @@ namespace SSLang
 			var vrbl = ScopeManager.FindAny(vname);
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
+			vrbl.ReadStages |= _currStage;
 			return TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vname), context.arrayIndexer(), context.SWIZZLE());
 		}
 		#endregion // Atoms

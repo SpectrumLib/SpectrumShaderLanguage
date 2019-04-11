@@ -100,6 +100,9 @@ namespace SSLang
 		public void EmitDeclaration(Variable v) => _funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()};");
 		public void EmitDefinition(Variable v, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()} = {expr.ValueText};");
+
+		public void EmitAssignment(string name, long? arrIndex, string swiz, ExprResult expr) =>
+			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} = {expr.RefText};");
 		#endregion // Functions
 	}
 }
