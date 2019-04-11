@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -34,6 +34,9 @@ namespace SSLang
 
 		// The current stage (if inside of a stage function)
 		private ShaderStages _currStage = ShaderStages.None;
+
+		// The current array type to check array literal elements against
+		private ShaderType _currArrayType = ShaderType.Void;
 		#endregion // Fields
 
 		public SSLVisitor(CommonTokenStream tokens, SSLCompiler compiler, CompileOptions options)
@@ -411,7 +414,12 @@ namespace SSLang
 				{
 					if (varDef.arrayLiteral() != null)
 					{
-						// TODO
+						_currArrayType = vrbl.Type;
+						var alit = Visit(varDef.arrayLiteral()); // Also validates the array type
+						_currArrayType = ShaderType.Void;
+						if (vrbl.ArraySize != alit.ArraySize)
+							_THROW(varDef.arrayLiteral(), $"Array size mismatch ({vrbl.ArraySize} != {alit.ArraySize}) in definition.");
+						GLSL.EmitDefinition(vrbl, alit);
 					}
 					else
 						_THROW(varDef.expression(), "An array type must be initialized with an array literal.");
@@ -431,6 +439,16 @@ namespace SSLang
 			}
 
 			return null;
+		}
+
+		public override ExprResult VisitArrayLiteral([NotNull] SSLParser.ArrayLiteralContext context)
+		{
+			var exprs = context._Values.Select(e => Visit(e)).ToList();
+			var bidx = exprs.FindIndex(e => !e.Type.CanCastTo(_currArrayType));
+			if (bidx != -1)
+				_THROW(context._Values[bidx], $"Array literal ({_currArrayType}) has incompatible type '{exprs[bidx].Type}' at element {bidx}.");
+
+			return new ExprResult(_currArrayType, (uint)exprs.Count, $"{{ {String.Join(", ", exprs.Select(e => e.RefText))} }}");
 		}
 		#endregion // Statements
 
