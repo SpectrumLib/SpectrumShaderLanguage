@@ -454,7 +454,7 @@ namespace SSLang
 			if (!expr.Type.CanCastTo(ltype))
 				_THROW(context.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
 
-			GLSL.EmitAssignment(vname, arrIndex, swiz?.Symbol?.Text, expr);
+			GLSL.EmitAssignment(vrbl.OutputName, arrIndex, swiz?.Symbol?.Text, expr);
 			return null;
 		}
 
@@ -527,7 +527,7 @@ namespace SSLang
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
 			vrbl.ReadStages |= _currStage;
-			return TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vname), context.arrayIndexer(), context.SWIZZLE());
+			return TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.OutputName), context.arrayIndexer(), context.SWIZZLE());
 		}
 		#endregion // Atoms
 	}

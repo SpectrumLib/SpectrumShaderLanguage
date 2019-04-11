@@ -138,18 +138,6 @@ BIF_IMAGESIZE   : 'imageSize' ;
 BIF_IMAGELOAD   : 'imageLoad' ;
 BIF_IMAGESTORE  : 'imageStore' ;
 
-// Built-in variables
-BIV_POSITION    : '$Position' ; // gl_Position
-BIV_VERTEXIDX   : '$VertexIndex' ; // gl_VertexIndex
-BIV_INSTIDX     : '$InstanceIndex' ; // gl_InstanceIndex
-BIV_POINTSIZE   : '$PointSize' ; // gl_PointSize
-BIV_FRAGCOORD   : '$FragCoord' ; // gl_FragCoord
-BIV_FRONTFACE   : '$FrontFacing' ; // gl_FrontFacing
-BIV_POINTCOORD  : '$PointCoord' ; // gl_PointCoord
-BIV_SAMPLEID    : '$SampleId' ; // gl_SampleId
-BIV_SAMPLEPOS   : '$SamplePosition' ; // gl_SamplePosition
-BIV_FRAGDEPTH   : '$FragDepth' ; // gl_FragDepth
-
 // Swizzles
 SWIZZLE
     : '.' ([xyzw]+ | [rbga]+ | [stpq]+)
