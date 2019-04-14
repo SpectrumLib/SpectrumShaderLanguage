@@ -496,6 +496,48 @@ namespace SSLang
 			return TypeManager.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
 		}
 
+		public override ExprResult VisitBuiltinCallAtom([NotNull] SSLParser.BuiltinCallAtomContext context)
+		{
+			var cexpr = Visit(context.builtinFunctionCall());
+			return TypeManager.ApplyModifiers(this, cexpr, context.arrayIndexer(), context.SWIZZLE());
+		}
+
+		public override ExprResult VisitBuiltinCall1([NotNull] SSLParser.BuiltinCall1Context context)
+		{
+			var fname = context.FName.Start.Text;
+			var ftype = context.FName.Start.Type;
+			var aexpr = new ExprResult[] { Visit(context.A1) };
+			var rtype = TypeManager.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
+			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
+			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
+			GLSL.EmitDefinition(ssa, ret);
+			return ret;
+		}
+
+		public override ExprResult VisitBuiltinCall2([NotNull] SSLParser.BuiltinCall2Context context)
+		{
+			var fname = context.FName.Start.Text;
+			var ftype = context.FName.Start.Type;
+			var aexpr = new ExprResult[] { Visit(context.A1), Visit(context.A2) };
+			var rtype = TypeManager.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
+			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
+			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
+			GLSL.EmitDefinition(ssa, ret);
+			return ret;
+		}
+
+		public override ExprResult VisitBuiltinCall3([NotNull] SSLParser.BuiltinCall3Context context)
+		{
+			var fname = context.FName.Start.Text;
+			var ftype = context.FName.Start.Type;
+			var aexpr = new ExprResult[] { Visit(context.A1), Visit(context.A2), Visit(context.A3) };
+			var rtype = TypeManager.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
+			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
+			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
+			GLSL.EmitDefinition(ssa, ret);
+			return ret;
+		}
+
 		public override ExprResult VisitFunctionCallAtom([NotNull] SSLParser.FunctionCallAtomContext context)
 		{
 			var fc = context.functionCall();

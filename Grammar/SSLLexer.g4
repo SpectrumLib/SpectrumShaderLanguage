@@ -108,8 +108,10 @@ BIF_MIN         : 'min' ;
 BIF_MAX         : 'max' ;
 BIF_CLAMP       : 'clamp';
 BIF_MIX         : 'mix' ;
+// TODO: 'select', which acts like glsl's `mix(vec, vec, bvec)`
 BIF_STEP        : 'step' ;
 BIF_SSTEP       : 'smoothstep' ;
+// TODO: 'isnan' and 'isinf'
 BIF_LENGTH      : 'length';
 BIF_DISTANCE    : 'distance' ;
 BIF_DOT         : 'dot' ;
@@ -120,8 +122,8 @@ BIF_REFLECT     : 'reflect' ;
 BIF_REFRACT     : 'refract' ;
 BIF_MATCOMPMUL  : 'matCompMul' ; // GLSL: matrixCompMult(mat, mat)
 BIF_TRANSPOSE   : 'transpose' ;
-BIF_DETERMINANT : 'determinant' ;
 BIF_INVERSE     : 'inverse' ;
+BIF_DETERMINANT : 'determinant' ;
 BIF_VECLT       : 'vecLT' ; // GLSL: lessThan(vec, vec)
 BIF_VECLE       : 'vecLE' ; // GLSL: lessThanEqual(vec, vec)
 BIF_VECGT       : 'vecGT' ; // GLSL: greaterThan(vec, vec)

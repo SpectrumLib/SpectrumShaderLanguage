@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SSLang.Generated;
 using SSLang.Reflection;
 
 namespace SSLang
@@ -104,5 +106,30 @@ namespace SSLang
 		public void EmitAssignment(string name, long? arrIndex, string swiz, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} = {expr.RefText};");
 		#endregion // Functions
+
+		// Gets the glsl builtin function name
+		public static string GetBuiltinFuncName(string fname, int ftype)
+		{
+			return BUILTIN_NAMES.ContainsKey(ftype) ? BUILTIN_NAMES[ftype] : fname;
+		}
+
+		// GLSL names for builtin functions (where the SSL name does not match)
+		private static readonly Dictionary<int, string> BUILTIN_NAMES = new Dictionary<int, string>()
+		{
+			{ SSLParser.BIF_DEG2RAD, "radians" },
+			{ SSLParser.BIF_RAD2DEG, "degrees" },
+			{ SSLParser.BIF_ATAN2, "atan" },
+			{ SSLParser.BIF_INVSQRT, "inversesqrt" },
+			{ SSLParser.BIF_MATCOMPMUL, "matrixCompMult" },
+			{ SSLParser.BIF_VECLT, "lessThan" },
+			{ SSLParser.BIF_VECLE, "lessThanEqual" },
+			{ SSLParser.BIF_VECGT, "greaterThan" },
+			{ SSLParser.BIF_VECGE, "greaterThanEqual" },
+			{ SSLParser.BIF_VECEQ, "equal" },
+			{ SSLParser.BIF_VECNE, "notEqual" },
+			{ SSLParser.BIF_VECANY, "any" },
+			{ SSLParser.BIF_VECALL, "all" },
+			{ SSLParser.BIF_VECNOT, "not" }
+		};
 	}
 }
