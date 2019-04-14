@@ -25,9 +25,46 @@ namespace SSLang
 					   a2c = a2t.GetComponentType(),
 					   a3c = a3t.GetComponentType();
 
-			if (type >= SSLParser.BIF_TEXSIZE) // Functions that deal with handles
+			if (type >= SSLParser.BIF_TEXSIZE && type <= SSLParser.BIF_TEXFETCH) // Functions that deal with texture handles
 			{
-				
+				if (!a1t.IsTextureHandle())
+					vis._THROW(token, $"The built-in function '{name}' requires a texture handle as argument 1.");
+				var tdim = a1t.GetTexelDim();
+
+				if (type == SSLParser.BIF_TEXSIZE)
+					return ShaderType.Int.ToVectorType(tdim);
+				else if (type == SSLParser.BIF_TEXTURE)
+				{
+					if (!a2c.CanCastTo(ShaderType.Float))
+						vis._THROW(token, $"The built-in function '{name}' requires a floating-point vector or scalar as argument 2.");
+					if (a2t.GetVectorSize() != tdim)
+						vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
+				}
+				else
+				{
+					if (a2c != ShaderType.Int)
+						vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
+					if (a2t.GetVectorSize() != tdim)
+						vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
+				}
+				return ShaderType.Float4;
+			}
+			else if (type >= SSLParser.BIF_IMAGESIZE && type <= SSLParser.BIF_IMAGESTORE) // Functions that deal with image handles
+			{
+				if (!a1t.IsImageHandle())
+					vis._THROW(token, $"The built-in function '{name}' requires an image handle as argument 1.");
+				var tdim = a1t.GetTexelDim();
+
+				if (type == SSLParser.BIF_IMAGESIZE)
+					return ShaderType.Int.ToVectorType(tdim);
+
+				if (a2c != ShaderType.Int)
+					vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
+				if (a2t.GetVectorSize() != tdim)
+					vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
+				if ((type == SSLParser.BIF_IMAGESTORE) && !a3t.CanCastTo(ShaderType.Float4))
+					vis._THROW(token, $"The built-in function '{name}' requires a 4-component floating-point vector for argument 3.");
+				return (type == SSLParser.BIF_IMAGESTORE) ? ShaderType.Void : ShaderType.Float4;
 			}
 			else if (type >= SSLParser.BIF_MATCOMPMUL && type <= SSLParser.BIF_DETERMINANT) // Functions that deal with matrices
 			{

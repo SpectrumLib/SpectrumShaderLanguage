@@ -453,6 +453,8 @@ namespace SSLang
 			var expr = Visit(context.Value);
 			if (!expr.Type.CanCastTo(ltype))
 				_THROW(context.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
+			if (expr.ArraySize != vrbl.ArraySize)
+				_THROW(context.Value, $"The expression has a mismatched array size with the assignment variable.");
 
 			GLSL.EmitAssignment(vrbl.OutputName, arrIndex, swiz?.Symbol?.Text, expr);
 			return null;
