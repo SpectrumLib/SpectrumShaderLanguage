@@ -68,6 +68,12 @@ namespace SSLang
 			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitUniformBlockClose() => _varSource.AppendLine("};");
+
+		public void EmitInternal(Variable vrbl, uint loc, ShaderStages stage)
+		{
+			var access = (vrbl.ReadStages.HasFlag(stage) ? "in" : "") + (vrbl.WriteStages.HasFlag(stage) ? "out" : "");
+			_varSource.AppendLine($"layout(location = {loc}) {access} {vrbl.GetGLSLDecl(false, stage)};");
+		}
 		#endregion // Variables
 
 		#region Functions

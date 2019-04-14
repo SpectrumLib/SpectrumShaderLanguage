@@ -15,6 +15,10 @@ namespace SSLang.Reflection
 			{ "$PointCoord", "gl_PointCoord" }, { "$SampleId", "gl_SampleId" }, { "$SamplePosition", "gl_SamplePosition" },
 			{ "$FragDepth", "gl_FragDepth" }
 		};
+		private readonly Dictionary<ShaderStages, string> STAGE_PREFIXES = new Dictionary<ShaderStages, string>() {
+			{ ShaderStages.None, "none" }, { ShaderStages.Vertex, "vert" }, { ShaderStages.TessControl, "tesc" },
+			{ ShaderStages.TessEval, "tese" }, { ShaderStages.Geometry, "geom" }, { ShaderStages.Fragment, "frag" }
+		};
 
 		#region Fields
 		/// <summary>
@@ -45,12 +49,6 @@ namespace SSLang.Reflection
 		/// The size of the array, if the variable is an array of values. Will be zero if it is not an array.
 		/// </summary>
 		public readonly uint ArraySize;
-
-		/// <summary>
-		/// The variable name that should be used when writing the variable to GLSL. Only affects built-in
-		/// variables.
-		/// </summary>
-		public string OutputName => (Scope == ScopeType.Builtin) ? BUILTIN_MAP[Name] : Name;
 
 		/// <summary>
 		/// Gets if the variable is an array of values.
@@ -106,8 +104,15 @@ namespace SSLang.Reflection
 			ArraySize = asize;
 		}
 
-		internal string GetGLSLDecl(bool @const = true) => 
-			$"{((@const && Constant) ? "const " : "")}{Type.ToGLSL()} {OutputName}{(IsArray ? $"[{ArraySize}]" : "")}";
+		internal string GetGLSLDecl(bool @const = true, ShaderStages? stage = null) => 
+			$"{((@const && Constant) ? "const " : "")}{Type.ToGLSL()} {GetOutputName(stage)}{(IsArray ? $"[{ArraySize}]" : "")}";
+
+		internal string GetOutputName(ShaderStages? stage = null)
+		{
+			if (IsBuiltin) return BUILTIN_MAP[Name];
+			else if (IsInternal) return $"_{STAGE_PREFIXES[stage.GetValueOrDefault()]}_{Name}";
+			else return Name;
+		}
 
 		internal static bool TryFromContext(SSLParser.VariableDeclarationContext ctx, ScopeType scope, out Variable v, out string error)
 		{

@@ -165,6 +165,28 @@ namespace SSLang
 			Visit(vert[0]);
 			Visit(frag[0]);
 
+			// Write the internals
+			uint intOff = Math.Max(
+				Info.Attributes.Max(pair => pair.Location + pair.Variable.Type.GetSlotCount(pair.Variable.ArraySize)),
+				(uint)Info.Outputs.Count
+			);
+			GLSL.EmitCommentVar("Internal variables");
+			foreach (var i in ScopeManager.Internals.Values)
+			{
+				bool any = false;
+				for (int sh = 0; sh < 5; ++sh)
+				{
+					var stage = (ShaderStages)(0x01 << sh);
+					if (i.ReadStages.HasFlag(stage) || i.WriteStages.HasFlag(stage))
+					{
+						GLSL.EmitInternal(i, intOff, stage);
+						any = true;
+					}
+				}
+				if (any)
+					intOff += i.Type.GetSlotCount(i.ArraySize);
+			}
+
 			return null;
 		}
 
@@ -456,7 +478,7 @@ namespace SSLang
 			if (expr.ArraySize != vrbl.ArraySize)
 				_THROW(context.Value, $"The expression has a mismatched array size with the assignment variable.");
 
-			GLSL.EmitAssignment(vrbl.OutputName, arrIndex, swiz?.Symbol?.Text, expr);
+			GLSL.EmitAssignment(vrbl.GetOutputName(_currStage), arrIndex, swiz?.Symbol?.Text, expr);
 			return null;
 		}
 
@@ -588,7 +610,7 @@ namespace SSLang
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
 			vrbl.ReadStages |= _currStage;
-			return TypeUtils.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.OutputName), context.arrayIndexer(), context.SWIZZLE());
+			return TypeUtils.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage)), context.arrayIndexer(), context.SWIZZLE());
 		}
 		#endregion // Atoms
 	}
