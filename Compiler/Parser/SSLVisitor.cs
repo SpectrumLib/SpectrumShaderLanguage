@@ -448,7 +448,7 @@ namespace SSLang
 			vrbl.WriteStages |= _currStage;
 			var actx = context.arrayIndexer();
 			var swiz = context.SWIZZLE();
-			var ltype = TypeManager.ApplyLValueModifier(this, context.Name, vrbl, actx, swiz, out var arrIndex);
+			var ltype = TypeUtils.ApplyLValueModifier(this, context.Name, vrbl, actx, swiz, out var arrIndex);
 
 			var expr = Visit(context.Value);
 			if (!expr.Type.CanCastTo(ltype))
@@ -476,7 +476,7 @@ namespace SSLang
 		public override ExprResult VisitParenAtom([NotNull] SSLParser.ParenAtomContext context)
 		{
 			var inner = Visit(context.expression());
-			return TypeManager.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
+			return TypeUtils.ApplyModifiers(this, inner, context.arrayIndexer(), context.SWIZZLE());
 		}
 
 		public override ExprResult VisitConstructionAtom([NotNull] SSLParser.ConstructionAtomContext context)
@@ -487,19 +487,19 @@ namespace SSLang
 				_THROW(tctx, $"Did not understand the type '{tctx.Type.Start.Text}' in type construction.");
 
 			var args = tctx._Args.Select(e => Visit(e)).ToList();
-			if (!TypeManager.CanConstructType(ntype, args, out var error))
+			if (!FunctionCallUtils.CanConstructType(ntype, args, out var error))
 				_THROW(tctx, error);
 
 			var ssa = ScopeManager.TryAddSSALocal(ntype, 0);
 			var expr = new ExprResult(ssa, $"{tctx.Type.Start.Text}( {String.Join(", ", args.Select(a => a.RefText))} )");
 			GLSL.EmitDefinition(expr.SSA, expr);
-			return TypeManager.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
+			return TypeUtils.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
 		}
 
 		public override ExprResult VisitBuiltinCallAtom([NotNull] SSLParser.BuiltinCallAtomContext context)
 		{
 			var cexpr = Visit(context.builtinFunctionCall());
-			return TypeManager.ApplyModifiers(this, cexpr, context.arrayIndexer(), context.SWIZZLE());
+			return TypeUtils.ApplyModifiers(this, cexpr, context.arrayIndexer(), context.SWIZZLE());
 		}
 
 		public override ExprResult VisitBuiltinCall1([NotNull] SSLParser.BuiltinCall1Context context)
@@ -507,7 +507,7 @@ namespace SSLang
 			var fname = context.FName.Start.Text;
 			var ftype = context.FName.Start.Type;
 			var aexpr = new ExprResult[] { Visit(context.A1) };
-			var rtype = TypeManager.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
+			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
 			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
 			GLSL.EmitDefinition(ssa, ret);
@@ -519,7 +519,7 @@ namespace SSLang
 			var fname = context.FName.Start.Text;
 			var ftype = context.FName.Start.Type;
 			var aexpr = new ExprResult[] { Visit(context.A1), Visit(context.A2) };
-			var rtype = TypeManager.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
+			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
 			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
 			GLSL.EmitDefinition(ssa, ret);
@@ -531,7 +531,7 @@ namespace SSLang
 			var fname = context.FName.Start.Text;
 			var ftype = context.FName.Start.Type;
 			var aexpr = new ExprResult[] { Visit(context.A1), Visit(context.A2), Visit(context.A3) };
-			var rtype = TypeManager.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
+			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
 			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
 			GLSL.EmitDefinition(ssa, ret);
@@ -558,7 +558,7 @@ namespace SSLang
 			var ssa = ScopeManager.TryAddSSALocal(func.ReturnType, 0);
 			var ret = new ExprResult(ssa, $"{func.OutputName}({String.Join(", ", avars.Select(arg => arg.RefText))})");
 			GLSL.EmitDefinition(ret.SSA, ret);
-			return TypeManager.ApplyModifiers(this, ret, null, context.SWIZZLE());
+			return TypeUtils.ApplyModifiers(this, ret, null, context.SWIZZLE());
 		}
 
 		public override ExprResult VisitLiteralAtom([NotNull] SSLParser.LiteralAtomContext context)
@@ -586,7 +586,7 @@ namespace SSLang
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
 			vrbl.ReadStages |= _currStage;
-			return TypeManager.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.OutputName), context.arrayIndexer(), context.SWIZZLE());
+			return TypeUtils.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.OutputName), context.arrayIndexer(), context.SWIZZLE());
 		}
 		#endregion // Atoms
 	}

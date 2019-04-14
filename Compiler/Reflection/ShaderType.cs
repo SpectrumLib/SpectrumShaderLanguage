@@ -367,6 +367,47 @@ namespace SSLang.Reflection
 			}
 		}
 
+		/// <summary>
+		/// Gets the number of dimensions for handle types that hold texel data.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>The number of dimensions, or 0 for non-texel-data-handle types.</returns>
+		public static uint GetTexelDim(this ShaderType type)
+		{
+			switch (type)
+			{
+				case ShaderType.Tex1D:
+				case ShaderType.Image1D:
+					return 1;
+				case ShaderType.Tex2D:
+				case ShaderType.Tex1DArray:
+				case ShaderType.TexCube:
+				case ShaderType.Image2D:
+				case ShaderType.Image1DArray:
+					return 2;
+				case ShaderType.Tex3D:
+				case ShaderType.Tex2DArray:
+				case ShaderType.Image3D:
+				case ShaderType.Image2DArray:
+					return 3;
+				default: return 0;
+			}
+		}
+
+		/// <summary>
+		/// Gets if the type is a handle to a sampled texture.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a sampled texture handle.</returns>
+		public static bool IsTextureHandle(this ShaderType type) => (type >= ShaderType.Tex1D) && (type <= ShaderType.Tex2DArray);
+
+		/// <summary>
+		/// Gets if the type is a handle to a texel storage image.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a storage image handle.</returns>
+		public static bool IsImageHandle(this ShaderType type) => (type >= ShaderType.Image1D) && (type <= ShaderType.Image2DArray);
+
 		// Used to convert parsed tokens into enum values
 		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
 		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)

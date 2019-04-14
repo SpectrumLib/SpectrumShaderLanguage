@@ -120,6 +120,7 @@ BIF_NORMALIZE   : 'normalize' ;
 BIF_FFORWARD    : 'faceforward' ;
 BIF_REFLECT     : 'reflect' ;
 BIF_REFRACT     : 'refract' ;
+// TODO: 'outerProduct'
 BIF_MATCOMPMUL  : 'matCompMul' ; // GLSL: matrixCompMult(mat, mat)
 BIF_TRANSPOSE   : 'transpose' ;
 BIF_INVERSE     : 'inverse' ;
