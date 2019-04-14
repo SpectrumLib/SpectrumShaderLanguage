@@ -15,6 +15,10 @@ namespace SSLang
 			bool hasa = (actx != null);
 			bool hass = (swizzle != null);
 
+			// This prevents duplication in the event that there is an ssa already, and there is no array indexer or swizzle
+			if (res.HasSSA)
+				res = new ExprResult(res.Type, 0, res.SSA.Name);
+
 			if (hasa)
 			{
 				if (!res.IsArray && !res.Type.IsVectorType())

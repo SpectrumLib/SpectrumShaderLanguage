@@ -512,7 +512,7 @@ namespace SSLang
 			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
 			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
-			GLSL.EmitDefinition(ssa, ret);
+			GLSL.EmitDefinition(ret.SSA, ret);
 			return ret;
 		}
 
@@ -524,7 +524,7 @@ namespace SSLang
 			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
 			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
-			GLSL.EmitDefinition(ssa, ret);
+			GLSL.EmitDefinition(ret.SSA, ret);
 			return ret;
 		}
 
@@ -536,7 +536,7 @@ namespace SSLang
 			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
 			var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
-			GLSL.EmitDefinition(ssa, ret);
+			GLSL.EmitDefinition(ret.SSA, ret);
 			return ret;
 		}
 
