@@ -143,7 +143,7 @@ namespace SSLang
 				{
 					if (File.Exists(glslPath))
 						File.Delete(glslPath);
-					File.WriteAllText(glslPath, visitor.GLSL.GetSource());
+					File.WriteAllText(glslPath, visitor.GLSL.GetGLSLOutput());
 				}
 				catch (Exception e)
 				{

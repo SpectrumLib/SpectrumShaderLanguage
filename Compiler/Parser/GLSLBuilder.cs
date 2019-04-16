@@ -20,27 +20,51 @@ namespace SSLang
 		#region Fields
 		// Contains the variable listings - the inputs, outputs, uniforms, and locals
 		private readonly StringBuilder _varSource;
-		// Contains the functions and their code
-		private readonly StringBuilder _funcSource;
+		// Contains the function output for general functions and stages
+		private readonly Dictionary<ShaderStages, StringBuilder> _funcSources;
 
 		// Tracks the indentation for scopes to output more readable code
 		private string _indent = "";
 		public uint IndentLevel => (uint)_indent.Length;
+
+		// Controls which function output that emitted glsl goes to
+		// ShaderStages.None puts it in global functions
+		public ShaderStages CurrentStage = ShaderStages.None;
+		// Shortcut to current func source
+		private StringBuilder _funcSource => _funcSources[CurrentStage];
 		#endregion // Fields
 
 		public GLSLBuilder()
 		{
 			_varSource = new StringBuilder(2048);
-			_funcSource = new StringBuilder(8192);
+			_funcSources = new Dictionary<ShaderStages, StringBuilder>() {
+				{ ShaderStages.None, new StringBuilder(2048) }, { ShaderStages.Vertex, new StringBuilder(2048) }, { ShaderStages.TessControl, new StringBuilder(2048) },
+				{ ShaderStages.TessEval, new StringBuilder(2048) }, { ShaderStages.Geometry, new StringBuilder(2048) }, { ShaderStages.Fragment, new StringBuilder(2048) }
+			};
+
+			// Initial generated glsl
 			_varSource.AppendLine(GENERATED_COMMENT);
 			_varSource.AppendLine(VERSION_STRING);
 			foreach (var ext in EXTENSIONS)
 				_varSource.AppendLine($"#extension {ext} : require");
 			_varSource.AppendLine();
-			_funcSource.AppendLine();
 		}
 
-		public string GetSource() => _varSource.ToString() + _funcSource.ToString();
+		// Gets the full glsl output with all stages combined together
+		public string GetGLSLOutput()
+		{
+			return _varSource.ToString() 
+				   + _funcSources[ShaderStages.None].ToString()
+				   + _funcSources[ShaderStages.Vertex].ToString()
+				   + _funcSources[ShaderStages.TessControl].ToString()
+				   + _funcSources[ShaderStages.TessEval].ToString()
+				   + _funcSources[ShaderStages.Geometry].ToString()
+				   + _funcSources[ShaderStages.Fragment].ToString();
+		}
+
+		public string GetStageSource(ShaderStages stage) =>
+			_varSource.ToString() + _funcSources[ShaderStages.None].ToString() + 
+			((stage != ShaderStages.None) ? _funcSources[stage].ToString() : "");
 
 		public void EmitBlankLineVar() => _varSource.AppendLine();
 		public void EmitBlankLineFunc() => _funcSource.AppendLine();
@@ -91,10 +115,10 @@ namespace SSLang
 			_funcSource.AppendLine($"{func.ReturnType.ToGLSL()} {func.OutputName}({plist})");
 		}
 
-		public void EmitStageFunctionHeader(ShaderStages stage)
+		public void EmitStageFunctionHeader()
 		{
 			string fname = "ERROR_FUNCTION";
-			switch (stage)
+			switch (CurrentStage)
 			{
 				case ShaderStages.Vertex: fname = "VERT_MAIN"; break;
 				case ShaderStages.TessControl: fname = "TESC_MAIN"; break;

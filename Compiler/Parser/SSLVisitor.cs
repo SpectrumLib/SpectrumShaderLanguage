@@ -186,6 +186,7 @@ namespace SSLang
 				if (any)
 					intOff += i.Type.GetSlotCount(i.ArraySize);
 			}
+			GLSL.EmitBlankLineVar();
 
 			return null;
 		}
@@ -208,6 +209,7 @@ namespace SSLang
 		{
 			GLSL.EmitCloseBlock();
 			GLSL.EmitBlankLineFunc();
+			GLSL.CurrentStage = ShaderStages.None;
 			ScopeManager.PopScope();
 			_currStage = ShaderStages.None;
 		}
@@ -379,8 +381,9 @@ namespace SSLang
 		#region Stage Functions
 		private void enterStageFunction(ShaderStages stage)
 		{
+			GLSL.CurrentStage = stage;
 			GLSL.EmitCommentFunc($"Shader stage function ({stage})");
-			GLSL.EmitStageFunctionHeader(stage);
+			GLSL.EmitStageFunctionHeader();
 			GLSL.EmitOpenBlock();
 			ScopeManager.PushScope();
 			ScopeManager.AddBuiltins(stage);
