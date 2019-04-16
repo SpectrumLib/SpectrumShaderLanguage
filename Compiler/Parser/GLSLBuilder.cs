@@ -12,7 +12,7 @@ namespace SSLang
 	{
 		private static readonly string GENERATED_COMMENT =
 			"// Generated from Spectrum Shader Language input using sslc.";
-		private static readonly string VERSION_STRING = "#version 450";
+		private static readonly string VERSION_STRING = "#version 450 core";
 		private static readonly string[] EXTENSIONS = {
 			"GL_EXT_scalar_block_layout"
 		};
@@ -107,7 +107,7 @@ namespace SSLang
 
 		public void EmitDeclaration(Variable v) => _funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()};");
 		public void EmitDefinition(Variable v, ExprResult expr) =>
-			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()} = {expr.ValueText};");
+			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl(false)} = {expr.ValueText};");
 
 		public void EmitAssignment(string name, long? arrIndex, string swiz, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} = {expr.RefText};");

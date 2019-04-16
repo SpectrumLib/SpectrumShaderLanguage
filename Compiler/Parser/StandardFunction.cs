@@ -25,7 +25,7 @@ namespace SSLang
 		public StandardFunction(string n, ShaderType rt, Param[] pars)
 		{
 			Name = n;
-			OutputName = $"__func_{n}";
+			OutputName = $"_func_{n}";
 			ReturnType = rt;
 			Params = pars;
 		}
