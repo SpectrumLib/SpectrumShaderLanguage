@@ -135,6 +135,9 @@ namespace SSLang
 
 		public void EmitAssignment(string name, long? arrIndex, string swiz, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} = {expr.RefText};");
+
+		public void EmitReturn(ExprResult res) => _funcSource.AppendLine($"{_indent}return {res?.RefText ?? ""};");
+		public void EmitDiscard() => _funcSource.AppendLine(_indent + "discard;");
 		#endregion // Functions
 
 		// Gets the glsl builtin function name

@@ -35,6 +35,9 @@ namespace SSLang
 		// The current stage (if inside of a stage function)
 		private ShaderStages _currStage = ShaderStages.None;
 
+		// The current function being parsed
+		private StandardFunction _currFunc = null;
+
 		// The current array type to check array literal elements against
 		private ShaderType _currArrayType = ShaderType.Void;
 		#endregion // Fields
@@ -212,6 +215,36 @@ namespace SSLang
 			GLSL.CurrentStage = ShaderStages.None;
 			ScopeManager.PopScope();
 			_currStage = ShaderStages.None;
+			_currFunc = null;
+		}
+
+		// Ensures that all required variable assignments in the current block have been made
+		private void ensureExitAssignments(RuleContext ctx)
+		{
+			if (_currStage == ShaderStages.None)
+			{
+				// Ensure all of the 'out' parameters have been assigned
+				foreach (var par in _currFunc.Params)
+				{
+					var pvar = ScopeManager.FindLocal(par.Name);
+					if (par.Access == StandardFunction.Access.Out && !pvar.IsWritten)
+						_THROW(ctx, $"The 'out' parameter '{par.Name}' must be assigned to before the function exits.");
+				}
+			}
+			else if (_currStage == ShaderStages.Vertex)
+			{
+				var req = ScopeManager.FindLocal("$Position");
+				if (!req.IsWritten)
+					_THROW(ctx, $"The builtin variable '$Position' must be assigned before the vertex stage exits.");
+			}
+			else if (_currStage == ShaderStages.Fragment)
+			{
+				foreach (var fout in ScopeManager.Outputs.Values)
+				{
+					if (!fout.IsWritten)
+						_THROW(ctx, $"The fragment output variable '{fout.Name}' must be assigned before the fragment stage exits.");
+				}
+			}
 		}
 
 		#region Top-Level
@@ -354,6 +387,7 @@ namespace SSLang
 		{
 			if (!ScopeManager.TryAddFunction(context, out var func, out var error))
 				_THROW(context, error);
+			_currFunc = func;
 
 			GLSL.EmitCommentFunc($"Standard function: \"{func.Name}\"");
 			GLSL.EmitFunctionHeader(func);
@@ -373,14 +407,7 @@ namespace SSLang
 				Visit(stmt);
 			}
 
-			// Ensure all of the 'out' parameters have been assigned
-			foreach (var par in func.Params)
-			{
-				var pvar = ScopeManager.FindLocal(par.Name);
-				if (par.Access == StandardFunction.Access.Out && !pvar.IsWritten)
-					_THROW(context, $"The 'out' parameter '{par.Name}' must be assigned to before the function exits.");
-			}
-
+			ensureExitAssignments(context);
 			exitFunction();
 			return null;
 		}
@@ -409,11 +436,7 @@ namespace SSLang
 				Visit(stmt);
 			}
 
-			// Ensure that the required variables have been set
-			var bipos = ScopeManager.FindLocal("$Position");
-			if (!bipos.IsWritten)
-				_THROW(context, $"The builtin variable '$Position' must be assigned before the vertex stage exits.");
-
+			ensureExitAssignments(context);
 			exitFunction();
 			return null;
 		}
@@ -428,13 +451,7 @@ namespace SSLang
 				Visit(stmt);
 			}
 
-			// Ensure that the required variables have been set
-			foreach (var fout in ScopeManager.Outputs.Values)
-			{
-				if (!fout.IsWritten)
-					_THROW(context, $"The fragment output variable '{fout.Name}' must be assigned before the fragment stage exits.");
-			}
-
+			ensureExitAssignments(context);
 			exitFunction();
 			return null;
 		}
@@ -519,6 +536,34 @@ namespace SSLang
 				_THROW(context._Values[bidx], $"Array literal ({_currArrayType}) has incompatible type '{exprs[bidx].Type}' at element {bidx}.");
 
 			return new ExprResult(_currArrayType, (uint)exprs.Count, $"{{ {String.Join(", ", exprs.Select(e => e.RefText))} }}");
+		}
+
+		public override ExprResult VisitControlFlowStatement([NotNull] SSLParser.ControlFlowStatementContext context)
+		{
+			if (context.KW_RETURN() != null) // return statement
+			{
+				var rexpr = (context.RVal != null) ? Visit(context.RVal) : null;
+				var rtype = rexpr?.Type ?? ShaderType.Void;
+				var etype = _currFunc?.ReturnType ?? ShaderType.Void;
+				if (etype.IsVoid())
+				{
+					if (rexpr != null)
+						_THROW(context, $"{((_currFunc != null) ? $"The function '{_currFunc.Name}' does" : "Shader stage functions do")} not allow return values.");
+				}
+				else if (!rtype.CanCastTo(etype))
+					_THROW(context, $"The given return type '{rtype}' cannot be cast to the expected type '{etype}'.");
+
+				ensureExitAssignments(context);
+				GLSL.EmitReturn(rexpr);
+			}
+			else if (context.KW_DISCARD() != null) // discard statement
+			{
+				if (_currStage != ShaderStages.Fragment)
+					_THROW(context, "The 'discard' keyword is not allowed outside of the fragment stage.");
+				GLSL.EmitDiscard();
+			}
+
+			return null;
 		}
 		#endregion // Statements
 

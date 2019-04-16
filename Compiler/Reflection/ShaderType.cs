@@ -242,6 +242,13 @@ namespace SSLang.Reflection
 		public static bool IsError(this ShaderType type) => (type == ShaderType.Error);
 
 		/// <summary>
+		/// Gets if the type is the void type, which represents a none-type or un-typed expression.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is the void type.</returns>
+		public static bool IsVoid(this ShaderType type) => (type == ShaderType.Void);
+
+		/// <summary>
 		/// Gets if the type represents a vector type.
 		/// </summary>
 		/// <param name="type">The type to check.</param>
