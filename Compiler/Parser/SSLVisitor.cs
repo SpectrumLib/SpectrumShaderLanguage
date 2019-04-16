@@ -373,6 +373,14 @@ namespace SSLang
 				Visit(stmt);
 			}
 
+			// Ensure all of the 'out' parameters have been assigned
+			foreach (var par in func.Params)
+			{
+				var pvar = ScopeManager.FindLocal(par.Name);
+				if (par.Access == StandardFunction.Access.Out && !pvar.IsWritten)
+					_THROW(context, $"The 'out' parameter '{par.Name}' must be assigned to before the function exits.");
+			}
+
 			exitFunction();
 			return null;
 		}
@@ -401,6 +409,11 @@ namespace SSLang
 				Visit(stmt);
 			}
 
+			// Ensure that the required variables have been set
+			var bipos = ScopeManager.FindLocal("$Position");
+			if (!bipos.IsWritten)
+				_THROW(context, $"The builtin variable '$Position' must be assigned before the vertex stage exits.");
+
 			exitFunction();
 			return null;
 		}
@@ -413,6 +426,13 @@ namespace SSLang
 			foreach (var stmt in context.block().statement())
 			{
 				Visit(stmt);
+			}
+
+			// Ensure that the required variables have been set
+			foreach (var fout in ScopeManager.Outputs.Values)
+			{
+				if (!fout.IsWritten)
+					_THROW(context, $"The fragment output variable '{fout.Name}' must be assigned before the fragment stage exits.");
 			}
 
 			exitFunction();
@@ -459,6 +479,7 @@ namespace SSLang
 					GLSL.EmitDefinition(vrbl, exp);
 				}
 			}
+			vrbl.IsWritten = true;
 			return null;
 		}
 
@@ -470,6 +491,10 @@ namespace SSLang
 				_THROW(context.Name, $"A variable with the name '{vname}' does not exist in the current context.");
 			if (vrbl.Constant)
 				_THROW(context, $"The variable '{vname}' is read only and cannot be assigned to.");
+			if (vrbl.IsAttribute && _currStage != ShaderStages.Vertex)
+				_THROW(context.IDENTIFIER().Symbol, $"The vertex attribute '{vname}' can only be accessed in the vertex shader stage.");
+			if (vrbl.IsFragmentOutput && _currStage != ShaderStages.Fragment)
+				_THROW(context.IDENTIFIER().Symbol, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
 			vrbl.WriteStages |= _currStage;
 			var actx = context.arrayIndexer();
 			var swiz = context.SWIZZLE();
@@ -482,6 +507,7 @@ namespace SSLang
 				_THROW(context.Value, $"The expression has a mismatched array size with the assignment variable.");
 
 			GLSL.EmitAssignment(vrbl.GetOutputName(_currStage), arrIndex, swiz?.Symbol?.Text, expr);
+			vrbl.IsWritten = true;
 			return null;
 		}
 
@@ -624,6 +650,10 @@ namespace SSLang
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
 			if (!vrbl.CanRead)
 				_THROW(context.IDENTIFIER().Symbol, $"The {(vrbl.IsBuiltin ? "built-in" : "'out' parameter")} variable '{vname}' is write-only.");
+			if (vrbl.IsAttribute && _currStage != ShaderStages.Vertex)
+				_THROW(context.IDENTIFIER().Symbol, $"The vertex attribute '{vname}' can only be accessed in the vertex shader stage.");
+			if (vrbl.IsFragmentOutput && _currStage != ShaderStages.Fragment)
+				_THROW(context.IDENTIFIER().Symbol, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
 			vrbl.ReadStages |= _currStage;
 			var expr = new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage));
 			expr.LValue = vrbl;
