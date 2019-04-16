@@ -622,6 +622,8 @@ namespace SSLang
 			var vrbl = ScopeManager.FindAny(vname);
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
+			if (!vrbl.CanRead)
+				_THROW(context.IDENTIFIER().Symbol, $"The {(vrbl.IsBuiltin ? "built-in" : "'out' parameter")} variable '{vname}' is write-only.");
 			vrbl.ReadStages |= _currStage;
 			var expr = new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage));
 			expr.LValue = vrbl;

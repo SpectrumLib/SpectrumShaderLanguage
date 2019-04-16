@@ -93,15 +93,19 @@ namespace SSLang.Reflection
 		/// Gets if the variable appears in the global scope in the program.
 		/// </summary>
 		public bool IsGlobal => (Scope != ScopeType.Local) && (Scope != ScopeType.Argument);
+
+		// Used internally to throw an error for attempting to read write-only built-in variables or 'out' function parameters
+		internal readonly bool CanRead;
 		#endregion // Fields
 
-		internal Variable(ShaderType type, string name, ScopeType scope, bool @const = false, uint asize = 0)
+		internal Variable(ShaderType type, string name, ScopeType scope, bool @const = false, uint asize = 0, bool cr = true)
 		{
 			Type = type;
 			Name = name;
 			Scope = scope;
 			Constant = (Scope == ScopeType.Uniform) || (Scope == ScopeType.Attribute) || @const;
 			ArraySize = asize;
+			CanRead = cr;
 		}
 
 		internal string GetGLSLDecl(bool @const = true, ShaderStages? stage = null) => 

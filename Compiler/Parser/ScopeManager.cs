@@ -184,7 +184,7 @@ namespace SSLang
 			{
 				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", ScopeType.Builtin, true, 0));
 				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", ScopeType.Builtin, false, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", ScopeType.Builtin, false, 0, false));
 				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", ScopeType.Builtin, false, 0));
 			}
 			else
@@ -194,7 +194,7 @@ namespace SSLang
 				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", ScopeType.Builtin, true, 0));
 				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", ScopeType.Builtin, true, 0));
 				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", ScopeType.Builtin, false, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", ScopeType.Builtin, false, 0, false));
 			}
 		}
 		#endregion // Functions
@@ -253,7 +253,7 @@ namespace SSLang
 				return false;
 			}
 
-			var vrbl = new Variable(p.Type, p.Name, ScopeType.Argument, p.Access == StandardFunction.Access.In, 0);
+			var vrbl = new Variable(p.Type, p.Name, ScopeType.Argument, p.Access == StandardFunction.Access.In, 0, p.Access != StandardFunction.Access.Out);
 			_params.Add(p.Name, (vrbl, p));
 
 			error = null;
