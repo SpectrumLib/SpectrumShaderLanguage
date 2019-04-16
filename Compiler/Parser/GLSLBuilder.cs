@@ -120,11 +120,11 @@ namespace SSLang
 			string fname = "ERROR_FUNCTION";
 			switch (CurrentStage)
 			{
-				case ShaderStages.Vertex: fname = "VERT_MAIN"; break;
-				case ShaderStages.TessControl: fname = "TESC_MAIN"; break;
-				case ShaderStages.TessEval: fname = "TESE_MAIN"; break;
-				case ShaderStages.Geometry: fname = "GEOM_MAIN"; break;
-				case ShaderStages.Fragment: fname = "FRAG_MAIN"; break;
+				case ShaderStages.Vertex: fname = "vert_main"; break;
+				case ShaderStages.TessControl: fname = "tesc_main"; break;
+				case ShaderStages.TessEval: fname = "tese_main"; break;
+				case ShaderStages.Geometry: fname = "geom_main"; break;
+				case ShaderStages.Fragment: fname = "frag_main"; break;
 			}
 			_funcSource.AppendLine($"void {fname}(void)");
 		}

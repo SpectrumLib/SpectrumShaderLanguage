@@ -18,6 +18,10 @@ namespace SSLang
 		// Used to reference the value, either be the ssa name or inlined code
 		public string RefText => SSA?.Name ?? ValueText;
 
+		// Used for expressions in function calls, to check if the expression is valid to pass as a reference
+		// This value will not propgate upwards when constructing new results based off of this one
+		public Variable LValue = null;
+
 		public bool IsArray => ArraySize != 0;
 		public bool HasSSA => SSA != null;
 

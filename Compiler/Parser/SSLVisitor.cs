@@ -578,8 +578,18 @@ namespace SSLang
 			var avars = fc._Args.Select(arg => Visit(arg)).ToList();
 			for (int i = 0; i < ptypes.Length; ++i)
 			{
+				// Checks for reference-passed values
+				if (ptypes[i].Access != StandardFunction.Access.In)
+				{
+					if (avars[i].LValue == null)
+						_THROW(fc._Args[i], $"Must pass a modifiable variable to 'out' or 'inout' function (argument {i+1}).");
+					if (avars[i].LValue.Constant)
+						_THROW(fc._Args[i], $"Cannot pass a constant variable as a reference to a function (argument {i+1}).");
+				}
+
+				// Type checking
 				if (!avars[i].Type.CanCastTo(ptypes[i].Type))
-					_THROW(fc._Args[i], $"Function ('{func.Name}') argument {i} expected '{ptypes[i].Type}' type, but got non-castable type '{avars[i].Type}'.");
+					_THROW(fc._Args[i], $"Function ('{func.Name}') argument {i+1} expected '{ptypes[i].Type}' type, but got non-castable type '{avars[i].Type}'.");
 			}
 
 			var ssa = ScopeManager.TryAddSSALocal(func.ReturnType, 0);
@@ -613,7 +623,9 @@ namespace SSLang
 			if (vrbl == null)
 				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
 			vrbl.ReadStages |= _currStage;
-			return TypeUtils.ApplyModifiers(this, new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage)), context.arrayIndexer(), context.SWIZZLE());
+			var expr = new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage));
+			expr.LValue = vrbl;
+			return TypeUtils.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
 		}
 		#endregion // Atoms
 	}

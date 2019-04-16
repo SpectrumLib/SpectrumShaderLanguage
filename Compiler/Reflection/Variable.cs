@@ -196,7 +196,7 @@ namespace SSLang.Reflection
 				asize = (uint)val.Value;
 			}
 
-			v = new Variable(type, name, scope, false, asize);
+			v = new Variable(type, name, scope, ctx.KW_CONST() != null, asize);
 			return true;
 		}
 	}
