@@ -247,6 +247,31 @@ namespace SSLang
 			}
 		}
 
+		// Unified function for finding, checking, and updating the stage flags for a variable
+		private Variable findVariable(RuleContext ctx, string vname, bool read, bool write)
+		{
+			var vrbl = ScopeManager.FindAny(vname);
+			if (vrbl == null)
+				_THROW(ctx, $"A variable with the name '{vname}' does not exist in the current scope.");
+			if (read && !vrbl.CanRead)
+				_THROW(ctx, $"The {(vrbl.IsBuiltin ? "built-in" : "'out' parameter")} variable '{vname}' is write-only.");
+			if (write && vrbl.Constant)
+				_THROW(ctx, $"The variable '{vname}' is constant, and cannot be modified.");
+			if (vrbl.IsAttribute && _currStage != ShaderStages.Vertex)
+				_THROW(ctx, $"The vertex attribute '{vname}' can only be accessed in the vertex shader stage.");
+			if (vrbl.IsFragmentOutput && _currStage != ShaderStages.Fragment)
+				_THROW(ctx, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
+
+			if (read)
+				vrbl.ReadStages |= _currStage;
+			if (write)
+			{
+				vrbl.WriteStages |= _currStage;
+				vrbl.IsWritten = true;
+			}
+			return vrbl;
+		}
+
 		#region Top-Level
 		public override ExprResult VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
 		{
@@ -502,17 +527,7 @@ namespace SSLang
 
 		public override ExprResult VisitAssignment([NotNull] SSLParser.AssignmentContext context)
 		{
-			var vname = context.Name.Text;
-			var vrbl = ScopeManager.FindAny(vname);
-			if (vrbl == null)
-				_THROW(context.Name, $"A variable with the name '{vname}' does not exist in the current context.");
-			if (vrbl.Constant)
-				_THROW(context, $"The variable '{vname}' is read only and cannot be assigned to.");
-			if (vrbl.IsAttribute && _currStage != ShaderStages.Vertex)
-				_THROW(context.IDENTIFIER().Symbol, $"The vertex attribute '{vname}' can only be accessed in the vertex shader stage.");
-			if (vrbl.IsFragmentOutput && _currStage != ShaderStages.Fragment)
-				_THROW(context.IDENTIFIER().Symbol, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
-			vrbl.WriteStages |= _currStage;
+			var vrbl = findVariable(context, context.Name.Text, false, true);
 			var actx = context.arrayIndexer();
 			var swiz = context.SWIZZLE();
 			var ltype = TypeUtils.ApplyLValueModifier(this, context.Name, vrbl, actx, swiz, out var arrIndex);
@@ -524,7 +539,6 @@ namespace SSLang
 				_THROW(context.Value, $"The expression has a mismatched array size with the assignment variable.");
 
 			GLSL.EmitAssignment(vrbl.GetOutputName(_currStage), arrIndex, swiz?.Symbol?.Text, expr);
-			vrbl.IsWritten = true;
 			return null;
 		}
 
@@ -568,6 +582,54 @@ namespace SSLang
 		#endregion // Statements
 
 		#region Expressions
+		public override ExprResult VisitUnOpPostfix([NotNull] SSLParser.UnOpPostfixContext context)
+		{
+			var vrbl = findVariable(context, context.IDENTIFIER().Symbol.Text, true, true);
+			if (vrbl.Type != ShaderType.Int && vrbl.Type != ShaderType.UInt)
+				_THROW(context, $"The postfix operator '{context.Op.Text}' cannot be applied to the type '{vrbl.Type}'.");
+			if (vrbl.IsArray)
+				_THROW(context, $"Cannot apply the postfix operator '{context.Op.Text}' to an array.");
+			return new ExprResult(vrbl.Type, 0, "(" + vrbl.GetOutputName(_currStage) + context.Op.Text + ")");
+		}
+
+		public override ExprResult VisitUnOpPrefix([NotNull] SSLParser.UnOpPrefixContext context)
+		{
+			var vrbl = findVariable(context, context.IDENTIFIER().Symbol.Text, true, true);
+			if (vrbl.Type != ShaderType.Int && vrbl.Type != ShaderType.UInt)
+				_THROW(context, $"The prefix operator '{context.Op.Text}' cannot be applied to the type '{vrbl.Type}'.");
+			if (vrbl.IsArray)
+				_THROW(context, $"Cannot apply the prefix operator '{context.Op.Text}' to an array.");
+			return new ExprResult(vrbl.Type, 0, "(" + context.Op.Text + vrbl.GetOutputName(_currStage) + ")");
+		}
+
+		public override ExprResult VisitUnOpFactor([NotNull] SSLParser.UnOpFactorContext context)
+		{
+			var expr = Visit(context.Expr);
+			if (!expr.Type.IsValueType() || expr.Type.IsMatrixType() || expr.Type.GetComponentType() == ShaderType.Bool)
+				_THROW(context, $"The unary operator '{context.Op.Text}' cannot be applied to the type '{expr.Type}'.");
+			if (expr.IsArray)
+				_THROW(context, $"Cannot apply the unary operator '{context.Op.Text}' to an array.");
+			return new ExprResult(expr.Type, 0, "(" + context.Op.Text + expr.RefText + ")");
+		}
+
+		public override ExprResult VisitUnOpNegate([NotNull] SSLParser.UnOpNegateContext context)
+		{
+			var expr = Visit(context.Expr);
+			if (expr.IsArray)
+				_THROW(context, $"Cannot apply the negation operator '{context.Op.Text}' to an array.");
+			if (context.Op.Text == "!")
+			{
+				if (expr.Type != ShaderType.Bool)
+					_THROW(context, "The negation operator '!' can only be applied to scalar booleans.");
+				return new ExprResult(ShaderType.Bool, 0, "(!" + expr.RefText + ")");
+			}
+			else
+			{
+				if (expr.Type != ShaderType.Int && expr.Type != ShaderType.UInt)
+					_THROW(context, "The negation operator '~' can only be applied to integer types.");
+				return new ExprResult(expr.Type, 0, "(~" + expr.RefText + ")");
+			}
+		}
 		#endregion // Expressions
 
 		#region Atoms
@@ -689,17 +751,7 @@ namespace SSLang
 
 		public override ExprResult VisitVariableAtom([NotNull] SSLParser.VariableAtomContext context)
 		{
-			var vname = context.IDENTIFIER().Symbol.Text;
-			var vrbl = ScopeManager.FindAny(vname);
-			if (vrbl == null)
-				_THROW(context.IDENTIFIER().Symbol, $"A variable with the name '{vname}' does not exist in the current scope.");
-			if (!vrbl.CanRead)
-				_THROW(context.IDENTIFIER().Symbol, $"The {(vrbl.IsBuiltin ? "built-in" : "'out' parameter")} variable '{vname}' is write-only.");
-			if (vrbl.IsAttribute && _currStage != ShaderStages.Vertex)
-				_THROW(context.IDENTIFIER().Symbol, $"The vertex attribute '{vname}' can only be accessed in the vertex shader stage.");
-			if (vrbl.IsFragmentOutput && _currStage != ShaderStages.Fragment)
-				_THROW(context.IDENTIFIER().Symbol, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
-			vrbl.ReadStages |= _currStage;
+			var vrbl = findVariable(context, context.IDENTIFIER().Symbol.Text, true, false);
 			var expr = new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage));
 			expr.LValue = vrbl;
 			return TypeUtils.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
