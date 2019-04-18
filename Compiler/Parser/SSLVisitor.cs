@@ -528,17 +528,32 @@ namespace SSLang
 		public override ExprResult VisitAssignment([NotNull] SSLParser.AssignmentContext context)
 		{
 			var vrbl = findVariable(context, context.Name.Text, false, true);
+			if (vrbl.Constant)
+				_THROW(context, $"Cannot assign a value to constant variable '{vrbl.Name}'.");
 			var actx = context.arrayIndexer();
 			var swiz = context.SWIZZLE();
 			var ltype = TypeUtils.ApplyLValueModifier(this, context.Name, vrbl, actx, swiz, out var arrIndex);
+			if (vrbl.IsArray && !arrIndex.HasValue)
+				_THROW(context, $"Cannot assign a value to array variable '{vrbl.Name}'.");
 
+			var cpx = context.Op.Type != SSLParser.OP_ASSIGN;
 			var expr = Visit(context.Value);
-			if (!expr.Type.CanCastTo(ltype))
-				_THROW(context.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
+
+			if (cpx) // Complex assignment
+			{
+				var rtype = TypeUtils.CheckOperator(this, context.Op, ltype, expr.Type);
+				if (rtype != ltype)
+					_THROW(context, $"Cannot reassign complex operator result type '{rtype}' back to variable type '{ltype}'.");
+			}
+			else
+			{
+				if (!expr.Type.CanCastTo(ltype))
+					_THROW(context.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
+			}
 			if (expr.ArraySize != vrbl.ArraySize)
 				_THROW(context.Value, $"The expression has a mismatched array size with the assignment variable.");
 
-			GLSL.EmitAssignment(vrbl.GetOutputName(_currStage), arrIndex, swiz?.Symbol?.Text, expr);
+			GLSL.EmitAssignment(vrbl.GetOutputName(_currStage), arrIndex, swiz?.Symbol?.Text, context.Op.Text, expr);
 			return null;
 		}
 
@@ -662,6 +677,21 @@ namespace SSLang
 
 		public override ExprResult VisitBinOpBoolLogic([NotNull] SSLParser.BinOpBoolLogicContext context) =>
 			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitSelectionExpr([NotNull] SSLParser.SelectionExprContext context)
+		{
+			var cexpr = Visit(context.Cond);
+			if (cexpr.Type != ShaderType.Bool)
+				_THROW(context.Cond, $"The selection operation condition must be a scalar boolean type ({cexpr.Type}).");
+
+			var texpr = Visit(context.TVal);
+			var fexpr = Visit(context.FVal);
+			if (!fexpr.Type.CanCastTo(texpr.Type) || texpr.ArraySize != fexpr.ArraySize)
+				_THROW(context.FVal, $"The false selection expression type ({fexpr.Type}) must match the true type ({texpr.Type}).");
+
+			var ftext = (texpr.Type != fexpr.Type) ? $"{texpr.Type.ToGLSL()}({fexpr.RefText})" : fexpr.RefText;
+			return new ExprResult(texpr.Type, texpr.ArraySize, $"(({cexpr.RefText}) ? ({texpr.RefText}) : ({ftext}))");
+		}
 		#endregion // Expressions
 
 		#region Atoms

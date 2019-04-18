@@ -105,7 +105,7 @@ namespace SSLang
 			if (!ltype.IsValueType() || !rtype.IsValueType())
 				vis._THROW(op, $"Cannot apply operators to non-value types ({ltype} {op.Text} {rtype}).");
 
-			if (opnum == SSLParser.OP_MUL || opnum == SSLParser.OP_DIV) // '*', '/'
+			if (opnum == SSLParser.OP_MUL || opnum == SSLParser.OP_DIV || opnum == SSLParser.OP_MUL_ASSIGN || opnum == SSLParser.OP_DIV_ASSIGN) // '*', '/', '*=', '/='
 			{
 				if (ltype.GetComponentType() == ShaderType.Bool || rtype.GetComponentType() == ShaderType.Bool)
 					vis._THROW(op, $"Cannot mul/div boolean types ({ltype} {op.Text} {rtype}).");
@@ -179,7 +179,7 @@ namespace SSLang
 					vis._THROW(op, $"The modulus operator requires both operands to be scalar integers ({ltype}, {rtype}).");
 				return ltype;
 			}
-			else if (opnum == SSLParser.OP_ADD || opnum == SSLParser.OP_SUB) // '+', '-'
+			else if (opnum == SSLParser.OP_ADD || opnum == SSLParser.OP_SUB || opnum == SSLParser.OP_ADD_ASSIGN || opnum == SSLParser.OP_SUB_ASSIGN) // '+', '-', '+=', '-='
 			{
 				if (ltype != rtype)
 				{
@@ -197,7 +197,7 @@ namespace SSLang
 				}
 				return ltype;
 			}
-			else if (opnum == SSLParser.OP_LSHIFT || opnum == SSLParser.OP_RSHIFT) // '<<', '>>'
+			else if (opnum == SSLParser.OP_LSHIFT || opnum == SSLParser.OP_RSHIFT || opnum == SSLParser.OP_LS_ASSIGN || opnum == SSLParser.OP_RS_ASSIGN) // '<<', '>>', '<<=', '>>='
 			{
 				if ((ltype != ShaderType.Int && ltype != ShaderType.UInt) || (rtype != ShaderType.Int && rtype != ShaderType.UInt))
 					vis._THROW(op, $"The '{op.Text}' operator requires both operands to be scalar integers ({ltype}, {rtype}).");
@@ -224,7 +224,8 @@ namespace SSLang
 				}
 				return ShaderType.Bool;
 			}
-			else if (opnum == SSLParser.OP_BITAND || opnum == SSLParser.OP_BITOR || opnum == SSLParser.OP_BITXOR) // '&', '|', '^'
+			else if (opnum == SSLParser.OP_BITAND || opnum == SSLParser.OP_BITOR || opnum == SSLParser.OP_BITXOR || opnum == SSLParser.OP_AND_ASSIGN
+					 || opnum == SSLParser.OP_OR_ASSIGN || opnum == SSLParser.OP_XOR_ASSIGN) // '&', '|', '^', '&=', '|=', '^='
 			{
 				if ((ltype != ShaderType.Int && ltype != ShaderType.UInt) || (rtype != ShaderType.Int && rtype != ShaderType.UInt))
 					vis._THROW(op, $"The '{op.Text}' operator requires both operands to be scalar integers ({ltype}, {rtype}).");
