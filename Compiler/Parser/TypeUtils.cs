@@ -95,5 +95,150 @@ namespace SSLang
 
 			return ltype;
 		}
+
+		// Checks the types for a binary or complex assignment operation
+		// See http://learnwebgl.brown37.net/12_shader_language/glsl_mathematical_operations.html
+		public static ShaderType CheckOperator(SSLVisitor vis, IToken op, ShaderType ltype, ShaderType rtype)
+		{
+			var opnum = op.Type;
+			// Overall check (value types only)
+			if (!ltype.IsValueType() || !rtype.IsValueType())
+				vis._THROW(op, $"Cannot apply operators to non-value types ({ltype} {op.Text} {rtype}).");
+
+			if (opnum == SSLParser.OP_MUL || opnum == SSLParser.OP_DIV) // '*', '/'
+			{
+				if (ltype.GetComponentType() == ShaderType.Bool || rtype.GetComponentType() == ShaderType.Bool)
+					vis._THROW(op, $"Cannot mul/div boolean types ({ltype} {op.Text} {rtype}).");
+
+				if (ltype.IsScalarType())
+				{
+					if (rtype.IsScalarType())
+					{
+						if (ltype == ShaderType.Float || rtype == ShaderType.Float) return ShaderType.Float;
+						if (ltype == ShaderType.Int || rtype == ShaderType.Int) return ShaderType.Int;
+						return ShaderType.UInt;
+					}
+					else if (rtype.IsMatrixType())
+					{
+						if (opnum == SSLParser.OP_DIV) vis._THROW(op, "Cannot divide a scalar by a matrix.");
+						else return rtype;
+					}
+					else // Vectors
+					{
+						if (opnum == SSLParser.OP_DIV) vis._THROW(op, "Cannot divide a scalar by a vector.");
+						// THIS ONLY WORKS BECAUSE OF THE ORDERING OF THE SHADERTYPE ENUM, AND WILL BREAK IF THE ORDERING IS CHANGED
+						var ctype = (ShaderType)Math.Max((int)ltype, (int)rtype.GetComponentType());
+						return ctype.ToVectorType(rtype.GetVectorSize());
+					}
+				}
+				else if (ltype.IsMatrixType())
+				{
+					if (rtype.IsScalarType())
+						return ltype;
+					else if (rtype.IsMatrixType())
+					{
+						if (opnum == SSLParser.OP_DIV) vis._THROW(op, "Cannot divide a matrix by a matrix.");
+						else return rtype;
+					}
+					else // Vectors
+					{
+						if (opnum == SSLParser.OP_DIV) vis._THROW(op, "Cannot divide a matrix by a vector.");
+						var vsize = rtype.GetVectorSize();
+						var msize = ((uint)ltype - (uint)ShaderType.Mat2) + 2;
+						if (vsize != msize) vis._THROW(op, $"Can only multiply a matrix by a vector of the same rank ({ltype}, {rtype}).");
+						return ShaderType.Float.ToVectorType(vsize);
+					}
+				}
+				else // Vectors
+				{
+					if (rtype.IsScalarType())
+					{
+						if (ltype.GetComponentType() == ShaderType.Float || rtype == ShaderType.Float)
+							return ShaderType.Float.ToVectorType(ltype.GetVectorSize());
+						if (ltype.GetComponentType() == ShaderType.Int || rtype == ShaderType.Int)
+							return ShaderType.Int.ToVectorType(ltype.GetVectorSize());
+						return ShaderType.UInt.ToVectorType(ltype.GetVectorSize());
+					}
+					else if (rtype.IsMatrixType())
+						vis._THROW(op, $"Cannot mul/div a vector to a matrix ({ltype} {op.Text} {rtype}).");
+					else // Vectors
+					{
+						if (ltype.GetVectorSize() != rtype.GetVectorSize())
+							vis._THROW(op, $"Cannot mul/div vectors of different sizes ({ltype}, {rtype}).");
+						if (ltype.GetComponentType() == ShaderType.Float || rtype.GetComponentType() == ShaderType.Float)
+							return ShaderType.Float.ToVectorType(ltype.GetVectorSize());
+						if (ltype.GetComponentType() == ShaderType.Int || rtype.GetComponentType() == ShaderType.Int)
+							return ShaderType.Int.ToVectorType(ltype.GetVectorSize());
+						return ShaderType.UInt.ToVectorType(ltype.GetVectorSize());
+					}
+				}
+			}
+			else if (opnum == SSLParser.OP_MOD) // '%'
+			{
+				if ((ltype != ShaderType.Int && ltype != ShaderType.UInt) || (rtype != ShaderType.Int && rtype != ShaderType.UInt))
+					vis._THROW(op, $"The modulus operator requires both operands to be scalar integers ({ltype}, {rtype}).");
+				return ltype;
+			}
+			else if (opnum == SSLParser.OP_ADD || opnum == SSLParser.OP_SUB) // '+', '-'
+			{
+				if (ltype != rtype)
+				{
+					if (ltype.IsMatrixType() || rtype.IsMatrixType())
+						vis._THROW(op, $"Can only add/sub a matrix to another matrix of the same size ({ltype} {op.Text} {rtype}).");
+					if (ltype.GetVectorSize() != rtype.GetVectorSize())
+						vis._THROW(op, $"Can only add/sub vectors of the same size ({ltype}, {rtype}).");
+					if (ltype.GetComponentType() == ShaderType.Bool || rtype.GetComponentType() == ShaderType.Bool)
+						vis._THROW(op, $"Cannot add/sub boolean types ({ltype} {op.Text} {rtype}).");
+					if (!ltype.CanCastTo(rtype) && !rtype.CanCastTo(ltype))
+						vis._THROW(op, $"No implicit cast available to add/sub different types ({ltype} {op.Text} {rtype}).");
+					// THIS ONLY WORKS BECAUSE OF THE ORDERING OF THE SHADERTYPE ENUM, AND WILL BREAK IF THE ORDERING IS CHANGED
+					var ctype = (ShaderType)Math.Max((int)ltype.GetComponentType(), (int)rtype.GetComponentType());
+					return ctype.ToVectorType(ltype.GetVectorSize());
+				}
+				return ltype;
+			}
+			else if (opnum == SSLParser.OP_LSHIFT || opnum == SSLParser.OP_RSHIFT) // '<<', '>>'
+			{
+				if ((ltype != ShaderType.Int && ltype != ShaderType.UInt) || (rtype != ShaderType.Int && rtype != ShaderType.UInt))
+					vis._THROW(op, $"The '{op.Text}' operator requires both operands to be scalar integers ({ltype}, {rtype}).");
+				return ShaderType.Int;
+			}
+			else if (opnum == SSLParser.OP_LT || opnum == SSLParser.OP_GT || opnum == SSLParser.OP_LE || opnum == SSLParser.OP_GE) // '<', '>', '<=', '>='
+			{
+				if (!ltype.IsScalarType() || !rtype.IsScalarType() || ltype == ShaderType.Bool || rtype == ShaderType.Bool)
+					vis._THROW(op, $"The relational operator '{op.Text}' can only be applied to numeric scalar types ({ltype}, {rtype}).");
+				if (!ltype.CanCastTo(rtype) && !rtype.CanCastTo(ltype))
+					vis._THROW(op, $"No implicit cast available to compare relation between different types ({ltype} {op.Text} {rtype}).");
+				return ShaderType.Bool;
+			}
+			else if (opnum == SSLParser.OP_EQ || opnum == SSLParser.OP_NE) // '==', '!='
+			{
+				if (ltype != rtype)
+				{
+					if (ltype.IsMatrixType() || rtype.IsMatrixType())
+						vis._THROW(op, $"Can only compare a matrix to another matrix of the same size ({ltype} {op.Text} {rtype}).");
+					if (ltype.GetVectorSize() != rtype.GetVectorSize())
+						vis._THROW(op, $"Can only compare equality of vectors of the same size ({ltype}, {rtype}).");
+					if (!ltype.CanCastTo(rtype) && !rtype.CanCastTo(ltype))
+						vis._THROW(op, $"No implicit cast available to compare equality between different types ({ltype} {op.Text} {rtype}).");
+				}
+				return ShaderType.Bool;
+			}
+			else if (opnum == SSLParser.OP_BITAND || opnum == SSLParser.OP_BITOR || opnum == SSLParser.OP_BITXOR) // '&', '|', '^'
+			{
+				if ((ltype != ShaderType.Int && ltype != ShaderType.UInt) || (rtype != ShaderType.Int && rtype != ShaderType.UInt))
+					vis._THROW(op, $"The '{op.Text}' operator requires both operands to be scalar integers ({ltype}, {rtype}).");
+				return ltype;
+			}
+			else if (opnum == SSLParser.OP_AND || opnum == SSLParser.OP_OR || opnum == SSLParser.OP_XOR) // '&&', '||', '^^'
+			{
+				if (ltype != ShaderType.Bool || rtype != ShaderType.Bool)
+					vis._THROW(op, $"The '{op.Text}' operator requires both operands to be scalar booleans ({ltype}, {rtype}).");
+				return ShaderType.Bool;
+			}
+
+			vis._THROW(op, $"The binary operator '{op.Text}' was not understood.");
+			return ShaderType.Error;
+		}
 	}
 }

@@ -291,7 +291,7 @@ namespace SSLang.Reflection
 		/// <returns>If the type is a one component scalar.</returns>
 		public static bool IsScalarType(this ShaderType type)
 		{
-			return (type >= ShaderType.Bool) && (type <= ShaderType.Float4) & (((int)type % 4) == 1);
+			return (type >= ShaderType.Bool) && (type <= ShaderType.Float) && (((int)type % 4) == 1);
 		}
 
 		/// <summary>

@@ -630,6 +630,38 @@ namespace SSLang
 				return new ExprResult(expr.Type, 0, "(~" + expr.RefText + ")");
 			}
 		}
+
+		// Base checker for binary operations
+		private ExprResult visitBinOp(SSLParser.ExpressionContext left, SSLParser.ExpressionContext right, IToken op)
+		{
+			var lexpr = Visit(left);
+			var rexpr = Visit(right);
+			if (lexpr.IsArray || rexpr.IsArray)
+				_THROW(lexpr.IsArray ? left : right, $"Cannot apply binary operator '{op.Text}' to an array type.");
+			var rtype = TypeUtils.CheckOperator(this, op, lexpr.Type, rexpr.Type);
+			return new ExprResult(rtype, 0, $"({lexpr.RefText} " + op.Text + $" {rexpr.RefText})");
+		}
+
+		public override ExprResult VisitBinOpMulDivMod([NotNull] SSLParser.BinOpMulDivModContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitBinOpAddSub([NotNull] SSLParser.BinOpAddSubContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitBinOpBitShift([NotNull] SSLParser.BinOpBitShiftContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitBinOpRelational([NotNull] SSLParser.BinOpRelationalContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitBinOpEquality([NotNull] SSLParser.BinOpEqualityContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitBinOpBitLogic([NotNull] SSLParser.BinOpBitLogicContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
+
+		public override ExprResult VisitBinOpBoolLogic([NotNull] SSLParser.BinOpBoolLogicContext context) =>
+			visitBinOp(context.Left, context.Right, context.Op);
 		#endregion // Expressions
 
 		#region Atoms
