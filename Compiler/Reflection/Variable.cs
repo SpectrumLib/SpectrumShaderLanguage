@@ -32,7 +32,7 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// The type of the scope that the variable appears in.
 		/// </summary>
-		public readonly ScopeType Scope;
+		public readonly VariableScope Scope;
 		/// <summary>
 		/// If the variable is constant, and cannot have its value reassigned.
 		/// </summary>
@@ -63,36 +63,36 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// Gets if this variable is a uniform in the shader program.
 		/// </summary>
-		public bool IsUniform => (Scope == ScopeType.Uniform);
+		public bool IsUniform => (Scope == VariableScope.Uniform);
 		/// <summary>
 		/// Gets if this variable is a vertex attribute in the shader program.
 		/// </summary>
-		public bool IsAttribute => (Scope == ScopeType.Attribute);
+		public bool IsAttribute => (Scope == VariableScope.Attribute);
 		/// <summary>
 		/// Gets if this variable is a fragment stage output in the shader program.
 		/// </summary>
-		public bool IsFragmentOutput => (Scope == ScopeType.FragmentOutput);
+		public bool IsFragmentOutput => (Scope == VariableScope.FragmentOutput);
 		/// <summary>
 		/// Gets if this variable is an internal in the shader program.
 		/// </summary>
-		public bool IsInternal => (Scope == ScopeType.Internal);
+		public bool IsInternal => (Scope == VariableScope.Internal);
 		/// <summary>
 		/// Gets if this variable is a builtin variable in the shader program.
 		/// </summary>
-		public bool IsBuiltin => (Scope == ScopeType.Builtin);
+		public bool IsBuiltin => (Scope == VariableScope.Builtin);
 		/// <summary>
 		/// Gets if the variable is an argument to a function.
 		/// </summary>
-		public bool IsArgument => (Scope == ScopeType.Argument);
+		public bool IsArgument => (Scope == VariableScope.Argument);
 		/// <summary>
 		/// Gets if this variable is local within a function (does not include arguments).
 		/// </summary>
-		public bool IsLocal => (Scope == ScopeType.Local);
+		public bool IsLocal => (Scope == VariableScope.Local);
 
 		/// <summary>
 		/// Gets if the variable appears in the global scope in the program.
 		/// </summary>
-		public bool IsGlobal => (Scope != ScopeType.Local) && (Scope != ScopeType.Argument);
+		public bool IsGlobal => (Scope != VariableScope.Local) && (Scope != VariableScope.Argument);
 
 		// Used internally to throw an error for attempting to read write-only built-in variables or 'out' function parameters
 		internal readonly bool CanRead;
@@ -102,12 +102,12 @@ namespace SSLang.Reflection
 		internal bool IsWritten = false;
 		#endregion // Fields
 
-		internal Variable(ShaderType type, string name, ScopeType scope, bool @const = false, uint asize = 0, bool cr = true)
+		internal Variable(ShaderType type, string name, VariableScope scope, bool @const = false, uint asize = 0, bool cr = true)
 		{
 			Type = type;
 			Name = name;
 			Scope = scope;
-			Constant = (Scope == ScopeType.Uniform) || (Scope == ScopeType.Attribute) || @const;
+			Constant = (Scope == VariableScope.Uniform) || (Scope == VariableScope.Attribute) || @const;
 			ArraySize = asize;
 			CanRead = cr;
 			IsWritten = false;
@@ -123,7 +123,7 @@ namespace SSLang.Reflection
 			else return Name;
 		}
 
-		internal static bool TryFromContext(SSLParser.VariableDeclarationContext ctx, ScopeType scope, out Variable v, out string error)
+		internal static bool TryFromContext(SSLParser.VariableDeclarationContext ctx, VariableScope scope, out Variable v, out string error)
 		{
 			v = null;
 			error = null;
@@ -166,7 +166,7 @@ namespace SSLang.Reflection
 			return true;
 		}
 
-		internal static bool TryFromContext(SSLParser.VariableDefinitionContext ctx, ScopeType scope, out Variable v, out string error)
+		internal static bool TryFromContext(SSLParser.VariableDefinitionContext ctx, VariableScope scope, out Variable v, out string error)
 		{
 			v = null;
 			error = null;
@@ -213,7 +213,7 @@ namespace SSLang.Reflection
 	/// <summary>
 	/// Represents the different scopes that variable objects can occur in in a shader program.
 	/// </summary>
-	public enum ScopeType : byte
+	public enum VariableScope : byte
 	{
 		/// <summary>
 		/// The variable appears in the global scope as a uniform value.

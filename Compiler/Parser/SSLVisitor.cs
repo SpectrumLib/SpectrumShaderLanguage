@@ -419,7 +419,7 @@ namespace SSLang
 			GLSL.EmitOpenBlock();
 
 			// Push the arguments
-			ScopeManager.PushScope();
+			ScopeManager.PushScope(ScopeType.Function);
 			foreach (var par in func.Params)
 			{
 				if (!ScopeManager.TryAddParameter(par, out error))
@@ -445,7 +445,7 @@ namespace SSLang
 			GLSL.EmitCommentFunc($"Shader stage function ({stage})");
 			GLSL.EmitStageFunctionHeader();
 			GLSL.EmitOpenBlock();
-			ScopeManager.PushScope();
+			ScopeManager.PushScope(ScopeType.Function);
 			ScopeManager.AddBuiltins(stage);
 			Info.Stages |= stage;
 			_currStage = stage;
@@ -590,6 +590,14 @@ namespace SSLang
 				if (_currStage != ShaderStages.Fragment)
 					_THROW(context, "The 'discard' keyword is not allowed outside of the fragment stage.");
 				GLSL.EmitDiscard();
+			}
+			else // 'break' and 'continue' statements (have the same effect)
+			{
+				var isBreak = context.KW_BREAK() != null;
+				if (!ScopeManager.InLoopScope())
+					_THROW(context, $"The '{(isBreak ? "break" : "continue")}' statement is not allowed outside of a looping construct.");
+				if (isBreak) GLSL.EmitBreak();
+				else GLSL.EmitContinue();
 			}
 
 			return null;

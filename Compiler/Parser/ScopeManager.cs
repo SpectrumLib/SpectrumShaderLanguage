@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SSLang.Generated;
 using SSLang.Reflection;
 
@@ -66,10 +67,14 @@ namespace SSLang
 		// Searches all local scopes and the global namespace for any name match
 		public Variable FindAny(string name) => FindLocal(name) ?? FindGlobal(name);
 
+		// Checks if the visitor is currently in a scope that has a parent (at any depth) that is a looping scope,
+		//    used to check if a 'break' or 'continue' statement is valid.
+		public bool InLoopScope() => _scopes.Any(sc => sc.Type == ScopeType.Loop);
+
 		#region Globals
 		public bool TryAddAttribute(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Attribute, out v, out error))
+			if (!Variable.TryFromContext(ctx, VariableScope.Attribute, out v, out error))
 				return false;
 
 			var pre = FindGlobal(v.Name);
@@ -85,7 +90,7 @@ namespace SSLang
 
 		public bool TryAddOutput(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.FragmentOutput, out v, out error))
+			if (!Variable.TryFromContext(ctx, VariableScope.FragmentOutput, out v, out error))
 				return false;
 
 			var pre = FindGlobal(v.Name);
@@ -101,7 +106,7 @@ namespace SSLang
 
 		public bool TryAddUniform(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Uniform, out v, out error))
+			if (!Variable.TryFromContext(ctx, VariableScope.Uniform, out v, out error))
 				return false;
 
 			var pre = FindGlobal(v.Name);
@@ -117,7 +122,7 @@ namespace SSLang
 
 		public bool TryAddInternal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Internal, out v, out error))
+			if (!Variable.TryFromContext(ctx, VariableScope.Internal, out v, out error))
 				return false;
 
 			var pre = FindGlobal(v.Name);
@@ -149,7 +154,7 @@ namespace SSLang
 		#endregion // Globals
 
 		#region Functions
-		public void PushScope() => _scopes.Push(new Scope(this));
+		public void PushScope(ScopeType type) => _scopes.Push(new Scope(this, type));
 		public void PopScope() => _scopes.Pop();
 
 		public bool TryAddParameter(StandardFunction.Param p, out string error) =>
@@ -157,21 +162,21 @@ namespace SSLang
 
 		public bool TryAddLocal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Local, out v, out error))
+			if (!Variable.TryFromContext(ctx, VariableScope.Local, out v, out error))
 				return false;
 			return _scopes.Peek().TryAddVariable(v, out error);
 		}
 
 		public bool TryAddLocal(SSLParser.VariableDefinitionContext ctx, out Variable v, out string error)
 		{
-			if (!Variable.TryFromContext(ctx, ScopeType.Local, out v, out error))
+			if (!Variable.TryFromContext(ctx, VariableScope.Local, out v, out error))
 				return false;
 			return _scopes.Peek().TryAddVariable(v, out error);
 		}
 
 		public Variable TryAddSSALocal(ShaderType type, uint arrSize = 0)
 		{
-			var v = new Variable(type, $"_r{_ssaIndex++}", ScopeType.Local, true, arrSize);
+			var v = new Variable(type, $"_r{_ssaIndex++}", VariableScope.Local, true, arrSize);
 			if (!_scopes.Peek().TryAddVariable(v, out var error))
 				return null;
 			return v;
@@ -182,19 +187,19 @@ namespace SSLang
 			var scope = _scopes.Peek();
 			if (stage == ShaderStages.Vertex)
 			{
-				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", ScopeType.Builtin, false, 0, false));
-				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", ScopeType.Builtin, false, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", VariableScope.Builtin, false, 0, false));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", VariableScope.Builtin, false, 0));
 			}
 			else
 			{
-				scope.AddBuiltin(new Variable(ShaderType.Float4, "$FragCoord", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Bool, "$FrontFacing", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", ScopeType.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", ScopeType.Builtin, false, 0, false));
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$FragCoord", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Bool, "$FrontFacing", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", VariableScope.Builtin, true, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", VariableScope.Builtin, false, 0, false));
 			}
 		}
 		#endregion // Functions
@@ -214,11 +219,13 @@ namespace SSLang
 		public IReadOnlyDictionary<string, Variable> BuiltIns => _builtins;
 
 		public readonly ScopeManager Manager;
+		public readonly ScopeType Type;
 		#endregion // Fields
 
-		public Scope(ScopeManager m)
+		public Scope(ScopeManager m, ScopeType type)
 		{
 			Manager = m;
+			Type = type;
 			_params = new Dictionary<string, (Variable, StandardFunction.Param)>();
 			_locals = new Dictionary<string, Variable>();
 			_builtins = new Dictionary<string, Variable>();
@@ -253,11 +260,19 @@ namespace SSLang
 				return false;
 			}
 
-			var vrbl = new Variable(p.Type, p.Name, ScopeType.Argument, p.Access == StandardFunction.Access.In, 0, p.Access != StandardFunction.Access.Out);
+			var vrbl = new Variable(p.Type, p.Name, VariableScope.Argument, p.Access == StandardFunction.Access.In, 0, p.Access != StandardFunction.Access.Out);
 			_params.Add(p.Name, (vrbl, p));
 
 			error = null;
 			return true;
 		}
+	}
+
+	// Used to track scope types for checking control flow statements
+	internal enum ScopeType
+	{
+		Function,		// The top-level scope for a function
+		Conditional,	// The the scope for a conditional statement ('if', and soon 'switch')
+		Loop			// Looping scope (for, while, do)
 	}
 }
