@@ -567,6 +567,65 @@ namespace SSLang
 			return new ExprResult(_currArrayType, (uint)exprs.Count, $"{{ {String.Join(", ", exprs.Select(e => e.RefText))} }}");
 		}
 
+		public override ExprResult VisitIfStatement([NotNull] SSLParser.IfStatementContext context)
+		{
+			var cexpr = Visit(context.Cond);
+			if (cexpr.Type != ShaderType.Bool)
+				_THROW(context.Cond, "The condition in an 'if' statment must have type Bool.");
+
+			GLSL.EmitIfStatement(cexpr);
+			ScopeManager.PushScope(ScopeType.Conditional);
+			GLSL.PushIndent();
+			if (context.Block != null)
+				Visit(context.Block);
+			else
+				Visit(context.Statement);
+			GLSL.EmitCloseBlock();
+			ScopeManager.PopScope();
+
+			foreach (var elif in context._Elifs)
+				Visit(elif);
+
+			if (context.Else != null)
+				Visit(context.Else);
+
+			return null;
+		}
+
+		public override ExprResult VisitElifStatement([NotNull] SSLParser.ElifStatementContext context)
+		{
+			var cexpr = Visit(context.Cond);
+			if (cexpr.Type != ShaderType.Bool)
+				_THROW(context.Cond, "The condition in an 'elif' statment must have type Bool.");
+
+			GLSL.EmitElifStatement(cexpr);
+			ScopeManager.PushScope(ScopeType.Conditional);
+			GLSL.PushIndent();
+			if (context.Block != null)
+				Visit(context.Block);
+			else
+				Visit(context.Statement);
+			GLSL.EmitCloseBlock();
+			ScopeManager.PopScope();
+
+			return null;
+		}
+
+		public override ExprResult VisitElseStatement([NotNull] SSLParser.ElseStatementContext context)
+		{
+			GLSL.EmitElseStatement();
+			ScopeManager.PushScope(ScopeType.Conditional);
+			GLSL.PushIndent();
+			if (context.Block != null)
+				Visit(context.Block);
+			else
+				Visit(context.Statement);
+			GLSL.EmitCloseBlock();
+			ScopeManager.PopScope();
+
+			return null;
+		}
+
 		public override ExprResult VisitControlFlowStatement([NotNull] SSLParser.ControlFlowStatementContext context)
 		{
 			if (context.KW_RETURN() != null) // return statement

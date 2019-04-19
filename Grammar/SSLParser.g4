@@ -110,7 +110,13 @@ arrayIndexer
 
 // Conditional statements
 ifStatement
-    : 'if' '(' Cond=expression ')' (IfBlock=block|IfStatement=statement) ('else' (ElseBlock=block|ElseStatement=statement))?
+    : 'if' '(' Cond=expression ')' (Block=block|Statement=statement) (Elifs+=elifStatement)* Else=elseStatement?
+    ;
+elifStatement
+    : 'elif' '(' Cond=expression ')' (Block=block|Statement=statement)
+    ;
+elseStatement
+    : 'else' (Block=block|Statement=statement)
     ;
 
 // Looping constructs

@@ -140,6 +140,10 @@ namespace SSLang
 		public void EmitDiscard() => _funcSource.AppendLine(_indent + "discard;");
 		public void EmitBreak() => _funcSource.AppendLine(_indent + "break;");
 		public void EmitContinue() => _funcSource.AppendLine(_indent + "continue;");
+
+		public void EmitIfStatement(ExprResult cond) => _funcSource.AppendLine($"{_indent}if ({cond.RefText}) {{");
+		public void EmitElifStatement(ExprResult cond) => _funcSource.AppendLine($"{_indent}else if ({cond.RefText}) {{");
+		public void EmitElseStatement() => _funcSource.AppendLine(_indent + "else {");
 		#endregion // Functions
 
 		// Gets the glsl builtin function name

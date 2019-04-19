@@ -24,6 +24,7 @@ KW_CONST            : 'const' ;
 KW_CONTINUE         : 'continue' ;
 KW_DISCARD          : 'discard' ;
 KW_DO               : 'do' ;
+KW_ELIF             : 'elif' ;
 KW_ELSE             : 'else' ;
 KW_FOR              : 'for' ;
 KW_IF               : 'if' ;
