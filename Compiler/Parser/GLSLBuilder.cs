@@ -18,8 +18,12 @@ namespace SSLang
 		};
 
 		#region Fields
-		// Contains the variable listings - the inputs, outputs, uniforms, and locals
+		// Contains the variable listings for the uniforms and locals
 		private readonly StringBuilder _varSource;
+		// Contains the variable listings for the vertex inputs
+		private readonly StringBuilder _attrSource;
+		// Contains the variable listings for the fragment outptus
+		private readonly StringBuilder _outputSource;
 		// Contains the function output for general functions and stages
 		private readonly Dictionary<ShaderStages, StringBuilder> _funcSources;
 
@@ -36,7 +40,9 @@ namespace SSLang
 
 		public GLSLBuilder()
 		{
-			_varSource = new StringBuilder(2048);
+			_varSource = new StringBuilder(1024);
+			_attrSource = new StringBuilder(512);
+			_outputSource = new StringBuilder(512);
 			_funcSources = new Dictionary<ShaderStages, StringBuilder>() {
 				{ ShaderStages.None, new StringBuilder(2048) }, { ShaderStages.Vertex, new StringBuilder(2048) }, { ShaderStages.TessControl, new StringBuilder(2048) },
 				{ ShaderStages.TessEval, new StringBuilder(2048) }, { ShaderStages.Geometry, new StringBuilder(2048) }, { ShaderStages.Fragment, new StringBuilder(2048) }
@@ -48,27 +54,9 @@ namespace SSLang
 			foreach (var ext in EXTENSIONS)
 				_varSource.AppendLine($"#extension {ext} : require");
 			_varSource.AppendLine();
+			_attrSource.AppendLine("// Vertex attributes");
+			_outputSource.AppendLine("// Fragment stage outputs");
 		}
-
-		// Gets the glsl output for a specific stage, or a combined shader for ShaderStages.All
-		public string GetGLSLOutput(ShaderStages stage)
-		{
-			if (stage == ShaderStages.All)
-			{
-				return _varSource.ToString()
-					   + _funcSources[ShaderStages.None].ToString()
-					   + _funcSources[ShaderStages.Vertex].ToString()
-					   + _funcSources[ShaderStages.TessControl].ToString()
-					   + _funcSources[ShaderStages.TessEval].ToString()
-					   + _funcSources[ShaderStages.Geometry].ToString()
-					   + _funcSources[ShaderStages.Fragment].ToString(); 
-			}
-			return _varSource.ToString() + _funcSources[stage].ToString();
-		}
-
-		public string GetStageSource(ShaderStages stage) =>
-			_varSource.ToString() + _funcSources[ShaderStages.None].ToString() +
-			((stage != ShaderStages.None) ? _funcSources[stage].ToString() : "");
 
 		public void EmitBlankLineVar() => _varSource.AppendLine();
 		public void EmitBlankLineFunc() => _funcSource.AppendLine();
@@ -81,10 +69,10 @@ namespace SSLang
 
 		#region Variables
 		public void EmitVertexAttribute(Variable vrbl, uint loc) =>
-			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl(false)};");
+			_attrSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl(false)};");
 
-		public void EmitFragmentOutput(Variable vrbl, uint loc) => // Wont ever be an array
-			_varSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl(false)};");
+		public void EmitFragmentOutput(Variable vrbl, uint loc) =>
+			_outputSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitUniform(Variable vrbl, uint loc) =>
 			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl(false)};");
@@ -160,6 +148,36 @@ namespace SSLang
 			_funcSource.AppendLine($"{_indent}}} while ({cond.RefText});");
 		}
 		#endregion // Functions
+
+		// Gets the glsl output for a specific stage, or a combined shader for ShaderStages.All
+		public string GetGLSLOutput(ShaderStages stage)
+		{
+			switch (stage)
+			{
+				case ShaderStages.All: return 
+					_varSource.ToString()
+					+ _attrSource.ToString()
+					+ _outputSource.ToString()
+					+ _funcSources[ShaderStages.None].ToString()
+					+ _funcSources[ShaderStages.Vertex].ToString()
+					+ _funcSources[ShaderStages.TessControl].ToString()
+					+ _funcSources[ShaderStages.TessEval].ToString()
+					+ _funcSources[ShaderStages.Geometry].ToString()
+					+ _funcSources[ShaderStages.Fragment].ToString();
+				case ShaderStages.Vertex: return
+					_varSource.ToString()
+					+ _attrSource.ToString() + "\n"
+					+ _funcSources[ShaderStages.None].ToString()
+					+ _funcSources[ShaderStages.Vertex].ToString();
+				case ShaderStages.Fragment: return
+					_varSource.ToString()
+					+ _outputSource.ToString() + "\n"
+					+ _funcSources[ShaderStages.None].ToString()
+					+ _funcSources[ShaderStages.Fragment].ToString();
+				default:
+					return "";
+			}
+		}
 
 		// Gets the glsl builtin function name
 		public static string GetBuiltinFuncName(string fname, int ftype)

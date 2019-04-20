@@ -300,7 +300,6 @@ namespace SSLang
 			if (block._Types.Count == 0)
 				_THROW(context, "The 'attributes' block cannot be empty.");
 
-			GLSL.EmitCommentVar("Vertex attributes");
 			uint loc = 0;
 			foreach (var tctx in block._Types)
 			{
@@ -312,7 +311,6 @@ namespace SSLang
 				Info._attributes.Add((vrbl, loc));
 				loc += vrbl.Type.GetSlotCount(vrbl.ArraySize);
 			}
-			GLSL.EmitBlankLineVar();
 
 			return null;
 		}
@@ -326,7 +324,6 @@ namespace SSLang
 			if (block._Types.Count == 0)
 				_THROW(context, "The 'output' block cannot be empty.");
 
-			GLSL.EmitCommentVar("Fragment stage outputs");
 			uint loc = 0;
 			foreach (var tctx in block._Types)
 			{
@@ -339,7 +336,6 @@ namespace SSLang
 				GLSL.EmitFragmentOutput(vrbl, loc++);
 				Info._outputs.Add(vrbl);
 			}
-			GLSL.EmitBlankLineVar();
 
 			return null;
 		}
