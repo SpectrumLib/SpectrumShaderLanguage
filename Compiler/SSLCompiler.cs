@@ -136,23 +136,100 @@ namespace SSLang
 			// Output the GLSL if requested
 			if (options.OutputGLSL)
 			{
-				var glslPath = options.GLSLPath ?? CompileOptions.MakeDefaultGLSLPath(SourceFile)
-					?? Path.Combine(Directory.GetCurrentDirectory(), $"{ShaderInfo.Name ?? "shader"}.glsl");
+				if (!outputGLSL(options, visitor, out error))
+					return false;
+			}
 
+			return true;
+		}
+
+		private bool outputGLSL(CompileOptions options, SSLVisitor visitor, out CompileError error)
+		{
+			var outDir = options.GLSLPath ?? CompileOptions.MakeDefaultGLSLPath(SourceFile) ?? Directory.GetCurrentDirectory();
+			var outName = ShaderInfo.Name ?? ((SourceFile != null) ? Path.GetFileNameWithoutExtension(SourceFile) : "shader");
+
+			if ((ShaderInfo.Stages & ShaderStages.Vertex) > 0)
+			{
 				try
 				{
-					if (File.Exists(glslPath))
-						File.Delete(glslPath);
-					File.WriteAllText(glslPath, visitor.GLSL.GetGLSLOutput());
+					var path = Path.Combine(outDir, outName + ".vert");
+					if (File.Exists(path))
+						File.Delete(path);
+					File.WriteAllText(path, visitor.GLSL.GetGLSLOutput(ShaderStages.Vertex));
 				}
 				catch (Exception e)
 				{
 					error = new CompileError(ErrorSource.Output, 0, 0,
-						$"Unable to write GLSL file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+						$"Unable to write vertex source file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+					return false;
+				}
+			}
+			if ((ShaderInfo.Stages & ShaderStages.TessControl) > 0)
+			{
+				try
+				{
+					var path = Path.Combine(outDir, outName + ".tesc");
+					if (File.Exists(path))
+						File.Delete(path);
+					File.WriteAllText(path, visitor.GLSL.GetGLSLOutput(ShaderStages.TessControl));
+				}
+				catch (Exception e)
+				{
+					error = new CompileError(ErrorSource.Output, 0, 0,
+						$"Unable to write tess control source file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+					return false;
+				}
+			}
+			if ((ShaderInfo.Stages & ShaderStages.TessEval) > 0)
+			{
+				try
+				{
+					var path = Path.Combine(outDir, outName + ".tese");
+					if (File.Exists(path))
+						File.Delete(path);
+					File.WriteAllText(path, visitor.GLSL.GetGLSLOutput(ShaderStages.TessEval));
+				}
+				catch (Exception e)
+				{
+					error = new CompileError(ErrorSource.Output, 0, 0,
+						$"Unable to write tess eval source file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+					return false;
+				}
+			}
+			if ((ShaderInfo.Stages & ShaderStages.Geometry) > 0)
+			{
+				try
+				{
+					var path = Path.Combine(outDir, outName + ".geom");
+					if (File.Exists(path))
+						File.Delete(path);
+					File.WriteAllText(path, visitor.GLSL.GetGLSLOutput(ShaderStages.Geometry));
+				}
+				catch (Exception e)
+				{
+					error = new CompileError(ErrorSource.Output, 0, 0,
+						$"Unable to write geometry source file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
+					return false;
+				}
+			}
+			if ((ShaderInfo.Stages & ShaderStages.Fragment) > 0)
+			{
+				try
+				{
+					var path = Path.Combine(outDir, outName + ".frag");
+					if (File.Exists(path))
+						File.Delete(path);
+					File.WriteAllText(path, visitor.GLSL.GetGLSLOutput(ShaderStages.Fragment));
+				}
+				catch (Exception e)
+				{
+					error = new CompileError(ErrorSource.Output, 0, 0,
+						$"Unable to write fragment source file, reason: '{e.Message.Substring(0, e.Message.Length - 1)}'.");
 					return false;
 				}
 			}
 
+			error = null;
 			return true;
 		}
 

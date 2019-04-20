@@ -50,16 +50,20 @@ namespace SSLang
 			_varSource.AppendLine();
 		}
 
-		// Gets the full glsl output with all stages combined together
-		public string GetGLSLOutput()
+		// Gets the glsl output for a specific stage, or a combined shader for ShaderStages.All
+		public string GetGLSLOutput(ShaderStages stage)
 		{
-			return _varSource.ToString()
-				   + _funcSources[ShaderStages.None].ToString()
-				   + _funcSources[ShaderStages.Vertex].ToString()
-				   + _funcSources[ShaderStages.TessControl].ToString()
-				   + _funcSources[ShaderStages.TessEval].ToString()
-				   + _funcSources[ShaderStages.Geometry].ToString()
-				   + _funcSources[ShaderStages.Fragment].ToString();
+			if (stage == ShaderStages.All)
+			{
+				return _varSource.ToString()
+					   + _funcSources[ShaderStages.None].ToString()
+					   + _funcSources[ShaderStages.Vertex].ToString()
+					   + _funcSources[ShaderStages.TessControl].ToString()
+					   + _funcSources[ShaderStages.TessEval].ToString()
+					   + _funcSources[ShaderStages.Geometry].ToString()
+					   + _funcSources[ShaderStages.Fragment].ToString(); 
+			}
+			return _varSource.ToString() + _funcSources[stage].ToString();
 		}
 
 		public string GetStageSource(ShaderStages stage) =>

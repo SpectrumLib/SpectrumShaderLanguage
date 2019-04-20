@@ -60,6 +60,7 @@ namespace SLLC
 			catch (Exception e) // Unknown error
 			{
 				CConsole.Error($"({e.GetType()}) {e.Message}");
+				CConsole.Error('\n' + e.StackTrace);
 			}
 		}
 

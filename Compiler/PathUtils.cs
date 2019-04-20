@@ -34,6 +34,20 @@ namespace SSLang
 			}
 		}
 
+		// Checks if the path is a valid filesystem path and points to a directory
+		public static bool IsValidDirectory(string path, bool allowRelative = true)
+		{
+			try
+			{
+				var fpath = Path.GetFullPath(path);
+				return (allowRelative || Path.IsPathRooted(path)) && Path.GetExtension(path) == String.Empty;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
 		// Replaces the extension of a path
 		public static string ReplaceExtension(string path, string newExt)
 		{
