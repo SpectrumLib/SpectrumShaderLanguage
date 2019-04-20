@@ -53,7 +53,7 @@ namespace SSLang
 		// Gets the full glsl output with all stages combined together
 		public string GetGLSLOutput()
 		{
-			return _varSource.ToString() 
+			return _varSource.ToString()
 				   + _funcSources[ShaderStages.None].ToString()
 				   + _funcSources[ShaderStages.Vertex].ToString()
 				   + _funcSources[ShaderStages.TessControl].ToString()
@@ -63,7 +63,7 @@ namespace SSLang
 		}
 
 		public string GetStageSource(ShaderStages stage) =>
-			_varSource.ToString() + _funcSources[ShaderStages.None].ToString() + 
+			_varSource.ToString() + _funcSources[ShaderStages.None].ToString() +
 			((stage != ShaderStages.None) ? _funcSources[stage].ToString() : "");
 
 		public void EmitBlankLineVar() => _varSource.AppendLine();
@@ -76,7 +76,7 @@ namespace SSLang
 		public void PopIndent() => _indent = new string('\t', (IndentLevel > 0) ? _indent.Length - 1 : 0);
 
 		#region Variables
-		public void EmitVertexAttribute(Variable vrbl, uint loc) => 
+		public void EmitVertexAttribute(Variable vrbl, uint loc) =>
 			_varSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl(false)};");
 
 		public void EmitFragmentOutput(Variable vrbl, uint loc) => // Wont ever be an array
@@ -144,6 +144,9 @@ namespace SSLang
 		public void EmitIfStatement(ExprResult cond) => _funcSource.AppendLine($"{_indent}if ({cond.RefText}) {{");
 		public void EmitElifStatement(ExprResult cond) => _funcSource.AppendLine($"{_indent}else if ({cond.RefText}) {{");
 		public void EmitElseStatement() => _funcSource.AppendLine(_indent + "else {");
+
+		public void EmitForLoopHeader(string init, ExprResult cond, string update) =>
+			_funcSource.AppendLine($"{_indent}for ( {init} ; {cond.RefText} ; {update} )");
 		#endregion // Functions
 
 		// Gets the glsl builtin function name

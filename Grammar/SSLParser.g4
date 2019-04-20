@@ -131,7 +131,7 @@ forLoopInit
     : (variableDefinition|assignment) (',' (variableDefinition|assignment))*
     ;
 forLoopUpdate
-    : assignment (',' assignment)*
+    : (assignment|expression) (',' (assignment|expression))*
     ;
 whileLoop
     : 'while' '(' Condition=expression ')' (block|statement)

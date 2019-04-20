@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
@@ -528,8 +529,6 @@ namespace SSLang
 		public override ExprResult VisitAssignment([NotNull] SSLParser.AssignmentContext context)
 		{
 			var vrbl = findVariable(context, context.Name.Text, false, true);
-			if (vrbl.Constant)
-				_THROW(context, $"Cannot assign a value to constant variable '{vrbl.Name}'.");
 			var actx = context.arrayIndexer();
 			var swiz = context.SWIZZLE();
 			var ltype = TypeUtils.ApplyLValueModifier(this, context.Name, vrbl, actx, swiz, out var arrIndex);
@@ -624,6 +623,129 @@ namespace SSLang
 			ScopeManager.PopScope();
 
 			return null;
+		}
+
+		public override ExprResult VisitForLoop([NotNull] SSLParser.ForLoopContext context)
+		{
+			ScopeManager.PushScope(ScopeType.Loop);
+
+			var initText = Visit(context.forLoopInit()).RefText;
+			var cexpr = (context.Condition != null) ? Visit(context.Condition) : null;
+			if ((cexpr?.Type ?? ShaderType.Bool) != ShaderType.Bool)
+				_THROW(context.Condition, "For loop conditions must be of type Bool.");
+			var updateText = Visit(context.forLoopUpdate()).RefText;
+
+			GLSL.EmitForLoopHeader(initText, cexpr, updateText);
+			GLSL.EmitOpenBlock();
+
+			if (context.block() != null) Visit(context.block());
+			else Visit(context.statement());
+
+			GLSL.EmitCloseBlock();
+			return null;
+		}
+
+		public override ExprResult VisitForLoopInit([NotNull] SSLParser.ForLoopInitContext context)
+		{
+			StringBuilder sb = new StringBuilder(128);
+
+			foreach (var ipt in context.children)
+			{
+				if (ipt is SSLParser.AssignmentContext)
+				{
+					var ac = ipt as SSLParser.AssignmentContext;
+					var vrbl = findVariable(ac, ac.Name.Text, true, true);
+					if (ac.SWIZZLE() != null)
+						_THROW(ac, $"Cannot use swizzles in for loop initializers ('{ac.Name.Text}').");
+					var ltype = TypeUtils.ApplyLValueModifier(this, ac.Name, vrbl, ac.arrayIndexer(), null, out var arrIndex);
+					if (vrbl.IsArray && !arrIndex.HasValue)
+						_THROW(ac, $"Cannot assign to an array variable ('{ac.Name.Text}').");
+
+					var cpx = ac.Op.Type != SSLParser.OP_ASSIGN;
+					if (cpx)
+						_THROW(ac.Op, $"Complex assignments are not allowed in for loop initializers ('{ac.Op.Text}').");
+					var expr = Visit(ac.Value);
+					if (!expr.Type.CanCastTo(ltype))
+						_THROW(ac.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
+
+					sb.Append($"{vrbl.Name} = {expr.RefText}");
+				}
+				else if (ipt is SSLParser.VariableDefinitionContext)
+				{
+					var vdc = ipt as SSLParser.VariableDefinitionContext;
+					if (vdc.arrayIndexer() != null || vdc.arrayLiteral() != null)
+						_THROW(vdc, $"Cannot declare an array in a for loop initializer ('{vdc.Name.Text}').");
+					if (vdc.KW_CONST() != null)
+						_THROW(vdc, $"Cannot declare a constant in a for loop initializer ('{vdc.Name.Text}').");
+					if (!ScopeManager.TryAddLocal(vdc, out var vrbl, out var error))
+						_THROW(vdc, error);
+					if (!(vrbl.Type.IsScalarType() || vrbl.Type.IsVectorType()))
+						_THROW(vdc, $"Can only declare scalar and vector types in a for loop initializer ('{vrbl.Name}').");
+
+					var expr = Visit(vdc.expression());
+					if (!expr.Type.CanCastTo(vrbl.Type))
+						_THROW(vdc.expression(), $"The expression type '{expr.Type}' cannot be assigned to the variable type '{vrbl.Type}'.");
+
+					sb.Append($"{vrbl.GetGLSLDecl(false, null)} = {expr.RefText}");
+				}
+				else if (ipt is ITerminalNode && (ipt as ITerminalNode).GetText() == ",")
+					sb.Append(", ");
+			}
+
+			return new ExprResult(ShaderType.Void, 0, sb.ToString());
+		}
+
+		public override ExprResult VisitForLoopUpdate([NotNull] SSLParser.ForLoopUpdateContext context)
+		{
+			StringBuilder sb = new StringBuilder(128);
+
+			foreach (var ipt in context.children)
+			{
+				if (ipt is SSLParser.AssignmentContext)
+				{
+					var ac = ipt as SSLParser.AssignmentContext;
+					var vrbl = findVariable(ac, ac.Name.Text, true, true);
+					var ltype = TypeUtils.ApplyLValueModifier(this, ac.Name, vrbl, ac.arrayIndexer(), ac.SWIZZLE(), out var arrIndex);
+					if (vrbl.IsArray && !arrIndex.HasValue)
+						_THROW(ac, $"Cannot assign to an array variable ('{ac.Name.Text}').");
+
+					var cpx = ac.Op.Type != SSLParser.OP_ASSIGN;
+					var expr = Visit(ac.Value);
+					if (cpx)
+					{
+						var rtype = TypeUtils.CheckOperator(this, ac.Op, ltype, expr.Type);
+						if (rtype != ltype)
+							_THROW(context, $"Cannot reassign complex operator result type '{rtype}' back to variable type '{ltype}'.");
+					}
+					else
+					{
+						if (!expr.Type.CanCastTo(ltype))
+							_THROW(ac.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
+					}
+
+					sb.Append($"{vrbl.Name} {ac.Op.Text} {expr.RefText}");
+				}
+				else if (ipt is SSLParser.ExpressionContext)
+				{
+					var post = ipt as SSLParser.UnOpPostfixContext;
+					var pre = ipt as SSLParser.UnOpPrefixContext;
+					if (post == null && pre == null)
+						_THROW(ipt as SSLParser.ExpressionContext, "Only post-fix and pre-fix expressions are allowed in for loop updates.");
+					var optxt = post?.Op.Text ?? pre.Op.Text;
+					var vrbl = findVariable(ipt as SSLParser.ExpressionContext, post?.Expr.Text ?? pre.Expr.Text, true, true);
+					if (vrbl.Type != ShaderType.Int && vrbl.Type != ShaderType.UInt)
+						_THROW(context, $"Pre-fix/post-fix operators cannot be applied to the type '{vrbl.Type}'.");
+					if (vrbl.IsArray)
+						_THROW(context, "Pre-fix/post-fix operators cannot be applied to an array.");
+
+					if (post != null) sb.Append($"{vrbl.Name}{optxt}");
+					else sb.Append($"{optxt}{vrbl.Name}");
+				}
+				else if (ipt is ITerminalNode && (ipt as ITerminalNode).GetText() == ",")
+					sb.Append(", ");
+			}
+
+			return new ExprResult(ShaderType.Void, 0, sb.ToString());
 		}
 
 		public override ExprResult VisitControlFlowStatement([NotNull] SSLParser.ControlFlowStatementContext context)
