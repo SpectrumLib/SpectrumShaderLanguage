@@ -642,6 +642,8 @@ namespace SSLang
 			else Visit(context.statement());
 
 			GLSL.EmitCloseBlock();
+			ScopeManager.PopScope();
+
 			return null;
 		}
 
@@ -746,6 +748,43 @@ namespace SSLang
 			}
 
 			return new ExprResult(ShaderType.Void, 0, sb.ToString());
+		}
+
+		public override ExprResult VisitWhileLoop([NotNull] SSLParser.WhileLoopContext context)
+		{
+			var cexpr = Visit(context.Condition);
+			if (cexpr.Type != ShaderType.Bool)
+				_THROW(context.Condition, "The condition in a while loop must have type Bool.");
+
+			ScopeManager.PushScope(ScopeType.Loop);
+			GLSL.EmitWhileLoopHeader(cexpr);
+			GLSL.EmitOpenBlock();
+
+			if (context.block() != null) Visit(context.block());
+			else Visit(context.statement());
+
+			GLSL.EmitCloseBlock();
+			ScopeManager.PopScope();
+
+			return null;
+		}
+
+		public override ExprResult VisitDoLoop([NotNull] SSLParser.DoLoopContext context)
+		{
+			var cexpr = Visit(context.Condition);
+			if (cexpr.Type != ShaderType.Bool)
+				_THROW(context.Condition, "The condition in a do/while loop must have type Bool.");
+
+			ScopeManager.PushScope(ScopeType.Loop);
+			GLSL.EmitDoLoopHeader();
+			GLSL.EmitOpenBlock();
+
+			Visit(context.block());
+
+			GLSL.EmitDoLoopFooter(cexpr);
+			ScopeManager.PopScope();
+
+			return null;
 		}
 
 		public override ExprResult VisitControlFlowStatement([NotNull] SSLParser.ControlFlowStatementContext context)

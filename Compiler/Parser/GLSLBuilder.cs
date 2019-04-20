@@ -147,6 +147,14 @@ namespace SSLang
 
 		public void EmitForLoopHeader(string init, ExprResult cond, string update) =>
 			_funcSource.AppendLine($"{_indent}for ( {init} ; {cond.RefText} ; {update} )");
+		public void EmitWhileLoopHeader(ExprResult cond) => _funcSource.AppendLine($"{_indent}while ({cond.RefText})");
+		public void EmitDoLoopHeader() => _funcSource.AppendLine($"{_indent}do");
+
+		public void EmitDoLoopFooter(ExprResult cond)
+		{
+			PopIndent();
+			_funcSource.AppendLine($"{_indent}}} while ({cond.RefText});");
+		}
 		#endregion // Functions
 
 		// Gets the glsl builtin function name
