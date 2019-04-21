@@ -30,6 +30,10 @@
       <HintPath>..\Dependencies\Antlr4.Runtime.Standard.dll</HintPath>
     </Reference>  
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\Dependencies\spirv-link.w" Link="Native\spirv-link.w" />
+  </ItemGroup>
   
   <PropertyGroup>
     <IsTravisCI>true</IsTravisCI>

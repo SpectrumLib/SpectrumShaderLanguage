@@ -33,3 +33,7 @@ This language is designed to minimally cover only the features that are required
 ## Acknowledgements
 
 This library uses [Antlr](https://www.antlr.org/) for lexing and parsing SSL for translation into GLSL.
+
+The build process makes use of [ILRepack](https://github.com/gluck/il-repack) for combining .NET binaries for easier distribution.
+
+The library uses the [VulkanSDK](https://www.lunarg.com/vulkan-sdk/) and [SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools) projects developed by LunarG and many open source developers.
