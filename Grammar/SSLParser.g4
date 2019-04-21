@@ -128,7 +128,8 @@ forLoop
       ')' (block|statement)
     ;
 forLoopInit
-    : (variableDefinition|assignment) (',' (variableDefinition|assignment))*
+    : variableDefinition
+    | Assigns+=assignment (',' Assigns+=assignment)*
     ;
 forLoopUpdate
     : (assignment|expression) (',' (assignment|expression))*
