@@ -28,7 +28,7 @@ namespace SLLC
 
 					var options = new CompileOptions {
 						WarnCallback = WarnCallback,
-						Compile = false,
+						Compile = true,
 						OutputGLSL = true
 					};
 

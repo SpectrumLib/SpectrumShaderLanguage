@@ -140,6 +140,21 @@ namespace SSLang
 					return false;
 			}
 
+			// Compile if requested
+			if (options.Compile)
+			{
+				if ((ShaderInfo.Stages & ShaderStages.Vertex) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Vertex), ShaderStages.Vertex, out error))
+					return false;
+				if ((ShaderInfo.Stages & ShaderStages.TessControl) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.TessControl), ShaderStages.TessControl, out error))
+					return false;
+				if ((ShaderInfo.Stages & ShaderStages.TessEval) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.TessEval), ShaderStages.TessEval, out error))
+					return false;
+				if ((ShaderInfo.Stages & ShaderStages.Geometry) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Geometry), ShaderStages.Geometry, out error))
+					return false;
+				if ((ShaderInfo.Stages & ShaderStages.Fragment) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Fragment), ShaderStages.Fragment, out error))
+					return false;
+			}
+
 			return true;
 		}
 
