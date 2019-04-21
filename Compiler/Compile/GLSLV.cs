@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using SSLang.Reflection;
 
@@ -12,6 +15,16 @@ namespace SSLang
 		private static readonly char[] PATH_SEP = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 		// The required SDK version (refine and change this as our requirements change)
 		private static readonly Version REQUIRED_SDK_VERSION = new Version(1, 0, 0, 0);
+		// Stage names for the compiler arguments
+		private static readonly Dictionary<ShaderStages, string> STAGE_NAMES = new Dictionary<ShaderStages, string>() {
+			{ ShaderStages.Vertex, "vert" }, { ShaderStages.TessControl, "tesc" }, { ShaderStages.TessEval, "tese" }, { ShaderStages.Geometry, "geom" },
+			{ ShaderStages.Fragment, "frag" }
+		};
+		// Entry point names
+		private static readonly Dictionary<ShaderStages, string> ENTRY_NAMES = new Dictionary<ShaderStages, string>() {
+			{ ShaderStages.Vertex, "vert_main" }, { ShaderStages.TessControl, "tesc_main" }, { ShaderStages.TessEval, "tese_main" }, { ShaderStages.Geometry, "geom_main" },
+			{ ShaderStages.Fragment, "frag_main" }
+		};
 
 		// The absolute path to glslangValidator
 		private static string TOOL_PATH = null;
@@ -19,11 +32,63 @@ namespace SSLang
 		public static Version SDK_VERSION { get; private set; } = null;
 
 		// Submit some glsl source code for compilation
-		public static bool Compile(CompileOptions options, string glsl, ShaderStages stage, out CompileError error)
+		public static bool Compile(CompileOptions options, string glsl, ShaderStages stage, out string bcFile, out CompileError error)
 		{
 			if (!Initialize(out string initError))
 			{
+				bcFile = null;
 				error = new CompileError(ErrorSource.Compiler, 0, 0, initError);
+				return false;
+			}
+
+			// Create the arguments
+			var ep = ENTRY_NAMES[stage];
+			bcFile = Path.GetTempFileName();
+			var args = $"-V -e {ep} --sep {ep} --client vulkan100 -o \"{bcFile}\" --stdin -S {STAGE_NAMES[stage]}";
+
+			// Define the process info
+			ProcessStartInfo psi = new ProcessStartInfo {
+				FileName = $"\"{TOOL_PATH}\"",
+				Arguments = args,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardError = true,
+				RedirectStandardOutput = true,
+				RedirectStandardInput = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+				ErrorDialog = false
+			};
+
+			// Run the compiler
+			string stdout = null;
+			using (Process proc = new Process())
+			{
+				proc.StartInfo = psi;
+				proc.Start();
+				proc.StandardInput.AutoFlush = true;
+				proc.StandardInput.Write(glsl);
+				proc.StandardInput.Close();
+				bool done = proc.WaitForExit(options.CompilerTimeout);
+				if (!done)
+				{
+					proc.Kill();
+					error = new CompileError(ErrorSource.Compiler, 0, 0, $"Compiler timed-out during stage '{stage}'.");
+					return false;
+				}
+				stdout = proc.StandardOutput.ReadToEnd() + '\n' + proc.StandardError.ReadToEnd();
+			}
+
+			// Convert the output to a list of error messages
+			var lines = stdout
+				.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+				.Where(line => line.StartsWith("ERROR:") && !line.Contains("Source entry point")) // Remove the error message about renaming the entry point
+				.Select(line => line.Trim().Substring(7)) // Trim the "ERROR: " text off of the front
+				.ToList();
+
+			// Report the errors, if present
+			if (lines.Count > 0)
+			{
+				error = new CompileError(ErrorSource.Compiler, 0, 0, String.Join("\n", lines));
 				return false;
 			}
 

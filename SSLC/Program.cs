@@ -34,9 +34,17 @@ namespace SLLC
 
 					if (!compiler.Compile(options, out var error))
 					{
-						CConsole.Error($"'{fileName}'[{error.Line}:{error.CharIndex}] - {error.Message}");
-						if (error.RuleStack != null)
-							CConsole.Error($"    Rule Stack:  {String.Join(" -> ", error.RuleStack)}");
+						if (error.Source == ErrorSource.Translator)
+						{
+							CConsole.Error($"'{fileName}'[{error.Line}:{error.CharIndex}] - " + error.Message);
+							if (error.RuleStack != null)
+								CConsole.Error($"    Rule Stack:  {String.Join(" -> ", error.RuleStack)}");
+						}
+						else
+						{
+							foreach (var err in error.Message.Split('\n'))
+								CConsole.Error($"'{fileName}' - " + err);
+						}
 						return;
 					}
 				}

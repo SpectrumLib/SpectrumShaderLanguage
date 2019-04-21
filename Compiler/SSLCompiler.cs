@@ -134,27 +134,37 @@ namespace SSLang
 			}
 
 			// Output the GLSL if requested
-			if (options.OutputGLSL)
-			{
-				if (!outputGLSL(options, visitor, out error))
-					return false;
-			}
+			if (options.OutputGLSL && !outputGLSL(options, visitor, out error))
+				return false;
 
 			// Compile if requested
-			if (options.Compile)
-			{
-				if ((ShaderInfo.Stages & ShaderStages.Vertex) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Vertex), ShaderStages.Vertex, out error))
-					return false;
-				if ((ShaderInfo.Stages & ShaderStages.TessControl) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.TessControl), ShaderStages.TessControl, out error))
-					return false;
-				if ((ShaderInfo.Stages & ShaderStages.TessEval) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.TessEval), ShaderStages.TessEval, out error))
-					return false;
-				if ((ShaderInfo.Stages & ShaderStages.Geometry) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Geometry), ShaderStages.Geometry, out error))
-					return false;
-				if ((ShaderInfo.Stages & ShaderStages.Fragment) > 0 && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Fragment), ShaderStages.Fragment, out error))
-					return false;
-			}
+			if (options.Compile && !compile(options, visitor, out error))
+				return false;
 
+			return true;
+		}
+
+		private bool compile(CompileOptions options, SSLVisitor visitor, out CompileError error)
+		{
+			bool hasVert = (ShaderInfo.Stages & ShaderStages.Vertex) > 0,
+				 hasTesc = (ShaderInfo.Stages & ShaderStages.TessControl) > 0,
+				 hasTese = (ShaderInfo.Stages & ShaderStages.TessEval) > 0,
+				 hasGeom = (ShaderInfo.Stages & ShaderStages.Geometry) > 0,
+				 hasFrag = (ShaderInfo.Stages & ShaderStages.Fragment) > 0;
+
+			string vertPath = null, tescPath = null, tesePath = null, geomPath = null, fragPath = null;
+			if (hasVert && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Vertex), ShaderStages.Vertex, out vertPath, out error))
+				return false;
+			if (hasTesc && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.TessControl), ShaderStages.TessControl, out tescPath, out error))
+				return false;
+			if (hasTese && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.TessEval), ShaderStages.TessEval, out tesePath, out error))
+				return false;
+			if (hasGeom && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Geometry), ShaderStages.Geometry, out geomPath, out error))
+				return false;
+			if (hasFrag && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Fragment), ShaderStages.Fragment, out fragPath, out error))
+				return false;
+
+			error = null;
 			return true;
 		}
 

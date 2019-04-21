@@ -65,6 +65,11 @@ namespace SSLang
 		/// are valid, but result in sub-optimal performance.
 		/// </summary>
 		public bool ForceContiguousUniforms = false;
+		/// <summary>
+		/// The number of milliseconds to wait for the Vulkan GLSL compiler to complete before timing out. Defaults to 2000
+		/// (5 seconds), and a value <= 0 will wait indefinitely.
+		/// </summary>
+		public int CompilerTimeout = 5000;
 		#endregion // Compiler Options
 		#endregion // Fields
 
@@ -81,6 +86,9 @@ namespace SSLang
 			OutputPath = (Compile && OutputPath != null) ? Path.GetFullPath(OutputPath) : null;
 			ReflectionPath = (OutputReflection && ReflectionPath != null) ? Path.GetFullPath(ReflectionPath) : null;
 			GLSLPath = (OutputGLSL && GLSLPath != null) ? Path.GetFullPath(GLSLPath) : null;
+
+			CompilerTimeout = Math.Max(CompilerTimeout, 0);
+			CompilerTimeout = (CompilerTimeout == 0) ? Int32.MaxValue : CompilerTimeout;
 		}
 
 		/// <summary>
