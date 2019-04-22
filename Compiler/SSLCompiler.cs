@@ -164,6 +164,11 @@ namespace SSLang
 			if (hasFrag && !GLSLV.Compile(options, visitor.GLSL.GetGLSLOutput(ShaderStages.Fragment), ShaderStages.Fragment, out fragPath, out error))
 				return false;
 
+			// Link the files
+			var linkOut = options.OptimizeBytecode ? Path.GetTempFileName() : options.OutputPath;
+			if (!SPIRVLink.Link(options, new[] { vertPath, tescPath, tesePath, geomPath, fragPath }, linkOut, out error))
+				return false;
+
 			error = null;
 			return true;
 		}

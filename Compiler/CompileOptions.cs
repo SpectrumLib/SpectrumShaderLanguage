@@ -70,6 +70,11 @@ namespace SSLang
 		/// (5 seconds), and a value <= 0 will wait indefinitely.
 		/// </summary>
 		public int CompilerTimeout = 5000;
+		/// <summary>
+		/// Gets if the output bytecode is run through a secondary optimization step to optimize the bytecode for
+		/// execution speed. Not required but strongly recommended. Defaults to true.
+		/// </summary>
+		public bool OptimizeBytecode = true;
 		#endregion // Compiler Options
 		#endregion // Fields
 

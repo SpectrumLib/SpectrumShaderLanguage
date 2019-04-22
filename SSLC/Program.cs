@@ -29,7 +29,8 @@ namespace SLLC
 					var options = new CompileOptions {
 						WarnCallback = WarnCallback,
 						Compile = true,
-						OutputGLSL = true
+						OutputGLSL = true,
+						OptimizeBytecode = false
 					};
 
 					if (!compiler.Compile(options, out var error))
