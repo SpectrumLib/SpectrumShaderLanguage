@@ -146,6 +146,9 @@ namespace SSLang
 
 		private bool compile(CompileOptions options, SSLVisitor visitor, out CompileError error)
 		{
+			var finalPath = options.OutputPath ?? (ShaderInfo.Name != null ? Path.Combine(Directory.GetCurrentDirectory(), $"{ShaderInfo.Name}.spv") : 
+				(CompileOptions.MakeDefaultOutputPath(SourceFile) ?? Path.Combine(Directory.GetCurrentDirectory(), "shader.spv")));
+
 			bool hasVert = (ShaderInfo.Stages & ShaderStages.Vertex) > 0,
 				 hasTesc = (ShaderInfo.Stages & ShaderStages.TessControl) > 0,
 				 hasTese = (ShaderInfo.Stages & ShaderStages.TessEval) > 0,
@@ -165,7 +168,7 @@ namespace SSLang
 				return false;
 
 			// Link the files
-			var linkOut = options.OptimizeBytecode ? Path.GetTempFileName() : options.OutputPath;
+			var linkOut = options.OptimizeBytecode ? Path.GetTempFileName() : finalPath;
 			if (!SPIRVLink.Link(options, new[] { vertPath, tescPath, tesePath, geomPath, fragPath }, linkOut, out error))
 				return false;
 

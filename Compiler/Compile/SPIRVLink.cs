@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SSLang
 {
@@ -16,6 +19,58 @@ namespace SSLang
 			if (!Initialize(out string initError))
 			{
 				error = new CompileError(ErrorSource.Compiler, 0, 0, initError);
+				return false;
+			}
+
+			// Build the args
+			StringBuilder args = new StringBuilder(512);
+			args.Append($"--create-library --target-env vulkan1.0 --verify-ids");
+			args.Append($" -o \"{output}\"");
+			foreach (var mfile in modules)
+			{
+				if (mfile != null)
+					args.Append($" \"{mfile}\"");
+			}
+
+			// Describe the process
+			ProcessStartInfo psi = new ProcessStartInfo {
+				FileName = $"\"{TOOL_PATH}\"",
+				Arguments = args.ToString(),
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardError = true,
+				RedirectStandardOutput = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+				ErrorDialog = false
+			};
+
+			// Run the linker
+			string stdout = null;
+			using (Process proc = new Process())
+			{
+				proc.StartInfo = psi;
+				proc.Start();
+				bool done = proc.WaitForExit(options.CompilerTimeout);
+				if (!done)
+				{
+					proc.Kill();
+					error = new CompileError(ErrorSource.Compiler, 0, 0, "Linking process timed out.");
+					return false;
+				}
+				stdout = proc.StandardOutput.ReadToEnd() + '\n' + proc.StandardError.ReadToEnd();
+			}
+
+			// Convert the output to a list of error messages
+			var lines = stdout
+				.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+				.Where(line => line.StartsWith("error:")) 
+				.Select(line => line.Trim().Substring(7)) // Trim the "error: " text off of the front
+				.ToList();
+
+			// Report the errors, if present
+			if (lines.Count > 0)
+			{
+				error = new CompileError(ErrorSource.Compiler, 0, 0, String.Join("\n", lines));
 				return false;
 			}
 
