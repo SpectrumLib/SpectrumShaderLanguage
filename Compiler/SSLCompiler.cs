@@ -146,8 +146,7 @@ namespace SSLang
 
 		private bool compile(CompileOptions options, SSLVisitor visitor, out CompileError error)
 		{
-			var finalPath = options.OutputPath ?? (ShaderInfo.Name != null ? Path.Combine(Directory.GetCurrentDirectory(), $"{ShaderInfo.Name}.spv") : 
-				(CompileOptions.MakeDefaultOutputPath(SourceFile) ?? Path.Combine(Directory.GetCurrentDirectory(), "shader.spv")));
+			var finalPath = options.OutputPath ?? CompileOptions.MakeDefaultOutputPath(SourceFile) ?? Path.Combine(Directory.GetCurrentDirectory(), "shader.spv");
 
 			bool hasVert = (ShaderInfo.Stages & ShaderStages.Vertex) > 0,
 				 hasTesc = (ShaderInfo.Stages & ShaderStages.TessControl) > 0,
@@ -179,7 +178,7 @@ namespace SSLang
 		private bool outputGLSL(CompileOptions options, SSLVisitor visitor, out CompileError error)
 		{
 			var outDir = options.GLSLPath ?? CompileOptions.MakeDefaultGLSLPath(SourceFile) ?? Directory.GetCurrentDirectory();
-			var outName = ShaderInfo.Name ?? ((SourceFile != null) ? Path.GetFileNameWithoutExtension(SourceFile) : "shader");
+			var outName = (SourceFile != null) ? Path.GetFileNameWithoutExtension(SourceFile) : "shader";
 
 			if ((ShaderInfo.Stages & ShaderStages.Vertex) > 0)
 			{

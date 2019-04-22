@@ -16,7 +16,7 @@ file
 
 // Shader metadata statements
 shaderMetaStatement
-    : 'shader' Name=STRING_LITERAL ';'
+    : 'shader' '{' '}' ';'
     ;
 
 // All top-level statements that can appear in the file scope

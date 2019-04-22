@@ -276,18 +276,6 @@ namespace SSLang
 		#region Top-Level
 		public override ExprResult VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
 		{
-			var name = context.Name.Text;
-			name = name.Substring(1, name.Length - 2);
-
-			if (name.Length > 0)
-			{
-				GLSL.EmitCommentVar($"Shader name: \"{name}\"");
-				GLSL.EmitBlankLineVar();
-				Info.Name = name;
-			}
-			else
-				_WARN(context, "Shader name is an empty string, ignoring.");
-
 			return null;
 		}
 

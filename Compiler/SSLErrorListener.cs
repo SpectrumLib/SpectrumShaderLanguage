@@ -42,8 +42,6 @@ namespace SSLang
 			// TODO: Cause problems to see what errors come out, and fill this out with more intelligent error messages as we go
 			if (ridx == SSLParser.RULE_file)
 				errMsg = $"Unexpected input '{badText}' at top level; expected type block, uniform, or function.";
-			else if (ridx == SSLParser.RULE_shaderMetaStatement)
-				errMsg = "Expected string literal for shader name.";
 			else
 			{
 				if (msg.Contains("missing ';' at"))
