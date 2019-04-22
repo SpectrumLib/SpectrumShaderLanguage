@@ -30,7 +30,7 @@ namespace SLLC
 						WarnCallback = WarnCallback,
 						Compile = true,
 						OutputGLSL = true,
-						OptimizeBytecode = false
+						OptimizeBytecode = true
 					};
 
 					if (!compiler.Compile(options, out var error))
