@@ -171,6 +171,10 @@ namespace SSLang
 			if (!SPIRVLink.Link(options, new[] { vertPath, tescPath, tesePath, geomPath, fragPath }, linkOut, out error))
 				return false;
 
+			// Optimize the files
+			if (options.OptimizeBytecode && !SPIRVOpt.Optimize(options, linkOut, finalPath, out error))
+				return false;
+
 			error = null;
 			return true;
 		}
