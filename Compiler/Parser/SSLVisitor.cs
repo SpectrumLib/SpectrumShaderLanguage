@@ -409,10 +409,7 @@ namespace SSLang
 			}
 
 			// Visit the statements
-			foreach (var stmt in context.block().statement())
-			{
-				Visit(stmt);
-			}
+			Visit(context.block());
 
 			// Ensure assignments and an accurate return type
 			ensureExitAssignments(context);
@@ -442,10 +439,7 @@ namespace SSLang
 			enterStageFunction(ShaderStages.Vertex);
 
 			// Visit the statements
-			foreach (var stmt in context.block().statement())
-			{
-				Visit(stmt);
-			}
+			Visit(context.block());
 
 			ensureExitAssignments(context);
 			exitFunction();
@@ -457,10 +451,7 @@ namespace SSLang
 			enterStageFunction(ShaderStages.Fragment);
 
 			// Visit the statements
-			foreach (var stmt in context.block().statement())
-			{
-				Visit(stmt);
-			}
+			Visit(context.block());
 
 			ensureExitAssignments(context);
 			exitFunction();
@@ -469,6 +460,26 @@ namespace SSLang
 		#endregion // Stage Functions
 
 		#region Statements
+		public override ExprResult VisitBlock([NotNull] SSLParser.BlockContext context)
+		{
+			RuleContext exitStmt = null;
+			foreach (var stmt in context.statement())
+			{
+				// First statement after exiting the block, give warning about unreachable code and return
+				if (exitStmt != null)
+				{
+					_WARN(stmt, "Unreachable code detected, remaining code in block will be ignored.");
+					return null;
+				}
+
+				Visit(stmt);
+
+				// Check for unreachable code
+				exitStmt = stmt.controlFlowStatement();
+			}
+			return null;
+		}
+
 		public override ExprResult VisitVariableDeclaration([NotNull] SSLParser.VariableDeclarationContext context)
 		{
 			if (!ScopeManager.TryAddLocal(context, out var vrbl, out var error))
