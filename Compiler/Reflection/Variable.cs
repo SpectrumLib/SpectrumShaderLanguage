@@ -96,10 +96,6 @@ namespace SSLang.Reflection
 
 		// Used internally to throw an error for attempting to read write-only built-in variables or 'out' function parameters
 		internal readonly bool CanRead;
-
-		// Used internally to check if a variable has been written to, for variables that must be assigned
-		//   before their scope exits
-		internal bool IsWritten = false;
 		#endregion // Fields
 
 		internal Variable(ShaderType type, string name, VariableScope scope, bool @const = false, uint asize = 0, bool cr = true)
@@ -110,7 +106,6 @@ namespace SSLang.Reflection
 			Constant = (Scope == VariableScope.Uniform) || (Scope == VariableScope.Attribute) || @const;
 			ArraySize = asize;
 			CanRead = cr;
-			IsWritten = false;
 		}
 
 		internal string GetGLSLDecl(bool @const = true, ShaderStages? stage = null) => 

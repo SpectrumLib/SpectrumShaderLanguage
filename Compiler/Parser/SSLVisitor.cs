@@ -228,21 +228,21 @@ namespace SSLang
 				foreach (var par in _currFunc.Params)
 				{
 					var pvar = ScopeManager.FindLocal(par.Name);
-					if (par.Access == StandardFunction.Access.Out && !pvar.IsWritten)
+					if (par.Access == StandardFunction.Access.Out && !ScopeManager.IsAssigned(pvar))
 						_THROW(ctx, $"The 'out' parameter '{par.Name}' must be assigned to before the function exits.");
 				}
 			}
 			else if (_currStage == ShaderStages.Vertex)
 			{
 				var req = ScopeManager.FindLocal("$Position");
-				if (!req.IsWritten)
+				if (!ScopeManager.IsAssigned(req))
 					_THROW(ctx, $"The builtin variable '$Position' must be assigned before the vertex stage exits.");
 			}
 			else if (_currStage == ShaderStages.Fragment)
 			{
 				foreach (var fout in ScopeManager.Outputs.Values)
 				{
-					if (!fout.IsWritten)
+					if (!ScopeManager.IsAssigned(fout))
 						_THROW(ctx, $"The fragment output variable '{fout.Name}' must be assigned before the fragment stage exits.");
 				}
 			}
@@ -266,10 +266,7 @@ namespace SSLang
 			if (read)
 				vrbl.ReadStages |= _currStage;
 			if (write)
-			{
 				vrbl.WriteStages |= _currStage;
-				vrbl.IsWritten = true;
-			}
 			return vrbl;
 		}
 
@@ -404,7 +401,7 @@ namespace SSLang
 			GLSL.EmitOpenBlock();
 
 			// Push the arguments
-			ScopeManager.PushScope(ScopeType.Function);
+			ScopeManager.PushScope(ScopeType.Function, false);
 			foreach (var par in func.Params)
 			{
 				if (!ScopeManager.TryAddParameter(par, out error))
@@ -417,7 +414,11 @@ namespace SSLang
 				Visit(stmt);
 			}
 
+			// Ensure assignments and an accurate return type
 			ensureExitAssignments(context);
+			if (_currFunc.ReturnType != ShaderType.Void && !ScopeManager.HasReturn())
+				_THROW(context, $"The function '{_currFunc.Name}' cannot exit before returning a value.");
+
 			exitFunction();
 			return null;
 		}
@@ -430,7 +431,7 @@ namespace SSLang
 			GLSL.EmitCommentFunc($"Shader stage function ({stage})");
 			GLSL.EmitStageFunctionHeader();
 			GLSL.EmitOpenBlock();
-			ScopeManager.PushScope(ScopeType.Function);
+			ScopeManager.PushScope(ScopeType.Function, false);
 			ScopeManager.AddBuiltins(stage);
 			Info.Stages |= stage;
 			_currStage = stage;
@@ -506,7 +507,7 @@ namespace SSLang
 					GLSL.EmitDefinition(vrbl, exp);
 				}
 			}
-			vrbl.IsWritten = true;
+			ScopeManager.AddAssignment(vrbl);
 			return null;
 		}
 
@@ -536,6 +537,7 @@ namespace SSLang
 			if (expr.ArraySize != vrbl.ArraySize)
 				_THROW(context.Value, $"The expression has a mismatched array size with the assignment variable.");
 
+			ScopeManager.AddAssignment(vrbl);
 			GLSL.EmitAssignment(vrbl.GetOutputName(_currStage), arrIndex, swiz?.Symbol?.Text, context.Op.Text, expr);
 			return null;
 		}
@@ -557,7 +559,7 @@ namespace SSLang
 				_THROW(context.Cond, "The condition in an 'if' statment must have type Bool.");
 
 			GLSL.EmitIfStatement(cexpr);
-			ScopeManager.PushScope(ScopeType.Conditional);
+			ScopeManager.PushScope(ScopeType.Conditional, false);
 			GLSL.PushIndent();
 			if (context.Block != null)
 				Visit(context.Block);
@@ -582,7 +584,7 @@ namespace SSLang
 				_THROW(context.Cond, "The condition in an 'elif' statment must have type Bool.");
 
 			GLSL.EmitElifStatement(cexpr);
-			ScopeManager.PushScope(ScopeType.Conditional);
+			ScopeManager.PushScope(ScopeType.Conditional, false);
 			GLSL.PushIndent();
 			if (context.Block != null)
 				Visit(context.Block);
@@ -597,7 +599,7 @@ namespace SSLang
 		public override ExprResult VisitElseStatement([NotNull] SSLParser.ElseStatementContext context)
 		{
 			GLSL.EmitElseStatement();
-			ScopeManager.PushScope(ScopeType.Conditional);
+			ScopeManager.PushScope(ScopeType.Conditional, true);
 			GLSL.PushIndent();
 			if (context.Block != null)
 				Visit(context.Block);
@@ -611,7 +613,7 @@ namespace SSLang
 
 		public override ExprResult VisitForLoop([NotNull] SSLParser.ForLoopContext context)
 		{
-			ScopeManager.PushScope(ScopeType.Loop);
+			ScopeManager.PushScope(ScopeType.Loop, false); // No propogation because for loops are not guarenteed to run
 
 			var initText = (context.forLoopInit() != null) ? Visit(context.forLoopInit()).RefText : "";
 			var cexpr = (context.Condition != null) ? Visit(context.Condition) : null;
@@ -633,7 +635,6 @@ namespace SSLang
 
 		public override ExprResult VisitForLoopInit([NotNull] SSLParser.ForLoopInitContext context)
 		{
-			
 			if (context.variableDefinition() != null)
 			{
 				var vdc = context.variableDefinition();
@@ -674,6 +675,7 @@ namespace SSLang
 					if (!expr.Type.CanCastTo(ltype))
 						_THROW(ac.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
 
+					ScopeManager.AddAssignment(vrbl);
 					sb.Append($"{vrbl.Name} = {expr.RefText}");
 					++count;
 				}
@@ -710,6 +712,7 @@ namespace SSLang
 							_THROW(ac.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
 					}
 
+					ScopeManager.AddAssignment(vrbl);
 					sb.Append($"{vrbl.Name} {ac.Op.Text} {expr.RefText}");
 				}
 				else if (ipt is SSLParser.ExpressionContext)
@@ -725,6 +728,7 @@ namespace SSLang
 					if (vrbl.IsArray)
 						_THROW(context, "Pre-fix/post-fix operators cannot be applied to an array.");
 
+					ScopeManager.AddAssignment(vrbl);
 					if (post != null) sb.Append($"{vrbl.Name}{optxt}");
 					else sb.Append($"{optxt}{vrbl.Name}");
 				}
@@ -741,7 +745,7 @@ namespace SSLang
 			if (cexpr.Type != ShaderType.Bool)
 				_THROW(context.Condition, "The condition in a while loop must have type Bool.");
 
-			ScopeManager.PushScope(ScopeType.Loop);
+			ScopeManager.PushScope(ScopeType.Loop, false); // No propogation because while loops are not guarenteed to run
 			GLSL.EmitWhileLoopHeader(cexpr);
 			GLSL.EmitOpenBlock();
 
@@ -760,7 +764,7 @@ namespace SSLang
 			if (cexpr.Type != ShaderType.Bool)
 				_THROW(context.Condition, "The condition in a do/while loop must have type Bool.");
 
-			ScopeManager.PushScope(ScopeType.Loop);
+			ScopeManager.PushScope(ScopeType.Loop, true); // Yes on propogation because do loops are guarenteed to run at least once
 			GLSL.EmitDoLoopHeader();
 			GLSL.EmitOpenBlock();
 
@@ -784,9 +788,15 @@ namespace SSLang
 					if (rexpr != null)
 						_THROW(context, $"{((_currFunc != null) ? $"The function '{_currFunc.Name}' does" : "Shader stage functions do")} not allow return values.");
 				}
-				else if (!rtype.CanCastTo(etype))
-					_THROW(context, $"The given return type '{rtype}' cannot be cast to the expected type '{etype}'.");
+				else
+				{
+					if (rtype.IsVoid())
+						_THROW(context, $"The function '{_currFunc.Name}' expects a return value of type '{etype}'.");
+					else if (!rtype.CanCastTo(etype))
+						_THROW(context, $"The given return type '{rtype}' cannot be cast to the expected type '{etype}'.");
+				}
 
+				ScopeManager.AddReturn();
 				ensureExitAssignments(context);
 				GLSL.EmitReturn(rexpr);
 			}
@@ -817,6 +827,7 @@ namespace SSLang
 				_THROW(context, $"The postfix operator '{context.Op.Text}' cannot be applied to the type '{vrbl.Type}'.");
 			if (vrbl.IsArray)
 				_THROW(context, $"Cannot apply the postfix operator '{context.Op.Text}' to an array.");
+			ScopeManager.AddAssignment(vrbl);
 			return new ExprResult(vrbl.Type, 0, "(" + vrbl.GetOutputName(_currStage) + context.Op.Text + ")");
 		}
 
@@ -827,6 +838,7 @@ namespace SSLang
 				_THROW(context, $"The prefix operator '{context.Op.Text}' cannot be applied to the type '{vrbl.Type}'.");
 			if (vrbl.IsArray)
 				_THROW(context, $"Cannot apply the prefix operator '{context.Op.Text}' to an array.");
+			ScopeManager.AddAssignment(vrbl);
 			return new ExprResult(vrbl.Type, 0, "(" + context.Op.Text + vrbl.GetOutputName(_currStage) + ")");
 		}
 

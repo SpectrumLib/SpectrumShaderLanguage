@@ -71,6 +71,19 @@ namespace SSLang
 		//    used to check if a 'break' or 'continue' statement is valid.
 		public bool InLoopScope() => _scopes.Any(sc => sc.Type == ScopeType.Loop);
 
+		// Checks if the variable was assigned to in the current scope or in a parent scope, used to check if required
+		//    built-ins and `out`s are written to before exiting from a function.
+		public bool IsAssigned(Variable vrbl) => _scopes.Any(sc => sc.IsAssigned(vrbl));
+
+		// Adds an assignment flag to the variable in the current scope
+		public void AddAssignment(Variable vrbl) => _scopes.Peek().AddAssignment(vrbl);
+
+		// Adds a return statement flag to the current scope
+		public void AddReturn() => _scopes.Peek().AddReturn();
+		
+		// Checks the current scope to see if it has a return statement
+		public bool HasReturn() => _scopes.Peek().HasReturn;
+
 		#region Globals
 		public bool TryAddAttribute(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
@@ -154,7 +167,11 @@ namespace SSLang
 		#endregion // Globals
 
 		#region Functions
-		public void PushScope(ScopeType type) => _scopes.Push(new Scope(this, type));
+		public void PushScope(ScopeType type, bool prop)
+		{
+			var parent = _scopes.Count > 0 ? _scopes.Peek() : null;
+			_scopes.Push(new Scope(this, parent, type, prop));
+		}
 		public void PopScope() => _scopes.Pop();
 
 		public bool TryAddParameter(StandardFunction.Param p, out string error) =>
@@ -218,17 +235,31 @@ namespace SSLang
 		private readonly Dictionary<string, Variable> _builtins;
 		public IReadOnlyDictionary<string, Variable> BuiltIns => _builtins;
 
+		private readonly List<string> _assignedVars;
+		public IReadOnlyList<string> AssignedVars => _assignedVars;
+
 		public readonly ScopeManager Manager;
 		public readonly ScopeType Type;
+		public readonly Scope Parent;
+
+		// Some scopes are special in that their assignments and returns propogate to the parent scope
+		public readonly bool Propogate;
+
+		// If this scope has a return statement
+		public bool HasReturn { get; private set; }
 		#endregion // Fields
 
-		public Scope(ScopeManager m, ScopeType type)
+		public Scope(ScopeManager m, Scope parent, ScopeType type, bool prop)
 		{
 			Manager = m;
 			Type = type;
+			Parent = parent;
 			_params = new Dictionary<string, (Variable, StandardFunction.Param)>();
 			_locals = new Dictionary<string, Variable>();
 			_builtins = new Dictionary<string, Variable>();
+			_assignedVars = new List<string>();
+			Propogate = prop;
+			HasReturn = false;
 		}
 
 		public Variable FindVariable(string name) =>
@@ -265,6 +296,23 @@ namespace SSLang
 
 			error = null;
 			return true;
+		}
+
+		public void AddAssignment(Variable vrbl)
+		{
+			if (!_assignedVars.Contains(vrbl.Name))
+				_assignedVars.Add(vrbl.Name);
+			if (Propogate)
+				Parent?.AddAssignment(vrbl);
+		}
+
+		public bool IsAssigned(Variable vrbl) => _assignedVars.Contains(vrbl.Name);
+
+		public void AddReturn()
+		{
+			HasReturn = true;
+			if (Propogate)
+				Parent?.AddReturn();
 		}
 	}
 
