@@ -190,7 +190,7 @@ namespace SSLang.Reflection
 			{
 				if (ifmt == ImageFormat.Error) return "ERROR_IMAGE_TYPE";
 				var ctype = ifmt.GetComponentType();
-				var prefix = (ctype == ShaderType.Int) ? "i" : (ctype == ShaderType.UInt) ? "ui" : "";
+				var prefix = (ctype == ShaderType.Int) ? "i" : (ctype == ShaderType.UInt) ? "u" : "";
 				return prefix + ToKeyword(type);
 			}
 			else return ToKeyword(type);
@@ -321,6 +321,25 @@ namespace SSLang.Reflection
 			if (sidx == 0)
 				return false;
 			return type.IsVectorType() && (sidx <= type.GetVectorSize());
+		}
+
+		/// <summary>
+		/// Gets the swizzle text that generates the given type.
+		/// </summary>
+		/// <param name="type">The type to get the swizzle text for.</param>
+		/// <param name="stype">The type of swizzle, 0 = position, 1 = color, 2 = texcoord.</param>
+		/// <returns>The swizzle text (without the period), or null if the type is not a vector or scalar type.</returns>
+		public static string GetSwizzle(this ShaderType type, uint stype = 0)
+		{
+			if (type.IsScalarType() || type.IsVectorType())
+			{
+				var cc = type.GetVectorSize();
+				if (cc == 1) return (stype == 0) ? "x" : (stype == 1) ? "r" : "s";
+				if (cc == 2) return (stype == 0) ? "xy" : (stype == 1) ? "rg" : "st";
+				if (cc == 3) return (stype == 0) ? "xyz" : (stype == 1) ? "rgb" : "stp";
+				if (cc == 4) return (stype == 0) ? "xyzw" : (stype == 1) ? "rgba" : "stpq";
+			}
+			return null;
 		}
 
 		/// <summary>

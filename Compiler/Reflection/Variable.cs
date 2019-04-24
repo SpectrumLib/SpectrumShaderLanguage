@@ -244,6 +244,14 @@ namespace SSLang.Reflection
 				}
 				ifmt = ImageFormatHelper.FromQualifier(ctx.Qualifier.imageLayoutQualifier());
 			}
+			else
+			{
+				if (ctx.Qualifier?.imageLayoutQualifier() != null)
+				{
+					error = "Non-storage-image types cannot have texel format qualifiers.";
+					return false;
+				}
+			}
 
 			v = new Variable(type, name, scope, false, 0, ifmt: ifmt);
 			return true;

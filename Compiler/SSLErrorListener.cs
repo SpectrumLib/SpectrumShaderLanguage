@@ -49,7 +49,7 @@ namespace SSLang
 				if (msg.Contains("missing ';' at"))
 					errMsg = "Unexpected statement... are you missing a semicolon in the preceeding line?";
 				else
-					errMsg = $"(Rule '{((ridx == -1) ? "none" : SSLParser.ruleNames[ridx])}') ('{badText}') - {msg}";
+					errMsg = $"(Rule '{((ridx == -1) ? "none" : SSLParser.ruleNames[ridx])}' line {line}:{charPositionInLine}) ('{badText}') - {msg}";
 			}
 
 			var stack = ((SSLParser)recognizer).GetRuleInvocationStack().ToList();

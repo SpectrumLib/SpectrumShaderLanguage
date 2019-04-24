@@ -62,9 +62,11 @@ namespace SSLang
 					vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
 				if (a2t.GetVectorSize() != tdim)
 					vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
-				if ((type == SSLParser.BIF_IMAGESTORE) && !a3t.CanCastTo(ShaderType.Float4))
-					vis._THROW(token, $"The built-in function '{name}' requires a 4-component floating-point vector for argument 3.");
-				return (type == SSLParser.BIF_IMAGESTORE) ? ShaderType.Void : ShaderType.Float4;
+
+				var ttype = args[0].ImageFormat;
+				if ((type == SSLParser.BIF_IMAGESTORE) && !a3t.CanCastTo(ttype.GetTexelType()))
+					vis._THROW(token, $"The built-in function '{name}' requires the type {ttype.GetTexelType()} for argument 3.");
+				return (type == SSLParser.BIF_IMAGESTORE) ? ShaderType.Void : ttype.GetTexelType();
 			}
 			else if (type >= SSLParser.BIF_MATCOMPMUL && type <= SSLParser.BIF_DETERMINANT) // Functions that deal with matrices
 			{

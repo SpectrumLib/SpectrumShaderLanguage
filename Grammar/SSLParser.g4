@@ -90,6 +90,8 @@ statement
     : variableDeclaration ';'
     | variableDefinition ';'
     | assignment ';'
+    | functionCall ';'
+    | builtinFunctionCall ';'
     | ifStatement
     | forLoop
     | whileLoop
@@ -184,7 +186,7 @@ expression
 atom
     : '(' expression ')' arrayIndexer? SWIZZLE?     # ParenAtom
     | typeConstruction arrayIndexer? SWIZZLE?       # ConstructionAtom
-    | builtinFunctionCall arrayIndexer? SWIZZLE?    # BuiltinCallAtom
+    | builtinFunctionCall SWIZZLE?                  # BuiltinCallAtom
     | functionCall SWIZZLE?                         # FunctionCallAtom
     | valueLiteral                                  # LiteralAtom
     | IDENTIFIER arrayIndexer? SWIZZLE?             # VariableAtom

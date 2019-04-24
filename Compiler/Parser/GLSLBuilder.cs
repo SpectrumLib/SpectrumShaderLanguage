@@ -131,6 +131,9 @@ namespace SSLang
 		public void EmitAssignment(string name, long? arrIndex, string swiz, string op, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} {op} {expr.RefText};");
 
+		public void EmitCall(string fname, ExprResult[] args) =>
+			_funcSource.AppendLine($"{_indent}{fname}({String.Join(", ", args.Select(ae => ae.RefText))});");
+
 		public void EmitReturn(ExprResult res) => _funcSource.AppendLine($"{_indent}return {res?.RefText ?? ""};");
 		public void EmitDiscard() => _funcSource.AppendLine(_indent + "discard;");
 		public void EmitBreak() => _funcSource.AppendLine(_indent + "break;");
