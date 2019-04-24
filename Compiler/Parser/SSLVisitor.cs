@@ -262,6 +262,8 @@ namespace SSLang
 				_THROW(ctx, $"The vertex attribute '{vname}' can only be accessed in the vertex shader stage.");
 			if (vrbl.IsFragmentOutput && _currStage != ShaderStages.Fragment)
 				_THROW(ctx, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
+			if (vrbl.Type.IsSubpassInput() && _currStage != ShaderStages.Fragment)
+				_THROW(ctx, $"The subpass input '{vname}' can only be accessed in the fragment shader stage.");
 
 			if (read)
 				vrbl.ReadStages |= _currStage;
@@ -339,7 +341,6 @@ namespace SSLang
 			if (fidx >= 0)
 				_THROW(context, $"The uniform location {loc.Value} is already bound.");
 
-			GLSL.EmitCommentVar($"Uniform binding {loc.Value}");
 			bool isHandle = context.uniformVariable() != null;
 			if (isHandle)
 			{

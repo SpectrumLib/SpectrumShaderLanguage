@@ -65,17 +65,18 @@ KWT_MAT3        : 'mat3' ;
 KWT_MAT4        : 'mat4' ;
 
 // Type keywords (handle)
-KWT_TEX1D       : 'tex1D' ;
-KWT_TEX2D       : 'tex2D' ;
-KWT_TEX3D       : 'tex3D' ;
-KWT_TEXCUBE     : 'texCube' ;
-KWT_TEX1D_ARR   : 'tex1DArray' ;
-KWT_TEX2D_ARR   : 'tex2DArray' ;
-KWT_IMAGE1D     : 'image1D' ;
-KWT_IMAGE2D     : 'image2D' ;
-KWT_IMAGE3D     : 'image3D' ;
-KWT_IMAGE1D_ARR : 'image1DArray' ;
-KWT_IMAGE2D_ARR : 'image2DArray' ;
+KWT_TEX1D           : 'tex1D' ;
+KWT_TEX2D           : 'tex2D' ;
+KWT_TEX3D           : 'tex3D' ;
+KWT_TEXCUBE         : 'texCube' ;
+KWT_TEX1D_ARR       : 'tex1DArray' ;
+KWT_TEX2D_ARR       : 'tex2DArray' ;
+KWT_IMAGE1D         : 'image1D' ;
+KWT_IMAGE2D         : 'image2D' ;
+KWT_IMAGE3D         : 'image3D' ;
+KWT_IMAGE1D_ARR     : 'image1DArray' ;
+KWT_IMAGE2D_ARR     : 'image2DArray' ;
+KWT_SUBPASSINPUT    : 'subpassInput';
 
 // Image format qualifiers
 IFQ_RGBA_F  : 'rgba_f' ;
@@ -152,6 +153,7 @@ BIF_TEXFETCH    : 'texelFetch' ;
 BIF_IMAGESIZE   : 'imageSize' ;
 BIF_IMAGELOAD   : 'imageLoad' ;
 BIF_IMAGESTORE  : 'imageStore' ;
+BIF_SUBPASSLOAD : 'subpassLoad' ;
 
 // Swizzles
 SWIZZLE

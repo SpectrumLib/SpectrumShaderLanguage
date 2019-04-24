@@ -85,6 +85,12 @@ namespace SSLang
 				else if (type == SSLParser.BIF_DETERMINANT) // 'determinant' function
 					return ShaderType.Float;
 			}
+			else if (type == SSLParser.BIF_SUBPASSLOAD) // 'subpassLoad' function
+			{
+				if (!a1t.IsSubpassInput())
+					vis._THROW(token, "The 'subpassLoad' function requires a subpass input as an argument.");
+				return ShaderType.Float4;
+			}
 			else // Functions that deal with scalar and vector types
 			{
 				btidx = Array.FindIndex(args, a => !(a.Type.IsScalarType() || a.Type.IsVectorType()));

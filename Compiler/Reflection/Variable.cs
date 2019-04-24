@@ -54,6 +54,11 @@ namespace SSLang.Reflection
 		/// <see cref="ImageFormat.Error"/>.
 		/// </summary>
 		public readonly ImageFormat ImageFormat;
+		/// <summary>
+		/// The subpass input index for the variable. If this variable is not a subpass input, this will have
+		/// a value of <see cref="UInt32.MaxValue"/>.
+		/// </summary>
+		public readonly uint SubpassIndex;
 
 		/// <summary>
 		/// Gets if the variable is an array of values.
@@ -103,7 +108,7 @@ namespace SSLang.Reflection
 		internal readonly bool CanRead;
 		#endregion // Fields
 
-		internal Variable(ShaderType type, string name, VariableScope scope, bool @const = false, uint asize = 0, bool cr = true, ImageFormat ifmt = ImageFormat.Error)
+		internal Variable(ShaderType type, string name, VariableScope scope, bool @const = false, uint asize = 0, bool cr = true, ImageFormat ifmt = ImageFormat.Error, uint si = UInt32.MaxValue)
 		{
 			Type = type;
 			Name = name;
@@ -112,6 +117,7 @@ namespace SSLang.Reflection
 			ArraySize = asize;
 			CanRead = cr;
 			ImageFormat = ifmt;
+			SubpassIndex = si;
 		}
 
 		internal string GetGLSLDecl(bool @const = true, ShaderStages? stage = null) => 
@@ -235,6 +241,7 @@ namespace SSLang.Reflection
 			}
 
 			ImageFormat ifmt = ImageFormat.Error;
+			uint si = UInt32.MaxValue;
 			if (type.IsImageHandle())
 			{
 				if (ctx.Qualifier?.imageLayoutQualifier() == null)
@@ -244,16 +251,28 @@ namespace SSLang.Reflection
 				}
 				ifmt = ImageFormatHelper.FromQualifier(ctx.Qualifier.imageLayoutQualifier());
 			}
+			else if (type.IsSubpassInput())
+			{
+				if (ctx.Qualifier?.INTEGER_LITERAL() == null)
+				{
+					error = "Subpass inputs must have an index qualifier.";
+					return false;
+				}
+				var pv = SSLVisitor.ParseIntegerLiteral(ctx.Qualifier.INTEGER_LITERAL().GetText(), out var isus, out error);
+				if (!pv.HasValue)
+					return false;
+				si = (uint)pv.Value;
+			}
 			else
 			{
-				if (ctx.Qualifier?.imageLayoutQualifier() != null)
+				if (ctx.Qualifier?.imageLayoutQualifier() != null || ctx.Qualifier?.INTEGER_LITERAL() != null)
 				{
-					error = "Non-storage-image types cannot have texel format qualifiers.";
+					error = $"The handle type '{type}' cannot have qualifiers.";
 					return false;
 				}
 			}
 
-			v = new Variable(type, name, scope, false, 0, ifmt: ifmt);
+			v = new Variable(type, name, scope, false, 0, ifmt: ifmt, si: si);
 			return true;
 		}
 	}

@@ -140,6 +140,10 @@ namespace SSLang.Reflection
 		/// An array of 2-dimensional read/write storage images (image2DArray).
 		/// </summary>
 		Image2DArray,
+		/// <summary>
+		/// A render target image from a previous subpass used as an optimized readonly input to the fragment shader.
+		/// </summary>
+		SubpassInput,
 
 		/// <summary>
 		/// Represents a type error. Only used in temporary situations when errors arise, not a valid type for objects.
@@ -158,7 +162,7 @@ namespace SSLang.Reflection
 			"bool", "bvec2", "bvec3", "bvec4", "int", "ivec2", "ivec3", "ivec4", "uint", "uvec2", "uvec3", "uvec4",
 			"float", "vec2", "vec3", "vec4", "mat2", "mat3", "mat4",
 			"tex1D", "tex2D", "tex3D", "texCube", "tex1dArray", "tex2DArray", "image1D", "image2D", "image3D",
-			"image1dArray", "image2DArray",
+			"image1dArray", "image2DArray", "subpassInput"
 		};
 		// This must be kept organized to the enums, as it only contains the types that dont match between SSL and GLSL
 		internal static readonly string[] GLSL_KEYWORDS = {
@@ -173,7 +177,7 @@ namespace SSLang.Reflection
 		public static string ToKeyword(this ShaderType type)
 		{
 			if (type <= ShaderType.Mat4) return SSL_KEYWORDS[(int)type];
-			else if (type <= ShaderType.Image2DArray) return SSL_KEYWORDS[(int)(type - ShaderType.Tex1D + ShaderType.Mat4) + 1];
+			else if (type <= ShaderType.SubpassInput) return SSL_KEYWORDS[(int)(type - ShaderType.Tex1D + ShaderType.Mat4) + 1];
 			else return "ERROR";
 		}
 
@@ -240,7 +244,7 @@ namespace SSLang.Reflection
 		/// </summary>
 		/// <param name="type">The type to check.</param>
 		/// <returns>If the type is a handle type.</returns>
-		public static bool IsHandleType(this ShaderType type) => (type >= ShaderType.Tex1D) && (type <= ShaderType.Image2DArray);
+		public static bool IsHandleType(this ShaderType type) => (type >= ShaderType.Tex1D) && (type <= ShaderType.SubpassInput);
 
 		/// <summary>
 		/// Gets if the type is an error type, which represents an error and not an actual valid type.
@@ -418,6 +422,7 @@ namespace SSLang.Reflection
 				case ShaderType.TexCube:
 				case ShaderType.Image2D:
 				case ShaderType.Image1DArray:
+				case ShaderType.SubpassInput:
 					return 2;
 				case ShaderType.Tex3D:
 				case ShaderType.Tex2DArray:
@@ -442,6 +447,13 @@ namespace SSLang.Reflection
 		/// <returns>If the type is a storage image handle.</returns>
 		public static bool IsImageHandle(this ShaderType type) => (type >= ShaderType.Image1D) && (type <= ShaderType.Image2DArray);
 
+		/// <summary>
+		/// Gets if the type is a handle to a subpass input image.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns>If the type is a subpass input handle.</returns>
+		public static bool IsSubpassInput(this ShaderType type) => type == ShaderType.SubpassInput;
+
 		// Used to convert parsed tokens into enum values
 		// This function relies on the enum being in the same order and having the same contiguous blocks as the grammar
 		internal static ShaderType FromTypeContext(SSLParser.TypeContext ctx)
@@ -450,7 +462,7 @@ namespace SSLang.Reflection
 
 			if (token == SSLParser.KWT_VOID) return ShaderType.Void;
 			if (token <= SSLParser.KWT_MAT4) return (ShaderType)((token - SSLParser.KWT_BOOL) + (int)ShaderType.Bool); // Value types
-			if (token <= SSLParser.KWT_IMAGE2D_ARR) return (ShaderType)((token - SSLParser.KWT_TEX1D) + (int)ShaderType.Tex1D); // Handle types
+			if (token <= SSLParser.KWT_SUBPASSINPUT) return (ShaderType)((token - SSLParser.KWT_TEX1D) + (int)ShaderType.Tex1D); // Handle types
 
 			return ShaderType.Error;
 		}
