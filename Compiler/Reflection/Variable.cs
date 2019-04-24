@@ -49,6 +49,11 @@ namespace SSLang.Reflection
 		/// The size of the array, if the variable is an array of values. Will be zero if it is not an array.
 		/// </summary>
 		public readonly uint ArraySize;
+		/// <summary>
+		/// The texel format for the image. If this variable is not an image type, this will have the value of
+		/// <see cref="ImageFormat.Error"/>.
+		/// </summary>
+		public readonly ImageFormat ImageFormat;
 
 		/// <summary>
 		/// Gets if the variable is an array of values.
@@ -98,7 +103,7 @@ namespace SSLang.Reflection
 		internal readonly bool CanRead;
 		#endregion // Fields
 
-		internal Variable(ShaderType type, string name, VariableScope scope, bool @const = false, uint asize = 0, bool cr = true)
+		internal Variable(ShaderType type, string name, VariableScope scope, bool @const = false, uint asize = 0, bool cr = true, ImageFormat ifmt = ImageFormat.Error)
 		{
 			Type = type;
 			Name = name;
@@ -106,10 +111,11 @@ namespace SSLang.Reflection
 			Constant = (Scope == VariableScope.Uniform) || (Scope == VariableScope.Attribute) || @const;
 			ArraySize = asize;
 			CanRead = cr;
+			ImageFormat = ifmt;
 		}
 
 		internal string GetGLSLDecl(bool @const = true, ShaderStages? stage = null) => 
-			$"{((@const && Constant) ? "const " : "")}{Type.ToGLSL()} {GetOutputName(stage)}{(IsArray ? $"[{ArraySize}]" : "")}";
+			$"{((@const && Constant) ? "const " : "")}{Type.ToGLSL(ImageFormat)} {GetOutputName(stage)}{(IsArray ? $"[{ArraySize}]" : "")}";
 
 		internal string GetOutputName(ShaderStages? stage = null)
 		{
@@ -228,7 +234,18 @@ namespace SSLang.Reflection
 				return false;
 			}
 
-			v = new Variable(type, name, scope, false, 0);
+			ImageFormat ifmt = ImageFormat.Error;
+			if (type.IsImageHandle())
+			{
+				if (ctx.Qualifier?.imageLayoutQualifier() == null)
+				{
+					error = "Storage image types must have a format qualifier.";
+					return false;
+				}
+				ifmt = ImageFormatHelper.FromQualifier(ctx.Qualifier.imageLayoutQualifier());
+			}
+
+			v = new Variable(type, name, scope, false, 0, ifmt: ifmt);
 			return true;
 		}
 	}

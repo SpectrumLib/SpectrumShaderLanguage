@@ -166,7 +166,7 @@ namespace SSLang.Reflection
 		};
 
 		/// <summary>
-		/// Gets the SSL keyword that represents the <see cref="ShaderType"/> type.
+		/// Gets the SSL keyword that represents the type.
 		/// </summary>
 		/// <param name="type">The type to get the keyword for.</param>
 		/// <returns>The SSL type keyword.</returns>
@@ -178,13 +178,21 @@ namespace SSLang.Reflection
 		}
 
 		/// <summary>
-		/// Gets the GLSL keyword that represents the <see cref="ShaderType"/> type.
+		/// Gets the GLSL keyword that represents the type.
 		/// </summary>
 		/// <param name="type">The type to get the keyword for.</param>
+		/// <param name="ifmt">The image format for the type, if the type is an image type.</param>
 		/// <returns>The GLSL type keyword.</returns>
-		public static string ToGLSL(this ShaderType type)
+		public static string ToGLSL(this ShaderType type, ImageFormat ifmt = ImageFormat.Error)
 		{
 			if ((type >= ShaderType.Tex1D) && (type <= ShaderType.Tex2DArray)) return GLSL_KEYWORDS[(int)(type - ShaderType.Tex1D)];
+			else if (type >= ShaderType.Image1D && type <= ShaderType.Image2DArray)
+			{
+				if (ifmt == ImageFormat.Error) return "ERROR_IMAGE_TYPE";
+				var ctype = ifmt.GetComponentType();
+				var prefix = (ctype == ShaderType.Int) ? "i" : (ctype == ShaderType.UInt) ? "ui" : "";
+				return prefix + ToKeyword(type);
+			}
 			else return ToKeyword(type);
 		}
 

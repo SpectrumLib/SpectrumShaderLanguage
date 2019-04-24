@@ -74,8 +74,11 @@ namespace SSLang
 		public void EmitFragmentOutput(Variable vrbl, uint loc) =>
 			_outputSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl(false)};");
 
-		public void EmitUniform(Variable vrbl, uint loc) =>
-			_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl(false)};");
+		public void EmitUniform(Variable vrbl, uint loc)
+		{
+			var qual = vrbl.Type.IsImageHandle() ? $", {vrbl.ImageFormat.ToGLSL()}" : "";
+			_varSource.AppendLine($"layout(set = 0, binding = {loc}{qual}) uniform {vrbl.GetGLSLDecl(false)};");
+		}
 
 		public void EmitUniformBlockHeader(string name, uint loc) =>
 			_varSource.AppendLine($"layout(scalar, set = 0, binding = {loc}) uniform {name} {{");
