@@ -31,13 +31,23 @@ topLevelStatement
 
 // Uniform statements
 uniformStatement
-    : uniformHeader (('block' typeBlock)|variableDeclaration) ';'
+    : uniformHeader (('block' typeBlock)|uniformVariable) ';'
     ;
 uniformHeader
     : 'uniform' '(' Index=INTEGER_LITERAL ')'
     ;
 typeBlock
     : '{' (Types+=variableDeclaration ';')* '}'
+    ;
+uniformVariable
+    : type ('<' Qualifier=uniformQualifier '>')? Name=IDENTIFIER
+    ;
+uniformQualifier
+    : imageLayoutQualifier
+    ;
+imageLayoutQualifier
+    : IFQ_RGBA_F | IFQ_RGBA_I | IFQ_RGBA_U | IFQ_RG_F | IFQ_RG_I | IFQ_RG_U | IFQ_R_F 
+    | IFQ_R_I | IFQ_R_U 
     ;
 
 // Vertex shader input (attributes)

@@ -77,6 +77,17 @@ KWT_IMAGE3D     : 'image3D' ;
 KWT_IMAGE1D_ARR : 'image1DArray' ;
 KWT_IMAGE2D_ARR : 'image2DArray' ;
 
+// Image format qualifiers
+IFQ_RGBA_F  : 'rgba_f' ;
+IFQ_RGBA_I  : 'rgba_i' ;
+IFQ_RGBA_U  : 'rgba_u' ;
+IFQ_RG_F    : 'rg_f' ;
+IFQ_RG_I    : 'rg_i' ;
+IFQ_RG_U    : 'rg_u' ;
+IFQ_R_F     : 'r_f' ;
+IFQ_R_I     : 'r_i' ;
+IFQ_R_U     : 'r_u' ;
+
 // Built-in Functions
 // Taken from https://www.khronos.org/files/opengl45-quick-reference-card.pdf, and adjusted to a smaller subset of
 //    functions 

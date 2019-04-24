@@ -133,6 +133,22 @@ namespace SSLang
 			return true;
 		}
 
+		public bool TryAddUniform(SSLParser.UniformVariableContext ctx, out Variable v, out string error)
+		{
+			if (!Variable.TryFromContext(ctx, VariableScope.Uniform, out v, out error))
+				return false;
+
+			var pre = FindGlobal(v.Name);
+			if (pre != null)
+			{
+				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
+				return false;
+			}
+
+			_uniforms.Add(v.Name, v);
+			return true;
+		}
+
 		public bool TryAddInternal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
 		{
 			if (!Variable.TryFromContext(ctx, VariableScope.Internal, out v, out error))

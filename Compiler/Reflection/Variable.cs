@@ -203,6 +203,34 @@ namespace SSLang.Reflection
 			v = new Variable(type, name, scope, ctx.KW_CONST() != null, asize);
 			return true;
 		}
+
+		internal static bool TryFromContext(SSLParser.UniformVariableContext ctx, VariableScope scope, out Variable v, out string error)
+		{
+			v = null;
+			error = null;
+
+			var name = ctx.Name.Text;
+			if (name[0] == '$')
+			{
+				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
+				return false;
+			}
+
+			var type = ShaderTypeHelper.FromTypeContext(ctx.type());
+			if (type == ShaderType.Void)
+			{
+				error = $"The variable '{name}' cannot be of type 'void'.";
+				return false;
+			}
+			if (type == ShaderType.Error)
+			{
+				error = $"Unable to convert variable '{name}' to internal type.";
+				return false;
+			}
+
+			v = new Variable(type, name, scope, false, 0);
+			return true;
+		}
 	}
 
 	/// <summary>
