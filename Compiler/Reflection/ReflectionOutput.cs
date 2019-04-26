@@ -9,7 +9,7 @@ namespace SSLang.Reflection
 	// Controls formatting and output of reflection info to a file
 	internal static class ReflectionOutput
 	{
-		private static readonly string TOOL_VERSION;
+		private static readonly Version TOOL_VERSION;
 
 		public static bool Generate(string outPath, bool binary, ShaderInfo info, out string error)
 		{
@@ -23,7 +23,7 @@ namespace SSLang.Reflection
 			error = null;
 			StringBuilder sb = new StringBuilder(1024);
 
-			sb.AppendLine($"SSL Reflection Dump (v{TOOL_VERSION})");
+			sb.AppendLine($"SSL Reflection Dump (v{TOOL_VERSION.Major}.{TOOL_VERSION.Minor}.{TOOL_VERSION.Revision})");
 			sb.AppendLine();
 
 			// General shader info
@@ -117,14 +117,100 @@ namespace SSLang.Reflection
 
 		private static bool GenerateBinary(string outPath, ShaderInfo info, out string error)
 		{
-			error = "Binary reflection generation not yet implemented.";
-			return false;
+			error = null;
+
+			using (MemoryStream buffer = new MemoryStream(1024))
+			using (BinaryWriter writer = new BinaryWriter(buffer))
+			{
+				// Write the header and tool version
+				writer.Write(Encoding.ASCII.GetBytes("SSLR"));
+				writer.Write((byte)TOOL_VERSION.Major);
+				writer.Write((byte)TOOL_VERSION.Minor);
+				writer.Write((byte)TOOL_VERSION.Revision);
+
+				// Write shader info
+				writer.Write((byte)info.Stages); // Stage mask
+
+				// Write the uniforms
+				writer.Write((byte)info.Uniforms.Count());
+				writer.Write(info.AreUniformsContiguous());
+				uint uidx = 0;
+				foreach (var uni in info.Uniforms)
+				{
+					writer.Write((byte)uni.Variable.Name.Length);
+					writer.Write(Encoding.ASCII.GetBytes(uni.Variable.Name));
+					writer.Write((byte)uni.Variable.Type);
+					writer.Write((byte)uni.Variable.Type.GetSize());
+					writer.Write((byte)uni.Variable.ArraySize);
+					writer.Write(uni.Variable.Type.IsSubpassInput() ? (byte)uni.Variable.SubpassIndex : uni.Variable.Type.IsImageHandle() ? (byte)uni.Variable.ImageFormat : (byte)0xFF);
+					writer.Write((byte)uni.Location);
+					writer.Write(uni.Variable.Type.IsValueType());
+					if (uni.Variable.Type.IsValueType()) // It will be in a block
+					{
+						var block = info.Blocks.First(b => b.Location == uni.Location);
+						var idx = Array.FindIndex(block.Members, mem => mem == uidx);
+						writer.Write((byte)idx);
+					}
+					else
+						writer.Write((byte)0xFF);
+					++uidx;
+				}
+
+				// Write the vertex attributes
+				writer.Write((byte)info.Attributes.Count);
+				foreach (var attr in info.Attributes)
+				{
+					writer.Write((byte)attr.Variable.Name.Length);
+					writer.Write(Encoding.ASCII.GetBytes(attr.Variable.Name));
+					writer.Write((byte)attr.Variable.Type);
+					writer.Write((byte)attr.Variable.Type.GetSize());
+					writer.Write((byte)attr.Variable.ArraySize);
+					writer.Write((byte)attr.Location);
+					writer.Write((byte)attr.Variable.Type.GetSlotCount(attr.Variable.ArraySize));
+				}
+
+				// Write the outputs
+				uint oidx = 0;
+				foreach (var output in info.Outputs)
+				{
+					writer.Write((byte)output.Name.Length);
+					writer.Write(Encoding.ASCII.GetBytes(output.Name));
+					writer.Write((byte)output.Type);
+					writer.Write((byte)output.Type.GetSize());
+					writer.Write((byte)oidx);
+					++oidx;
+				}
+
+				// Write the file
+				try
+				{
+					writer.Flush();
+					using (var file = File.Open(outPath, FileMode.Create, FileAccess.Write, FileShare.None))
+						file.Write(buffer.GetBuffer(), 0, (int)buffer.Position);
+				}
+				catch (PathTooLongException)
+				{
+					error = "the output path is too long.";
+					return false;
+				}
+				catch (DirectoryNotFoundException)
+				{
+					error = "the output directory could not be found, or does not exist.";
+					return false;
+				}
+				catch (Exception e)
+				{
+					error = $"could not open and write output file ({e.Message}).";
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		static ReflectionOutput()
 		{
-			var ver = Assembly.GetExecutingAssembly().GetName().Version;
-			TOOL_VERSION = $"{ver.Major}.{ver.Minor}.{ver.Revision}";
+			TOOL_VERSION = Assembly.GetExecutingAssembly().GetName().Version;
 		}
 	}
 }
