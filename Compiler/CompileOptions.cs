@@ -8,6 +8,11 @@ namespace SSLang
 	/// </summary>
 	public sealed class CompileOptions
 	{
+		/// <summary>
+		/// Default timeout for the compiler (5 seconds).
+		/// </summary>
+		public const int DEFAULT_TIMEOUT = 5000;
+
 		#region Fields
 		/// <summary>
 		/// The optional callback to use to communicate warning messages to the client application.
@@ -66,10 +71,10 @@ namespace SSLang
 		/// </summary>
 		public bool ForceContiguousUniforms = false;
 		/// <summary>
-		/// The number of milliseconds to wait for the Vulkan GLSL compiler to complete before timing out. Defaults to 2000
+		/// The number of milliseconds to wait for the Vulkan GLSL compiler to complete before timing out. Defaults to 5000
 		/// (5 seconds), and a value <= 0 will wait indefinitely.
 		/// </summary>
-		public int CompilerTimeout = 5000;
+		public int CompilerTimeout = DEFAULT_TIMEOUT;
 		/// <summary>
 		/// Gets if the output bytecode is run through a secondary optimization step to optimize the bytecode for
 		/// execution speed. Not required but strongly recommended. Defaults to true.
@@ -86,7 +91,7 @@ namespace SSLang
 			if (OutputReflection && (ReflectionPath != null) && !PathUtils.IsValid(ReflectionPath))
 				throw new CompileOptionException(nameof(ReflectionPath), "invalid filesystem path.");
 			if (OutputGLSL && (GLSLPath != null) && !PathUtils.IsValidDirectory(GLSLPath))
-				throw new CompileOptionException(nameof(GLSLPath), "invalid filesystem path to directory.");
+				throw new CompileOptionException(nameof(GLSLPath), "invalid filesystem directory path.");
 
 			OutputPath = (Compile && OutputPath != null) ? Path.GetFullPath(OutputPath) : null;
 			ReflectionPath = (OutputReflection && ReflectionPath != null) ? Path.GetFullPath(ReflectionPath) : null;
