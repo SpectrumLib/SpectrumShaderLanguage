@@ -1045,6 +1045,14 @@ namespace SSLang
 			}
 			else
 			{
+				if (fname == "imageStore")
+				{
+					var rem = 4 - aexpr[2].Type.GetVectorSize();
+					var strtxt = $"vec4({aexpr[2].RefText}" + Enumerable.Repeat(", 0", (int)rem).Aggregate((s1, s2) => s1 + s2) + ")";
+					var ssa = ScopeManager.TryAddSSALocal(ShaderType.Float4, 0);
+					aexpr[2] = new ExprResult(ssa, strtxt);
+					GLSL.EmitDefinition(ssa, aexpr[2]);
+				}
 				GLSL.EmitCall(GLSLBuilder.GetBuiltinFuncName(fname, ftype), aexpr);
 				return new ExprResult(ShaderType.Void, 0, "");
 			}

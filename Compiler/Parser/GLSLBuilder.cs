@@ -76,19 +76,23 @@ namespace SSLang
 
 		public void EmitUniform(Variable vrbl, uint loc)
 		{
-			var qual =
-				vrbl.Type.IsImageHandle() ? $", {vrbl.ImageFormat.ToGLSL()}" :
-				vrbl.Type.IsSubpassInput() ? $", input_attachment_index = {vrbl.SubpassIndex}" : "";
 			if (vrbl.Type.IsSubpassInput())
 			{
-				_funcSources[ShaderStages.Fragment].AppendLine($"// Subpass Input {vrbl.SubpassIndex}");
-				_funcSources[ShaderStages.Fragment].AppendLine($"layout(set = 0, binding = {loc}{qual}) uniform {vrbl.GetGLSLDecl(false)};");
+				_funcSources[ShaderStages.Fragment].AppendLine($"// Uniform Subpass Input {vrbl.SubpassIndex}");
+				_funcSources[ShaderStages.Fragment].AppendLine(
+					$"layout(set = 0, binding = {loc}, input_attachment_index = {vrbl.SubpassIndex}) uniform {vrbl.GetGLSLDecl(false)};"
+				);
 				_funcSources[ShaderStages.Fragment].AppendLine();
+			}
+			else if (vrbl.Type.IsImageHandle())
+			{
+				_varSource.AppendLine($"// Uniform binding {loc}");
+				_varSource.AppendLine($"layout(set = 0, binding = {loc}, {vrbl.ImageFormat.ToGLSL()}) coherent uniform {vrbl.GetGLSLDecl(false)};");
 			}
 			else
 			{
 				_varSource.AppendLine($"// Uniform binding {loc}");
-				_varSource.AppendLine($"layout(set = 0, binding = {loc}{qual}) uniform {vrbl.GetGLSLDecl(false)};");
+				_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl(false)};");
 			}
 		}
 
