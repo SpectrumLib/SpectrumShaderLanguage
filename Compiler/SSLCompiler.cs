@@ -133,6 +133,10 @@ namespace SSLang
 				return false;
 			}
 
+			// Output the reflection if requested
+			if (options.OutputReflection && !outputRefl(options, visitor, out error))
+				return false;
+
 			// Output the GLSL if requested
 			if (options.OutputGLSL && !outputGLSL(options, visitor, out error))
 				return false;
@@ -142,6 +146,17 @@ namespace SSLang
 				return false;
 
 			return true;
+		}
+
+		private bool outputRefl(CompileOptions options, SSLVisitor vis, out CompileError error)
+		{
+			error = null;
+			var rPath = options.ReflectionPath ?? CompileOptions.MakeDefaultReflectionPath(SourceFile) ?? Path.Combine(Directory.GetCurrentDirectory(), "shader.refl");
+
+			if (!ReflectionOutput.Generate(rPath, options.UseBinaryReflection, vis.Info, out var reflError))
+				error = new CompileError(ErrorSource.Output, 0, 0, $"Unable to generate reflection info: {reflError}");
+
+			return error == null;
 		}
 
 		private bool compile(CompileOptions options, SSLVisitor visitor, out CompileError error)
