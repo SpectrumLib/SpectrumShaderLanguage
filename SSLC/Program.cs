@@ -154,6 +154,9 @@ namespace SLLC
 			Console.WriteLine("    > rpath;rp          - Specifies the file for the reflection info. Ignored if '/reflect'");
 			Console.WriteLine("                           is not present. Defaults to the input file with the extension");
 			Console.WriteLine("                           '.refl'.");
+			Console.WriteLine("    > timeout;to        - Specifies the time, in milliseconds, to wait to compile/optimize");
+			Console.WriteLine("                           each shader stage before throwing an error. A value of <= 0 will");
+			Console.WriteLine("                           wait indefinitely. By default, the timout is 5000 (5 seconds).");
 
 			// =============================================================================================================
 			Console.WriteLine();
