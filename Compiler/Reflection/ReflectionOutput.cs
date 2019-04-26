@@ -50,11 +50,7 @@ namespace SSLang.Reflection
 				var tstr = $"{uni.Variable.Type}{qualstr}";
 				var bstr = "";
 				if (uni.Variable.Type.IsValueType()) // It will be in a block
-				{
-					var block = info.Blocks.First(b => b.Location == uni.Location);
-					var idx = Array.FindIndex(block.Members, mem => mem == uidx);
-					bstr = $"Block={block.Location,-3} Idx={idx,-3} Off={uni.Offset,-3}";
-				}
+					bstr = $"Block={uni.Location,-3} Idx={uni.Index,-3} Off={uni.Offset,-3}";
 				var size = uni.Variable.Type.GetSize() * Math.Max(1, uni.Variable.ArraySize);
 				sb.AppendLine($"{uni.Variable.Name,-20} {tstr,-20} Loc={uni.Location,-3} Size={size,-3} {bstr}");
 				++uidx;
@@ -146,11 +142,7 @@ namespace SSLang.Reflection
 					writer.Write((byte)uni.Location);
 					writer.Write(uni.Variable.Type.IsValueType());
 					if (uni.Variable.Type.IsValueType()) // It will be in a block
-					{
-						var block = info.Blocks.First(b => b.Location == uni.Location);
-						var idx = Array.FindIndex(block.Members, mem => mem == uidx);
-						writer.Write((byte)idx);
-					}
+						writer.Write((byte)uni.Index);
 					else
 						writer.Write((byte)0xFF);
 					++uidx;

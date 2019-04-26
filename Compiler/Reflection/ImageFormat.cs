@@ -15,35 +15,35 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// The texels are 4-channel (RGBA) 32-bit signed integers (<see cref="ShaderType.Int4"/>).
 		/// </summary>
-		RGBA_I,
+		RGBA_I = 1,
 		/// <summary>
 		/// The texels are 4-channel (RGBA) 32-bit unsigned integers (<see cref="ShaderType.UInt4"/>).
 		/// </summary>
-		RGBA_U,
+		RGBA_U = 2,
 		/// <summary>
 		/// The texels are 2-channel (RG) 32-bit floats (<see cref="ShaderType.Float2"/>).
 		/// </summary>
-		RG_F,
+		RG_F = 3,
 		/// <summary>
 		/// The texels are 2-channel (RG) 32-bit signed integers (<see cref="ShaderType.Int2"/>).
 		/// </summary>
-		RG_I,
+		RG_I = 4,
 		/// <summary>
 		/// The texels are 2-channel (RG) 32-bit unsigned integers (<see cref="ShaderType.UInt2"/>).
 		/// </summary>
-		RG_U,
+		RG_U = 5,
 		/// <summary>
 		/// The texels are 1-channel (R) 32-bit floats (<see cref="ShaderType.Float"/>).
 		/// </summary>
-		R_F,
+		R_F = 6,
 		/// <summary>
 		/// The texels are 1-channel (R) 32-bit signed integers (<see cref="ShaderType.Int"/>).
 		/// </summary>
-		R_I,
+		R_I = 7,
 		/// <summary>
 		/// The texels are 1-channel (R) 32-bit unsigned integers (<see cref="ShaderType.UInt"/>).
 		/// </summary>
-		R_U,
+		R_U = 8,
 		/// <summary>
 		/// A special type used internally to represent an invalid format, or a handle type that does not have a
 		/// shader-defined texel layout.

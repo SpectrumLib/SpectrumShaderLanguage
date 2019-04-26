@@ -284,8 +284,6 @@ namespace SSLang
 				_THROW(context, "A shader cannot have more than one 'attributes' block.");
 
 			var block = context.typeBlock();
-			if (block._Types.Count == 0)
-				_THROW(context, "The 'attributes' block cannot be empty.");
 
 			uint loc = 0;
 			foreach (var tctx in block._Types)
@@ -299,6 +297,9 @@ namespace SSLang
 				loc += vrbl.Type.GetSlotCount(vrbl.ArraySize);
 			}
 
+			if (loc > 16)
+				_THROW(context, $"The vertex attributes cannot take up more than 16 binding points.");
+
 			return null;
 		}
 
@@ -310,6 +311,8 @@ namespace SSLang
 			var block = context.typeBlock();
 			if (block._Types.Count == 0)
 				_THROW(context, "The 'output' block cannot be empty.");
+			if (block._Types.Count > 4)
+				_THROW(context, "A maximum of 4 shader outputs can be specified.");
 
 			uint loc = 0;
 			foreach (var tctx in block._Types)
@@ -349,6 +352,15 @@ namespace SSLang
 					_THROW(uvar, error);
 				if (!vrbl.Type.IsHandleType())
 					_THROW(context, $"The uniform '{vrbl.Name}' must be a handle type if declared outside of a block.");
+				if (vrbl.Type.IsSubpassInput())
+				{
+					if (vrbl.SubpassIndex >= 4)
+						_THROW(context, $"Cannot attach more than 4 subpass inputs ({vrbl.SubpassIndex} given).");
+					fidx = Info._uniforms.FindIndex(u => u.v.Type.IsSubpassInput() && u.v.SubpassIndex == vrbl.SubpassIndex);
+					if (fidx != -1)
+						_THROW(context, $"Cannot bind two subpasses to the same index ({vrbl.SubpassIndex}).");
+				}
+
 				Info._uniforms.Add((vrbl, (uint)loc.Value, 0, 0));
 				GLSL.EmitUniform(vrbl, (uint)loc.Value);
 			}
@@ -387,6 +399,10 @@ namespace SSLang
 				if (!vrbl.Type.IsValueType())
 					_THROW(context, $"The local '{vrbl.Name}' must be a value type.");
 			}
+
+			var sum = ScopeManager.Internals.Values.Sum(v => v.Type.GetSlotCount(v.ArraySize));
+			if (sum > 16)
+				_THROW(context, "Internals cannot take up more than 16 binding slots.");
 
 			return null;
 		}

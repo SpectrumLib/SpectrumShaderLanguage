@@ -19,79 +19,79 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// Single boolean value (bool).
 		/// </summary>
-		Bool,
+		Bool = 1,
 		/// <summary>
 		/// A 2-component vector of booleans (bvec2).
 		/// </summary>
-		Bool2,
+		Bool2 = 2,
 		/// <summary>
 		/// A 3-component vector of booleans (bvec3).
 		/// </summary>
-		Bool3,
+		Bool3 = 3,
 		/// <summary>
 		/// A 4-component vector of booleans (bvec4).
 		/// </summary>
-		Bool4,
+		Bool4 = 4,
 		/// <summary>
 		/// Single signed 32-bit integer value (int).
 		/// </summary>
-		Int,
+		Int = 5,
 		/// <summary>
 		/// A 2-component vector of signed 32-bit integers (ivec2).
 		/// </summary>
-		Int2,
+		Int2 = 6,
 		/// <summary>
 		/// A 3-component vector of signed 32-bit integers (ivec3).
 		/// </summary>
-		Int3,
+		Int3 = 7,
 		/// <summary>
 		/// A 4-component vector of signed 32-bit integers (ivec4).
 		/// </summary>
-		Int4,
+		Int4 = 8,
 		/// <summary>
 		/// Single unsigned 32-bit integer value (uint).
 		/// </summary>
-		UInt,
+		UInt = 9,
 		/// <summary>
 		/// A 2-component vector of unsigned 32-bit integers (uvec2).
 		/// </summary>
-		UInt2,
+		UInt2 = 10,
 		/// <summary>
 		/// A 3-component vector of unsigned 32-bit integers (uvec3).
 		/// </summary>
-		UInt3,
+		UInt3 = 11,
 		/// <summary>
 		/// A 4-component vector of unsigned 32-bit integers (uvec4).
 		/// </summary>
-		UInt4,
+		UInt4 = 12,
 		/// <summary>
 		/// Single 32-bit floating-point value (float).
 		/// </summary>
-		Float,
+		Float = 13,
 		/// <summary>
 		/// A 2-component vector of 32-bit floating-point values (vec2).
 		/// </summary>
-		Float2,
+		Float2 = 14,
 		/// <summary>
 		/// A 3-component vector of 32-bit floating-point values (vec3).
 		/// </summary>
-		Float3,
+		Float3 = 15,
 		/// <summary>
 		/// A 4-component vector of 32-bit floating-point values (vec4).
 		/// </summary>
-		Float4,
+		Float4 = 16,
 		/// <summary>
 		/// A 2x2 matrix of 32-bit floating point values (mat2).
 		/// </summary>
-		Mat2,
+		Mat2 = 17,
 		/// <summary>
 		/// A 3x3 matrix of 32-bit floating point values (mat3).
 		/// </summary>
-		Mat3,
+		Mat3 = 18,
 		/// <summary>
 		/// A 4x4 matrix of 32-bit floating point values (mat4).
 		/// </summary>
-		Mat4,
+		Mat4 = 19,
 
 		// =====================================================================
 		// HANDLE TYPES
@@ -103,47 +103,47 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// A 2-dimensional combined image/sampler (tex2D).
 		/// </summary>
-		Tex2D,
+		Tex2D = 129,
 		/// <summary>
 		/// A 3-dimensional combined image/sampler (tex3D).
 		/// </summary>
-		Tex3D,
+		Tex3D = 130,
 		/// <summary>
 		/// A cube-map combined image/sampler (texCube).
 		/// </summary>
-		TexCube,
+		TexCube = 131,
 		/// <summary>
 		/// An array of 1-dimensional combined image/samplers (tex1DArray).
 		/// </summary>
-		Tex1DArray,
+		Tex1DArray = 132,
 		/// <summary>
 		/// An array of 2-dimensional combined image/samplers (tex2DArray).
 		/// </summary>
-		Tex2DArray,
+		Tex2DArray = 133,
 		/// <summary>
 		/// A 1-dimensional read/write storage image (image1D).
 		/// </summary>
-		Image1D,
+		Image1D = 134,
 		/// <summary>
 		/// A 2-dimensional read/write storage image (image2D).
 		/// </summary>
-		Image2D,
+		Image2D = 135,
 		/// <summary>
 		/// A 3-dimensional read/write storage image (image3D).
 		/// </summary>
-		Image3D,
+		Image3D = 136,
 		/// <summary>
 		/// An array of 1-dimensional read/write storage images (image1DArray).
 		/// </summary>
-		Image1DArray,
+		Image1DArray = 137,
 		/// <summary>
 		/// An array of 2-dimensional read/write storage images (image2DArray).
 		/// </summary>
-		Image2DArray,
+		Image2DArray = 138,
 		/// <summary>
 		/// A render target image from a previous subpass used as an optimized readonly input to the fragment shader.
 		/// </summary>
-		SubpassInput,
+		SubpassInput = 139,
 
 		/// <summary>
 		/// Represents a type error. Only used in temporary situations when errors arise, not a valid type for objects.

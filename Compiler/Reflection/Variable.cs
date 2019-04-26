@@ -141,6 +141,11 @@ namespace SSLang.Reflection
 				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
 				return false;
 			}
+			if (name.Length > 32)
+			{
+				error = "Variable names cannot be longer than 32 characters.";
+				return false;
+			}
 
 			var type = ShaderTypeHelper.FromTypeContext(ctx.type());
 			if (type == ShaderType.Void)
@@ -184,6 +189,11 @@ namespace SSLang.Reflection
 				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
 				return false;
 			}
+			if (name.Length > 32)
+			{
+				error = "Variable names cannot be longer than 32 characters.";
+				return false;
+			}
 
 			var type = ShaderTypeHelper.FromTypeContext(ctx.type());
 			if (type == ShaderType.Void)
@@ -225,6 +235,11 @@ namespace SSLang.Reflection
 			if (name[0] == '$')
 			{
 				error = "Cannot start a variable with the character '$', this is reserved for built-in variables.";
+				return false;
+			}
+			if (name.Length > 32)
+			{
+				error = "Uniform names cannot be longer than 32 characters.";
 				return false;
 			}
 
