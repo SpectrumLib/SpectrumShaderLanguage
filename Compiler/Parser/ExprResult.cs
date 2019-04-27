@@ -22,7 +22,7 @@ namespace SSLang
 		// This value will not propgate upwards when constructing new results based off of this one
 		public Variable LValue = null;
 		// Used sparingly, only for lvalue variable references to image types
-		public ImageFormat ImageFormat => LValue?.ImageFormat ?? ImageFormat.Error;
+		public ImageFormat? ImageFormat => LValue?.ImageFormat;
 
 		public bool IsArray => ArraySize != 0;
 		public bool HasSSA => SSA != null;

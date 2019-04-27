@@ -171,7 +171,7 @@ namespace SSLang
 
 			// Write the internals
 			uint intOff = Math.Max(
-				Info.Attributes.Max(pair => pair.Location + pair.Variable.Type.GetSlotCount(pair.Variable.ArraySize)),
+				Info.Attributes.Max(v => v.Location + v.Type.GetSlotCount(v.ArraySize)),
 				(uint)Info.Outputs.Count
 			);
 			GLSL.EmitCommentVar("Internal variables");
@@ -288,12 +288,11 @@ namespace SSLang
 			uint loc = 0;
 			foreach (var tctx in block._Types)
 			{
-				if (!ScopeManager.TryAddAttribute(tctx, out var vrbl, out var error))
-					_THROW(tctx, error);
+				var vrbl = ScopeManager.AddAttribute(tctx, this);
 				if (!vrbl.Type.IsValueType())
-					_THROW(tctx, $"The variable '{vrbl.Name}' cannot have type '{vrbl.Type.ToKeyword()}', only value types are allowed as attributes.");
+					_THROW(tctx, $"The variable '{vrbl.Name}' cannot have type '{vrbl.Type}', only value types are allowed as attributes.");
 				GLSL.EmitVertexAttribute(vrbl, loc);
-				Info._attributes.Add((vrbl, loc));
+				// TODO: Info._attributes.Add((vrbl, loc));
 				loc += vrbl.Type.GetSlotCount(vrbl.ArraySize);
 			}
 
@@ -317,14 +316,13 @@ namespace SSLang
 			uint loc = 0;
 			foreach (var tctx in block._Types)
 			{
-				if (!ScopeManager.TryAddOutput(tctx, out var vrbl, out var error))
-					_THROW(tctx, error);
+				var vrbl = ScopeManager.AddOutput(tctx, this);
 				if (!vrbl.Type.IsValueType())
-					_THROW(tctx, $"The variable '{vrbl.Name}' cannot have type '{vrbl.Type.ToKeyword()}', only value types are allowed as outputs.");
+					_THROW(tctx, $"The variable '{vrbl.Name}' cannot have type '{vrbl.Type}', only value types are allowed as outputs.");
 				if (vrbl.IsArray)
 					_THROW(tctx, $"The output variable '{vrbl.Name}' cannot be an array.");
 				GLSL.EmitFragmentOutput(vrbl, loc++);
-				Info._outputs.Add(vrbl);
+				// TODO: Info._outputs.Add(vrbl);
 			}
 
 			return null;
@@ -340,12 +338,12 @@ namespace SSLang
 				_THROW(context, $"Uniforms cannot have a negative location.");
 			if (loc.Value >= Options.LimitUniforms)
 				_THROW(context, $"Uniforms cannot have binding points past the limit {Options.LimitUniforms}.");
-			var ucnt = Info._blocks.Count + Info._uniforms.Sum(u => u.v.Type.IsHandleType() ? 1 : 0);
+			var ucnt = Info._blocks.Count + Info._uniforms.Sum(u => u.Type.IsHandleType() ? 1 : 0);
 			if (ucnt >= Options.LimitUniforms)
 				_THROW(context, $"Cannot bind more than {Options.LimitUniforms} uniforms.");
 
 			// Check if the location is already taken
-			var fidx = Info._uniforms.FindIndex(u => u.l == loc.Value);
+			var fidx = Info._uniforms.FindIndex(u => u.Location == loc.Value);
 			if (fidx >= 0)
 				_THROW(context, $"The uniform location {loc.Value} is already bound.");
 
@@ -353,20 +351,19 @@ namespace SSLang
 			if (isHandle)
 			{
 				var uvar = context.uniformVariable();
-				if (!ScopeManager.TryAddUniform(uvar, out var vrbl, out error))
-					_THROW(uvar, error);
+				var vrbl = ScopeManager.AddUniform(uvar, this);
 				if (!vrbl.Type.IsHandleType())
 					_THROW(context, $"The uniform '{vrbl.Name}' must be a handle type if declared outside of a block.");
 				if (vrbl.Type.IsSubpassInput())
 				{
 					if (vrbl.SubpassIndex >= Options.LimitSubpassInputs)
 						_THROW(context, $"Cannot attach more than {Options.LimitSubpassInputs} subpass inputs ({vrbl.SubpassIndex} given).");
-					fidx = Info._uniforms.FindIndex(u => u.v.Type.IsSubpassInput() && u.v.SubpassIndex == vrbl.SubpassIndex);
+					fidx = Info._uniforms.FindIndex(u => u.Type.IsSubpassInput() && u.SubpassIndex == vrbl.SubpassIndex);
 					if (fidx != -1)
 						_THROW(context, $"Cannot bind two subpasses to the same index ({vrbl.SubpassIndex}).");
 				}
 
-				Info._uniforms.Add((vrbl, (uint)loc.Value, 0, 0));
+				// TODO: Info._uniforms.Add((vrbl, (uint)loc.Value, 0, 0));
 				GLSL.EmitUniform(vrbl, (uint)loc.Value);
 			}
 			else
@@ -374,19 +371,18 @@ namespace SSLang
 				var tblock = context.typeBlock();
 				if (tblock._Types.Count == 0)
 					_THROW(context, "Uniform blocks must have at least once member.");
-				uint idx = 0, offset = 0, sIdx = (uint)Info.Uniforms.Count;
+				uint offset = 0, sIdx = (uint)Info.Uniforms.Count;
 				GLSL.EmitUniformBlockHeader($"Block{loc.Value}", (uint)loc.Value);
 				foreach (var tctx in tblock._Types)
 				{
-					if (!ScopeManager.TryAddUniform(tctx, out var vrbl, out error))
-						_THROW(tctx, error);
+					var vrbl = ScopeManager.AddUniform(tctx, this);
 					if (!vrbl.Type.IsValueType())
 						_THROW(context, $"The uniform '{vrbl.Name}' must be a value type if declared inside of a block.");
-					Info._uniforms.Add((vrbl, (uint)loc.Value, idx++, offset));
+					// TODO: Info._uniforms.Add((vrbl, (uint)loc.Value, idx++, offset));
 					GLSL.EmitUniformBlockMember(vrbl, offset);
 					offset += vrbl.Size;
 				}
-				Info._blocks.Add(((uint)loc.Value, offset, Enumerable.Range((int)sIdx, tblock._Types.Count).Select(i => (uint)i).ToArray()));
+				// TODO: Info._blocks.Add(((uint)loc.Value, offset, Enumerable.Range((int)sIdx, tblock._Types.Count).Select(i => (uint)i).ToArray()));
 				GLSL.EmitUniformBlockClose();
 			}
 			GLSL.EmitBlankLineVar();
@@ -399,8 +395,7 @@ namespace SSLang
 			var types = context.typeBlock()._Types;
 			foreach (var tctx in types)
 			{
-				if (!ScopeManager.TryAddInternal(tctx, out var vrbl, out var error))
-					_THROW(tctx, error);
+				var vrbl = ScopeManager.AddInternal(tctx, this);
 				if (!vrbl.Type.IsValueType())
 					_THROW(context, $"The local '{vrbl.Name}' must be a value type.");
 			}
@@ -414,8 +409,7 @@ namespace SSLang
 
 		public override ExprResult VisitStandardFunction([NotNull] SSLParser.StandardFunctionContext context)
 		{
-			if (!ScopeManager.TryAddFunction(context, out var func, out var error))
-				_THROW(context, error);
+			var func = ScopeManager.AddFunction(context, this);
 			_currFunc = func;
 
 			GLSL.EmitCommentFunc($"Standard function: \"{func.Name}\"");
@@ -426,7 +420,7 @@ namespace SSLang
 			ScopeManager.PushScope(ScopeType.Function, false);
 			foreach (var par in func.Params)
 			{
-				if (!ScopeManager.TryAddParameter(par, out error))
+				if (!ScopeManager.TryAddParameter(par, out var error))
 					_THROW(context, error);
 			}
 
@@ -514,16 +508,14 @@ namespace SSLang
 
 		public override ExprResult VisitVariableDeclaration([NotNull] SSLParser.VariableDeclarationContext context)
 		{
-			if (!ScopeManager.TryAddLocal(context, out var vrbl, out var error))
-				_THROW(context, error);
+			var vrbl = ScopeManager.AddLocal(context, this);
 			GLSL.EmitDeclaration(vrbl);
 			return null;
 		}
 
 		public override ExprResult VisitVariableDefinition([NotNull] SSLParser.VariableDefinitionContext context)
 		{
-			if (!ScopeManager.TryAddLocal(context, out var vrbl, out var error))
-				_THROW(context, error);
+			var vrbl = ScopeManager.AddLocal(context, this);
 			if (context.arrayIndexer() != null) // We are creating a new array
 			{
 				if (context.arrayLiteral() != null)
@@ -545,7 +537,7 @@ namespace SSLang
 				else
 				{
 					var exp = Visit(context.expression());
-					if (!exp.Type.CanCastTo(vrbl.Type))
+					if (!exp.Type.CanPromoteTo(vrbl.Type))
 						_THROW(context.expression(), $"Cannot assign the type '{exp.Type}' to the type '{vrbl.Type}'.");
 					GLSL.EmitDefinition(vrbl, exp);
 				}
@@ -574,7 +566,7 @@ namespace SSLang
 			}
 			else
 			{
-				if (!expr.Type.CanCastTo(ltype))
+				if (!expr.Type.CanPromoteTo(ltype))
 					_THROW(context.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
 			}
 			if (expr.ArraySize != vrbl.ArraySize)
@@ -588,7 +580,7 @@ namespace SSLang
 		public override ExprResult VisitArrayLiteral([NotNull] SSLParser.ArrayLiteralContext context)
 		{
 			var exprs = context._Values.Select(e => Visit(e)).ToList();
-			var bidx = exprs.FindIndex(e => !e.Type.CanCastTo(_currArrayType));
+			var bidx = exprs.FindIndex(e => !e.Type.CanPromoteTo(_currArrayType));
 			if (bidx != -1)
 				_THROW(context._Values[bidx], $"Array literal ({_currArrayType}) has incompatible type '{exprs[bidx].Type}' at element {bidx}.");
 
@@ -685,16 +677,15 @@ namespace SSLang
 					_THROW(vdc, $"Cannot declare an array in a for loop initializer ('{vdc.Name.Text}').");
 				if (vdc.KW_CONST() != null)
 					_THROW(vdc, $"Cannot declare a constant in a for loop initializer ('{vdc.Name.Text}').");
-				if (!ScopeManager.TryAddLocal(vdc, out var vrbl, out var error))
-					_THROW(vdc, error);
+				var vrbl = ScopeManager.AddLocal(vdc, this);
 				if (!(vrbl.Type.IsScalarType() || vrbl.Type.IsVectorType()))
 					_THROW(vdc, $"Can only declare scalar and vector types in a for loop initializer ('{vrbl.Name}').");
 
 				var expr = Visit(vdc.expression());
-				if (!expr.Type.CanCastTo(vrbl.Type))
+				if (!expr.Type.CanPromoteTo(vrbl.Type))
 					_THROW(vdc.expression(), $"The expression type '{expr.Type}' cannot be assigned to the variable type '{vrbl.Type}'.");
 
-				return new ExprResult(ShaderType.Void, 0, $"{vrbl.GetGLSLDecl(false, null)} = {expr.RefText}");
+				return new ExprResult(ShaderType.Void, 0, $"{vrbl.GetGLSLDecl(null)} = {expr.RefText}");
 			}
 			else
 			{
@@ -715,7 +706,7 @@ namespace SSLang
 					if (cpx)
 						_THROW(ac.Op, $"Complex assignments are not allowed in for loop initializers ('{ac.Op.Text}').");
 					var expr = Visit(ac.Value);
-					if (!expr.Type.CanCastTo(ltype))
+					if (!expr.Type.CanPromoteTo(ltype))
 						_THROW(ac.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
 
 					ScopeManager.AddAssignment(vrbl);
@@ -751,7 +742,7 @@ namespace SSLang
 					}
 					else
 					{
-						if (!expr.Type.CanCastTo(ltype))
+						if (!expr.Type.CanPromoteTo(ltype))
 							_THROW(ac.Value, $"The expression type '{expr.Type}' cannot be assigned to the variable type '{ltype}'.");
 					}
 
@@ -835,7 +826,7 @@ namespace SSLang
 				{
 					if (rtype.IsVoid())
 						_THROW(context, $"The function '{_currFunc.Name}' expects a return value of type '{etype}'.");
-					else if (!rtype.CanCastTo(etype))
+					else if (!rtype.CanPromoteTo(etype))
 						_THROW(context, $"The given return type '{rtype}' cannot be cast to the expected type '{etype}'.");
 				}
 
@@ -954,10 +945,10 @@ namespace SSLang
 
 			var texpr = Visit(context.TVal);
 			var fexpr = Visit(context.FVal);
-			if (!fexpr.Type.CanCastTo(texpr.Type) || texpr.ArraySize != fexpr.ArraySize)
+			if (!fexpr.Type.CanPromoteTo(texpr.Type) || texpr.ArraySize != fexpr.ArraySize)
 				_THROW(context.FVal, $"The false selection expression type ({fexpr.Type}) must match the true type ({texpr.Type}).");
 
-			var ftext = (texpr.Type != fexpr.Type) ? $"{texpr.Type.ToGLSL()}({fexpr.RefText})" : fexpr.RefText;
+			var ftext = (texpr.Type != fexpr.Type) ? $"{texpr.Type.ToGLSLKeyword()}({fexpr.RefText})" : fexpr.RefText;
 			return new ExprResult(texpr.Type, texpr.ArraySize, $"(({cexpr.RefText}) ? ({texpr.RefText}) : ({ftext}))");
 		}
 		#endregion // Expressions
@@ -972,15 +963,15 @@ namespace SSLang
 		public override ExprResult VisitConstructionAtom([NotNull] SSLParser.ConstructionAtomContext context)
 		{
 			var tctx = context.typeConstruction();
-			var ntype = ShaderTypeHelper.FromTypeContext(tctx.Type);
-			if (ntype == ShaderType.Error)
+			var ntype = ReflectionUtils.TranslateTypeContext(tctx.Type);
+			if (!ntype.HasValue)
 				_THROW(tctx, $"Did not understand the type '{tctx.Type.Start.Text}' in type construction.");
 
 			var args = tctx._Args.Select(e => Visit(e)).ToList();
-			if (!FunctionCallUtils.CanConstructType(ntype, args, out var error))
+			if (!FunctionCallUtils.CanConstructType(ntype.Value, args, out var error))
 				_THROW(tctx, error);
 
-			var ssa = ScopeManager.TryAddSSALocal(ntype, 0);
+			var ssa = ScopeManager.AddSSALocal(ntype.Value, this);
 			var expr = new ExprResult(ssa, $"{tctx.Type.Start.Text}( {String.Join(", ", args.Select(a => a.RefText))} )");
 			GLSL.EmitDefinition(expr.SSA, expr);
 			return TypeUtils.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
@@ -1000,7 +991,7 @@ namespace SSLang
 			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			if (rtype != ShaderType.Void)
 			{
-				var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
+				var ssa = ScopeManager.AddSSALocal(rtype, this);
 				var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
 				GLSL.EmitDefinition(ret.SSA, ret);
 				return ret;
@@ -1020,9 +1011,9 @@ namespace SSLang
 			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			if (rtype != ShaderType.Void)
 			{
-				var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
+				var ssa = ScopeManager.AddSSALocal(rtype, this);
 				var ssatext = (fname == "imageLoad") // Find a more modular way to do this in the future
-					? $"imageLoad({String.Join(", ", aexpr.Select(ae => ae.RefText))}).{aexpr[0].ImageFormat.GetTexelType().GetSwizzle(1)}"
+					? $"imageLoad({String.Join(", ", aexpr.Select(ae => ae.RefText))}).{ReflectionUtils.GetSwizzle(aexpr[0].ImageFormat.Value.GetTexelType(), 1)}"
 					: $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})";
 				var ret = new ExprResult(ssa, ssatext);
 				GLSL.EmitDefinition(ret.SSA, ret);
@@ -1043,7 +1034,7 @@ namespace SSLang
 			var rtype = FunctionCallUtils.CheckBuiltinCall(this, context.Start, fname, ftype, aexpr);
 			if (rtype != ShaderType.Void)
 			{
-				var ssa = ScopeManager.TryAddSSALocal(rtype, 0);
+				var ssa = ScopeManager.AddSSALocal(rtype, this);
 				var ret = new ExprResult(ssa, $"{GLSLBuilder.GetBuiltinFuncName(fname, ftype)}({String.Join(", ", aexpr.Select(ae => ae.RefText))})");
 				GLSL.EmitDefinition(ret.SSA, ret);
 				return ret;
@@ -1052,9 +1043,9 @@ namespace SSLang
 			{
 				if (fname == "imageStore")
 				{
-					var rem = 4 - aexpr[2].Type.GetVectorSize();
+					var rem = 4 - aexpr[2].Type.GetComponentCount();
 					var strtxt = $"vec4({aexpr[2].RefText}" + Enumerable.Repeat(", 0", (int)rem).Aggregate((s1, s2) => s1 + s2) + ")";
-					var ssa = ScopeManager.TryAddSSALocal(ShaderType.Float4, 0);
+					var ssa = ScopeManager.AddSSALocal(ShaderType.Float4, this);
 					aexpr[2] = new ExprResult(ssa, strtxt);
 					GLSL.EmitDefinition(ssa, aexpr[2]);
 				}
@@ -1086,11 +1077,11 @@ namespace SSLang
 				}
 
 				// Type checking
-				if (!avars[i].Type.CanCastTo(ptypes[i].Type))
+				if (!avars[i].Type.CanPromoteTo(ptypes[i].Type))
 					_THROW(fc._Args[i], $"Function ('{func.Name}') argument {i+1} expected '{ptypes[i].Type}' type, but got non-castable type '{avars[i].Type}'.");
 			}
 
-			var ssa = ScopeManager.TryAddSSALocal(func.ReturnType, 0);
+			var ssa = ScopeManager.AddSSALocal(func.ReturnType, this);
 			var ret = new ExprResult(ssa, $"{func.OutputName}({String.Join(", ", avars.Select(arg => arg.RefText))})");
 			GLSL.EmitDefinition(ret.SSA, ret);
 			return TypeUtils.ApplyModifiers(this, ret, null, context.SWIZZLE());

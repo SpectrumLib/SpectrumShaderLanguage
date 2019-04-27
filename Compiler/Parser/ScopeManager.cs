@@ -85,100 +85,76 @@ namespace SSLang
 		public bool HasReturn() => _scopes.Peek().HasReturn;
 
 		#region Globals
-		public bool TryAddAttribute(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
+		public Variable AddAttribute(SSLParser.VariableDeclarationContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.Attribute, out v, out error))
-				return false;
+			var v = Variable.FromContext(ctx, vis, VariableScope.Attribute);
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-			{
-				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
-				return false;
-			}
+				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_attributes.Add(v.Name, v);
-			return true;
+			return v;
 		}
 
-		public bool TryAddOutput(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
+		public Variable AddOutput(SSLParser.VariableDeclarationContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.FragmentOutput, out v, out error))
-				return false;
+			var v = Variable.FromContext(ctx, vis, VariableScope.FragmentOutput);
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-			{
-				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
-				return false;
-			}
+				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_outputs.Add(v.Name, v);
-			return true;
+			return v;
 		}
 
-		public bool TryAddUniform(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
+		public Variable AddUniform(SSLParser.VariableDeclarationContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.Uniform, out v, out error))
-				return false;
+			var v = Variable.FromContext(ctx, vis, VariableScope.Uniform);
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-			{
-				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
-				return false;
-			}
+				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_uniforms.Add(v.Name, v);
-			return true;
+			return v;
 		}
 
-		public bool TryAddUniform(SSLParser.UniformVariableContext ctx, out Variable v, out string error)
+		public Variable AddUniform(SSLParser.UniformVariableContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.Uniform, out v, out error))
-				return false;
+			var v = Variable.FromContext(ctx, vis);
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-			{
-				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
-				return false;
-			}
+				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_uniforms.Add(v.Name, v);
-			return true;
+			return v;
 		}
 
-		public bool TryAddInternal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
+		public Variable AddInternal(SSLParser.VariableDeclarationContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.Internal, out v, out error))
-				return false;
+			var v = Variable.FromContext(ctx, vis, VariableScope.Internal);
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-			{
-				error = $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.";
-				return false;
-			}
+				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_internals.Add(v.Name, v);
-			return true;
+			return v;
 		}
 
-		public bool TryAddFunction(SSLParser.StandardFunctionContext ctx, out StandardFunction func, out string error)
+		public StandardFunction AddFunction(SSLParser.StandardFunctionContext ctx, SSLVisitor vis)
 		{
-			if (!StandardFunction.TryFromContext(ctx, out func, out error))
-				return false;
+			var func = StandardFunction.FromContext(ctx, vis);
 
 			var pre = FindFunction(func.Name);
 			if (pre != null)
-			{
-				error = $"A function with the name '{func.Name}' already exists in the shader.";
-				return false;
-			}
+				vis._THROW(ctx, $"A function with the name '{func.Name}' already exists in the shader.");
 
 			_functions.Add(func.Name, func);
-			return true;
+			return func;
 		}
 		#endregion // Globals
 
@@ -193,25 +169,26 @@ namespace SSLang
 		public bool TryAddParameter(StandardFunction.Param p, out string error) =>
 			_scopes.Peek().TryAddParam(p, out error);
 
-		public bool TryAddLocal(SSLParser.VariableDeclarationContext ctx, out Variable v, out string error)
+		public Variable AddLocal(SSLParser.VariableDeclarationContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.Local, out v, out error))
-				return false;
-			return _scopes.Peek().TryAddVariable(v, out error);
+			var v = Variable.FromContext(ctx, vis, VariableScope.Local);
+			if (!_scopes.Peek().TryAddVariable(v, out var error))
+				vis._THROW(ctx, error);
+			return v;
 		}
 
-		public bool TryAddLocal(SSLParser.VariableDefinitionContext ctx, out Variable v, out string error)
+		public Variable AddLocal(SSLParser.VariableDefinitionContext ctx, SSLVisitor vis)
 		{
-			if (!Variable.TryFromContext(ctx, VariableScope.Local, out v, out error))
-				return false;
-			return _scopes.Peek().TryAddVariable(v, out error);
+			var v = Variable.FromContext(ctx, vis, VariableScope.Local);
+			if (!_scopes.Peek().TryAddVariable(v, out var error))
+				vis._THROW(ctx, error);
+			return v;
 		}
 
-		public Variable TryAddSSALocal(ShaderType type, uint arrSize = 0)
+		public Variable AddSSALocal(ShaderType type, SSLVisitor vis, uint? arrSize = null)
 		{
 			var v = new Variable(type, $"_r{_ssaIndex++}", VariableScope.Local, true, arrSize);
-			if (!_scopes.Peek().TryAddVariable(v, out var error))
-				return null;
+			_scopes.Peek().TryAddVariable(v, out var error);
 			return v;
 		}
 

@@ -19,52 +19,52 @@ namespace SSLang
 				vis._THROW(token, $"Arguments to built-in functions cannot be arrays (arg {btidx+1}).");
 
 			ShaderType a1t = args[0].Type,
-					   a2t = (args.Length > 1) ? args[1].Type : ShaderType.Error,
-					   a3t = (args.Length > 2) ? args[2].Type : ShaderType.Error;
+					   a2t = (args.Length > 1) ? args[1].Type : ShaderType.Void,
+					   a3t = (args.Length > 2) ? args[2].Type : ShaderType.Void;
 			ShaderType a1c = a1t.GetComponentType(),
 					   a2c = a2t.GetComponentType(),
 					   a3c = a3t.GetComponentType();
 
 			if (type >= SSLParser.BIF_TEXSIZE && type <= SSLParser.BIF_TEXFETCH) // Functions that deal with texture handles
 			{
-				if (!a1t.IsTextureHandle())
+				if (!a1t.IsTextureType())
 					vis._THROW(token, $"The built-in function '{name}' requires a texture handle as argument 1.");
 				var tdim = a1t.GetTexelDim();
 
 				if (type == SSLParser.BIF_TEXSIZE)
-					return ShaderType.Int.ToVectorType(tdim);
+					return ShaderType.Int.ToVectorType(tdim).Value;
 				else if (type == SSLParser.BIF_TEXTURE)
 				{
-					if (!a2c.CanCastTo(ShaderType.Float))
+					if (!a2c.CanPromoteTo(ShaderType.Float))
 						vis._THROW(token, $"The built-in function '{name}' requires a floating-point vector or scalar as argument 2.");
-					if (a2t.GetVectorSize() != tdim)
+					if (a2t.GetComponentCount() != tdim)
 						vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
 				}
 				else
 				{
 					if (a2c != ShaderType.Int)
 						vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
-					if (a2t.GetVectorSize() != tdim)
+					if (a2t.GetComponentCount() != tdim)
 						vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
 				}
 				return ShaderType.Float4;
 			}
 			else if (type >= SSLParser.BIF_IMAGESIZE && type <= SSLParser.BIF_IMAGESTORE) // Functions that deal with image handles
 			{
-				if (!a1t.IsImageHandle())
+				if (!a1t.IsImageType())
 					vis._THROW(token, $"The built-in function '{name}' requires an image handle as argument 1.");
 				var tdim = a1t.GetTexelDim();
 
 				if (type == SSLParser.BIF_IMAGESIZE)
-					return ShaderType.Int.ToVectorType(tdim);
+					return ShaderType.Int.ToVectorType(tdim).Value;
 
 				if (a2c != ShaderType.Int)
 					vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
-				if (a2t.GetVectorSize() != tdim)
+				if (a2t.GetComponentCount() != tdim)
 					vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
 
-				var ttype = args[0].ImageFormat;
-				if ((type == SSLParser.BIF_IMAGESTORE) && !a3t.CanCastTo(ttype.GetTexelType()))
+				var ttype = args[0].ImageFormat.Value;
+				if ((type == SSLParser.BIF_IMAGESTORE) && !a3t.CanPromoteTo(ttype.GetTexelType()))
 					vis._THROW(token, $"The built-in function '{name}' requires the type {ttype.GetTexelType()} for argument 3.");
 				return (type == SSLParser.BIF_IMAGESTORE) ? ShaderType.Void : ttype.GetTexelType();
 			}
@@ -101,48 +101,48 @@ namespace SSLang
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_MOD) // 'mod' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureSizeIfNotScalar(vis, token, name, a1t, a2t, 1, 2);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_MIN || type == SSLParser.BIF_MAX) // 'min' and 'max' functions
 				{
-					EnsureCastableComponents(vis, token, name, a1c, ShaderType.Error, ShaderType.Error, ShaderType.Float);
+					EnsureCastableComponents(vis, token, name, a1c, ShaderType.Void, ShaderType.Void, ShaderType.Float);
 					EnsureMatchingComponents(vis, token, name, a1c, a2c, a3c);
 					EnsureSizeIfNotScalar(vis, token, name, a1t, a2t, 1, 2);
 					return a1t;
 				}
 				else if (type == SSLParser.BIF_CLAMP) // 'clamp' function
 				{
-					EnsureCastableComponents(vis, token, name, a1c, ShaderType.Error, ShaderType.Error, ShaderType.Float);
+					EnsureCastableComponents(vis, token, name, a1c, ShaderType.Void, ShaderType.Void, ShaderType.Float);
 					EnsureMatchingComponents(vis, token, name, a1c, a2c, a3c);
-					EnsureVectorSizes(vis, token, name, ShaderType.Error, a2t, a3t);
+					EnsureVectorSizes(vis, token, name, ShaderType.Void, a2t, a3t);
 					EnsureSizeIfNotScalar(vis, token, name, a1t, a2t, 1, 2);
 					return a1t;
 				}
 				else if (type == SSLParser.BIF_MIX) // 'mix' function, unlike GLSL this only supports floating points
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
-					EnsureVectorSizes(vis, token, name, a1t, a2t, ShaderType.Error);
+					EnsureVectorSizes(vis, token, name, a1t, a2t, ShaderType.Void);
 					EnsureSizeIfNotScalar(vis, token, name, a1t, a3t, 1, 3);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_STEP) // 'step' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureSizeIfNotScalar(vis, token, name, a2t, a1t, 2, 1);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_SSTEP) // 'smoothstep' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
 					EnsureSizeIfNotScalar(vis, token, name, a2t, a1t, 2, 1);
-					return ShaderType.Float.ToVectorType(a3t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a3t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_LENGTH) // 'length' function
 				{
@@ -158,49 +158,49 @@ namespace SSLang
 				else if (type == SSLParser.BIF_CROSS) // 'cross' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
-					if (a1t.GetVectorSize() != 3 || a2t.GetVectorSize() != 3)
+					if (a1t.GetComponentCount() != 3 || a2t.GetComponentCount() != 3)
 						vis._THROW(token, $"The built-in function '{name}' expects 3-component floating-point vector arguments.");
 					return ShaderType.Float3;
 				}
 				else if (type == SSLParser.BIF_NORMALIZE) // 'normalize' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_FFORWARD) // 'faceforward' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_REFLECT) // 'reflect' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_REFRACT) // 'refract' function
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
-					EnsureVectorSizes(vis, token, name, a1t, a2t, ShaderType.Error);
-					if (!a3t.CanCastTo(ShaderType.Float))
+					EnsureVectorSizes(vis, token, name, a1t, a2t, ShaderType.Void);
+					if (!a3t.CanPromoteTo(ShaderType.Float))
 						vis._THROW(token, $"The built-in function '{name}' expects a floating-point scalar for argument 3.");
-					return ShaderType.Float.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type >= SSLParser.BIF_VECLT && type <= SSLParser.BIF_VECGE) // 2-arg relational vector functions
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
-					return ShaderType.Bool.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Bool.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type == SSLParser.BIF_VECEQ || type == SSLParser.BIF_VECNE) // 2-arg logical vector functions
 				{
-					if ((a1c == ShaderType.Bool) || a1c.CanCastTo(ShaderType.Float))
+					if ((a1c == ShaderType.Bool) || a1c.CanPromoteTo(ShaderType.Float))
 						EnsureMatchingComponents(vis, token, name, a1c, a2c, a3c);
 					else
 						vis._THROW(token, $"The built-in function '{name}' expects floating-point or boolean vectors for all arguments.");
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
-					return ShaderType.Bool.ToVectorType(a1t.GetVectorSize());
+					return ShaderType.Bool.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type >= SSLParser.BIF_VECANY && type <= SSLParser.BIF_VECNOT) // 1-arg logical vector functions
 				{
@@ -211,7 +211,7 @@ namespace SSLang
 
 			// Error
 			vis._THROW(token, $"The built-in function '{name}' was not understood.");
-			return ShaderType.Error;
+			return ShaderType.Void;
 		}
 
 		// These functions provide common checks for built-in function argument types
@@ -219,32 +219,32 @@ namespace SSLang
 		// ShaderType.Error will disable checks against that specific argument
 		private static void EnsureCastableComponents(SSLVisitor vis, IToken token, string name, ShaderType a1c, ShaderType a2c, ShaderType a3c, ShaderType dstType)
 		{
-			if (!a1c.CanCastTo(dstType))
+			if (!a1c.CanPromoteTo(dstType))
 				vis._THROW(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 1 (actual is '{a1c}').");
-			if ((a2c != ShaderType.Error) && !a2c.CanCastTo(dstType))
+			if ((a2c != ShaderType.Void) && !a2c.CanPromoteTo(dstType))
 				vis._THROW(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 2 (actual is '{a2c}').");
-			if ((a3c != ShaderType.Error) && !a3c.CanCastTo(dstType))
+			if ((a3c != ShaderType.Void) && !a3c.CanPromoteTo(dstType))
 				vis._THROW(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 3 (actual is '{a3c}').");
 		}
 		private static void EnsureMatchingComponents(SSLVisitor vis, IToken token, string name, ShaderType a1c, ShaderType a2c, ShaderType a3c)
 		{
-			if (!a2c.CanCastTo(a1c))
+			if (!a2c.CanPromoteTo(a1c))
 				vis._THROW(token, $"The built-in function '{name}' requires a '{a1c}' compatible type for argument 2 (actual is '{a2c}').");
-			if ((a3c != ShaderType.Error) && !a3c.CanCastTo(a1c))
+			if ((a3c != ShaderType.Void) && !a3c.CanPromoteTo(a1c))
 				vis._THROW(token, $"The built-in function '{name}' requires a '{a1c}' compatible type for argument 3 (actual is '{a3c}').");
 		}
 		private static void EnsureVectorSizes(SSLVisitor vis, IToken token, string name, ShaderType a1t, ShaderType a2t, ShaderType a3t)
 		{
-			if ((a1t != ShaderType.Error) && (a2t != ShaderType.Error) && (a2t.GetVectorSize() != a1t.GetVectorSize()))
+			if ((a1t != ShaderType.Void) && (a2t != ShaderType.Void) && (a2t.GetComponentCount() != a1t.GetComponentCount()))
 				vis._THROW(token, $"The built-in function '{name}' requires matching vector sizes for arguments 1 and 2.");
-			if ((a1t != ShaderType.Error) && (a3t != ShaderType.Error) && (a3t.GetVectorSize() != a1t.GetVectorSize()))
+			if ((a1t != ShaderType.Void) && (a3t != ShaderType.Void) && (a3t.GetComponentCount() != a1t.GetComponentCount()))
 				vis._THROW(token, $"The built-in function '{name}' requires matching vector sizes for arguments 1 and 3.");
-			if ((a2t != ShaderType.Error) && (a3t != ShaderType.Error) && (a3t.GetVectorSize() != a2t.GetVectorSize()))
+			if ((a2t != ShaderType.Void) && (a3t != ShaderType.Void) && (a3t.GetComponentCount() != a2t.GetComponentCount()))
 				vis._THROW(token, $"The built-in function '{name}' requires matching vector sizes for arguments 2 and 3.");
 		}
 		private static void EnsureSizeIfNotScalar(SSLVisitor vis, IToken token, string name, ShaderType vtype, ShaderType ctype, int vp, int cp)
 		{
-			if (!ctype.IsScalarType() && (ctype.GetVectorSize() != vtype.GetVectorSize()))
+			if (!ctype.IsScalarType() && (ctype.GetComponentCount() != vtype.GetComponentCount()))
 				vis._THROW(token, $"The built-in function '{name}' requires argument {cp} to be a scalar, or a matching vector size to argument {vp}.");
 		}
 
@@ -274,7 +274,7 @@ namespace SSLang
 
 			if (!type.IsMatrixType()) // Vectors and scalars
 			{
-				var ccount = type.GetVectorSize();
+				var ccount = type.GetComponentCount();
 				if (ccount == 1) // Scalars
 				{
 					if (args.Count != 1)
@@ -301,19 +301,19 @@ namespace SSLang
 					{
 						if (args[0].Type.IsScalarType())
 						{
-							if (!args[0].Type.CanCastTo(comptype))
+							if (!args[0].Type.CanPromoteTo(comptype))
 							{
 								error = $"Cannot construct vector type '{type}' from scalar type '{args[0].Type}'.";
 								return false;
 							}
 							return true;
 						}
-						if (!args[0].Type.IsVectorType() || (args[0].Type.GetVectorSize() < ccount))
+						if (!args[0].Type.IsVectorType() || (args[0].Type.GetComponentCount() < ccount))
 						{
 							error = "Can only cast between vector types of the same size or larger (through concatenation).";
 							return false;
 						}
-						if (!args[0].Type.CanCastTo(type))
+						if (!args[0].Type.CanPromoteTo(type))
 						{
 							error = $"No casting rules exist to cast a '{args[0].Type}' vector to a '{type}' vector.";
 							return false;
@@ -322,7 +322,7 @@ namespace SSLang
 					}
 					if (args.Count == ccount) // Directly supplying each component
 					{
-						var bidx = args.FindIndex(arg => !arg.Type.IsScalarType() || !arg.Type.CanCastTo(comptype));
+						var bidx = args.FindIndex(arg => !arg.Type.IsScalarType() || !arg.Type.CanPromoteTo(comptype));
 						if (bidx != -1)
 						{
 							error = $"Type constructor argument {bidx} must be a '{comptype}' compatible non-array scalar type.";
@@ -332,13 +332,13 @@ namespace SSLang
 					}
 					else // Some mix of other argument types
 					{
-						var bidx = args.FindIndex(arg => arg.Type.IsMatrixType() || !arg.Type.GetComponentType().CanCastTo(comptype));
+						var bidx = args.FindIndex(arg => arg.Type.IsMatrixType() || !arg.Type.GetComponentType().CanPromoteTo(comptype));
 						if (bidx != -1)
 						{
 							error = $"The type constructor argument {bidx} must be a '{comptype}' compatible non-array scalar or vector type.";
 							return false;
 						}
-						var csum = args.Sum(arg => arg.Type.GetVectorSize());
+						var csum = args.Sum(arg => arg.Type.GetComponentCount());
 						if (csum != ccount)
 						{
 							error = $"The type constructor arguments must provide the exact numer of components required ({ccount} != {csum}).";
@@ -355,7 +355,7 @@ namespace SSLang
 					if (args[0].Type.IsMatrixType())
 						return true; // Direct matrix casts always work
 
-					if (!args[0].Type.IsScalarType() || !args[0].Type.CanCastTo(ShaderType.Float))
+					if (!args[0].Type.IsScalarType() || !args[0].Type.CanPromoteTo(ShaderType.Float))
 					{
 						error = $"Diagonal matrices can only be constructed from capatible scalar types.";
 						return false;
@@ -365,13 +365,13 @@ namespace SSLang
 				}
 
 				// Simply need enough compatible arguments to fill each matrix component exactly
-				var bidx = args.FindIndex(arg => arg.Type.IsMatrixType() || !arg.Type.GetComponentType().CanCastTo(ShaderType.Float));
+				var bidx = args.FindIndex(arg => arg.Type.IsMatrixType() || !arg.Type.GetComponentType().CanPromoteTo(ShaderType.Float));
 				if (bidx != -1)
 				{
 					error = $"The matrix constructor argument {bidx} must be a 'Float' compatible scalar or vector type.";
 					return false;
 				}
-				var csum = args.Sum(arg => arg.Type.GetVectorSize());
+				var csum = args.Sum(arg => arg.Type.GetComponentCount());
 				var tsum = (type == ShaderType.Mat2) ? 4 : (type == ShaderType.Mat3) ? 9 : 16;
 				if (tsum != csum)
 				{

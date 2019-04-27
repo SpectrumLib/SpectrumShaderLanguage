@@ -30,11 +30,9 @@ namespace SSLang
 			Params = pars;
 		}
 
-		public static bool TryFromContext(SSLParser.StandardFunctionContext ctx, out StandardFunction func, out string error)
+		public static StandardFunction FromContext(SSLParser.StandardFunctionContext ctx, SSLVisitor vis)
 		{
-			func = null;
-
-			var rtype = ShaderTypeHelper.FromTypeContext(ctx.type());
+			var rtype = ReflectionUtils.TranslateTypeContext(ctx.type());
 			var fname = ctx.Name.Text;
 
 			List<Param> pars = new List<Param>();
@@ -45,25 +43,17 @@ namespace SSLang
 					var pname = pctx.Name.Text;
 					var aidx = pctx.Access?.Type ?? SSLParser.KW_IN;
 					var acs = (aidx == SSLParser.KW_OUT) ? Access.Out : (aidx == SSLParser.KW_INOUT) ? Access.InOut : Access.In;
-					var ptype = ShaderTypeHelper.FromTypeContext(pctx.type());
+					var ptype = ReflectionUtils.TranslateTypeContext(pctx.type());
 					if (ptype == ShaderType.Void)
-					{
-						error = $"The parameter '{pname}' cannot have type 'void'.";
-						return false;
-					}
+						vis._THROW(ctx, $"The parameter '{pname}' cannot have type 'void'.");
 					var fidx = pars.FindIndex(ep => ep.Name == pname);
 					if (fidx != -1)
-					{
-						error = $"Duplicate parameter name '{pname}' in the function parameter list.";
-						return false;
-					}
-					pars.Add(new Param { Name = pname, Type = ptype, Access = acs });
+						vis._THROW(ctx, $"Duplicate parameter name '{pname}' in the function parameter list.");
+					pars.Add(new Param { Name = pname, Type = ptype.Value, Access = acs });
 				}
 			}
 
-			func = new StandardFunction(fname, rtype, pars.ToArray());
-			error = null;
-			return true;
+			return new StandardFunction(fname, rtype.Value, pars.ToArray());
 		}
 
 		// Contains information about a function parameter

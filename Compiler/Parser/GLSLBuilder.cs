@@ -69,10 +69,10 @@ namespace SSLang
 
 		#region Variables
 		public void EmitVertexAttribute(Variable vrbl, uint loc) =>
-			_attrSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl(false)};");
+			_attrSource.AppendLine($"layout(location = {loc}) in {vrbl.GetGLSLDecl()};");
 
 		public void EmitFragmentOutput(Variable vrbl, uint loc) =>
-			_outputSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl(false)};");
+			_outputSource.AppendLine($"layout(location = {loc}) out {vrbl.GetGLSLDecl()};");
 
 		public void EmitUniform(Variable vrbl, uint loc)
 		{
@@ -80,19 +80,19 @@ namespace SSLang
 			{
 				_funcSources[ShaderStages.Fragment].AppendLine($"// Uniform Subpass Input {vrbl.SubpassIndex}");
 				_funcSources[ShaderStages.Fragment].AppendLine(
-					$"layout(set = 0, binding = {loc}, input_attachment_index = {vrbl.SubpassIndex}) uniform {vrbl.GetGLSLDecl(false)};"
+					$"layout(set = 0, binding = {loc}, input_attachment_index = {vrbl.SubpassIndex}) uniform {vrbl.GetGLSLDecl()};"
 				);
 				_funcSources[ShaderStages.Fragment].AppendLine();
 			}
-			else if (vrbl.Type.IsImageHandle())
+			else if (vrbl.Type.IsImageType())
 			{
 				_varSource.AppendLine($"// Uniform binding {loc}");
-				_varSource.AppendLine($"layout(set = 0, binding = {loc}, {vrbl.ImageFormat.ToGLSL()}) coherent uniform {vrbl.GetGLSLDecl(false)};");
+				_varSource.AppendLine($"layout(set = 0, binding = {loc}, {vrbl.ImageFormat.Value.ToGLSLKeyword()}) coherent uniform {vrbl.GetGLSLDecl()};");
 			}
 			else
 			{
 				_varSource.AppendLine($"// Uniform binding {loc}");
-				_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl(false)};");
+				_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl()};");
 			}
 		}
 
@@ -103,14 +103,14 @@ namespace SSLang
 		}
 
 		public void EmitUniformBlockMember(Variable vrbl, uint offset) =>
-			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl(false)};");
+			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl()};");
 
 		public void EmitUniformBlockClose() => _varSource.AppendLine("};");
 
 		public void EmitInternal(Variable vrbl, uint loc, ShaderStages stage)
 		{
 			var access = (vrbl.ReadStages.HasFlag(stage) ? "in" : "") + (vrbl.WriteStages.HasFlag(stage) ? "out" : "");
-			_varSource.AppendLine($"layout(location = {loc}) {access} {vrbl.GetGLSLDecl(false, stage)};");
+			_varSource.AppendLine($"layout(location = {loc}) {access} {vrbl.GetGLSLDecl(stage)};");
 		}
 		#endregion // Variables
 
@@ -121,12 +121,12 @@ namespace SSLang
 		public void EmitFunctionHeader(StandardFunction func)
 		{
 			var plist = String.Join(", ", func.Params.Select(par =>
-				$"{par.Access.ToString().ToLower()} {par.Type.ToGLSL()} {par.Name}"
+				$"{par.Access.ToString().ToLower()} {par.Type.ToGLSLKeyword()} {par.Name}"
 			));
 			if (plist.Length == 0)
 				plist = "void";
 
-			_funcSource.AppendLine($"{func.ReturnType.ToGLSL()} {func.OutputName}({plist})");
+			_funcSource.AppendLine($"{func.ReturnType.ToGLSLKeyword()} {func.OutputName}({plist})");
 		}
 
 		public void EmitStageFunctionHeader()
@@ -145,7 +145,7 @@ namespace SSLang
 
 		public void EmitDeclaration(Variable v) => _funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()};");
 		public void EmitDefinition(Variable v, ExprResult expr) =>
-			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl(false)} = {expr.ValueText};");
+			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()} = {expr.ValueText};");
 
 		public void EmitAssignment(string name, long? arrIndex, string swiz, string op, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} {op} {expr.RefText};");

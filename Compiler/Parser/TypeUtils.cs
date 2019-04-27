@@ -28,7 +28,7 @@ namespace SSLang
 					vis._THROW(actx.Index, error);
 				if (aidx.Value < 0)
 					vis._THROW(actx.Index, "An array indexer cannot be negative.");
-				var asize = res.IsArray ? res.ArraySize : res.Type.GetVectorSize();
+				var asize = res.IsArray ? res.ArraySize : res.Type.GetComponentCount();
 				if (aidx.Value >= asize)
 					vis._THROW(actx.Index, "The array indexer is too large for the preceeding expression.");
 				res = new ExprResult(res.Type, 0, $"{res.RefText}[{aidx.Value}]");
@@ -43,10 +43,10 @@ namespace SSLang
 					vis._THROW(swizzle.Symbol, "A swizzle cannot have more than four components.");
 				foreach (var swc in stxt)
 				{
-					if (!res.Type.IsSwizzleValid(swc))
+					if (!ReflectionUtils.IsSwizzleValid(res.Type, swc))
 						vis._THROW(swizzle.Symbol, $"The swizzle character '{swc}' is not valid for this type.");
 				}
-				res = new ExprResult(res.Type.ToVectorType((uint)stxt.Length), 0, $"{res.RefText}.{stxt}");
+				res = new ExprResult(res.Type.ToVectorType((uint)stxt.Length).Value, 0, $"{res.RefText}.{stxt}");
 			}
 
 			return res;
@@ -69,7 +69,7 @@ namespace SSLang
 					vis._THROW(actx.Index, error);
 				if (aidx.Value < 0)
 					vis._THROW(actx.Index, "An array indexer cannot be negative.");
-				var asize = vrbl.IsArray ? vrbl.ArraySize : vrbl.Type.GetVectorSize();
+				var asize = vrbl.IsArray ? vrbl.ArraySize : vrbl.Type.GetComponentCount();
 				if (aidx.Value >= asize)
 					vis._THROW(actx.Index, "The array indexer is too large for the lvalue.");
 				arrIndex = aidx.HasValue ? (int?)(int)aidx.Value : null;
@@ -87,10 +87,10 @@ namespace SSLang
 					vis._THROW(swizzle.Symbol, "A swizzle cannot have more than four components.");
 				foreach (var swc in stxt)
 				{
-					if (!ltype.IsSwizzleValid(swc))
+					if (ReflectionUtils.IsSwizzleValid(ltype, swc))
 						vis._THROW(swizzle.Symbol, $"The swizzle character '{swc}' is not valid for this lvalue type.");
 				}
-				ltype = ltype.ToVectorType((uint)stxt.Length);
+				ltype = ltype.ToVectorType((uint)stxt.Length).Value;
 			}
 
 			return ltype;
@@ -128,7 +128,7 @@ namespace SSLang
 						if (opnum == SSLParser.OP_DIV) vis._THROW(op, "Cannot divide a scalar by a vector.");
 						// THIS ONLY WORKS BECAUSE OF THE ORDERING OF THE SHADERTYPE ENUM, AND WILL BREAK IF THE ORDERING IS CHANGED
 						var ctype = (ShaderType)Math.Max((int)ltype, (int)rtype.GetComponentType());
-						return ctype.ToVectorType(rtype.GetVectorSize());
+						return ctype.ToVectorType(rtype.GetComponentCount()).Value;
 					}
 				}
 				else if (ltype.IsMatrixType())
@@ -143,10 +143,10 @@ namespace SSLang
 					else // Vectors
 					{
 						if (opnum == SSLParser.OP_DIV) vis._THROW(op, "Cannot divide a matrix by a vector.");
-						var vsize = rtype.GetVectorSize();
+						var vsize = rtype.GetComponentCount();
 						var msize = ((uint)ltype - (uint)ShaderType.Mat2) + 2;
 						if (vsize != msize) vis._THROW(op, $"Can only multiply a matrix by a vector of the same rank ({ltype}, {rtype}).");
-						return ShaderType.Float.ToVectorType(vsize);
+						return ShaderType.Float.ToVectorType(vsize).Value;
 					}
 				}
 				else // Vectors
@@ -154,22 +154,22 @@ namespace SSLang
 					if (rtype.IsScalarType())
 					{
 						if (ltype.GetComponentType() == ShaderType.Float || rtype == ShaderType.Float)
-							return ShaderType.Float.ToVectorType(ltype.GetVectorSize());
+							return ShaderType.Float.ToVectorType(ltype.GetComponentCount()).Value;
 						if (ltype.GetComponentType() == ShaderType.Int || rtype == ShaderType.Int)
-							return ShaderType.Int.ToVectorType(ltype.GetVectorSize());
-						return ShaderType.UInt.ToVectorType(ltype.GetVectorSize());
+							return ShaderType.Int.ToVectorType(ltype.GetComponentCount()).Value;
+						return ShaderType.UInt.ToVectorType(ltype.GetComponentCount()).Value;
 					}
 					else if (rtype.IsMatrixType())
 						vis._THROW(op, $"Cannot mul/div a vector to a matrix ({ltype} {op.Text} {rtype}).");
 					else // Vectors
 					{
-						if (ltype.GetVectorSize() != rtype.GetVectorSize())
+						if (ltype.GetComponentCount() != rtype.GetComponentCount())
 							vis._THROW(op, $"Cannot mul/div vectors of different sizes ({ltype}, {rtype}).");
 						if (ltype.GetComponentType() == ShaderType.Float || rtype.GetComponentType() == ShaderType.Float)
-							return ShaderType.Float.ToVectorType(ltype.GetVectorSize());
+							return ShaderType.Float.ToVectorType(ltype.GetComponentCount()).Value;
 						if (ltype.GetComponentType() == ShaderType.Int || rtype.GetComponentType() == ShaderType.Int)
-							return ShaderType.Int.ToVectorType(ltype.GetVectorSize());
-						return ShaderType.UInt.ToVectorType(ltype.GetVectorSize());
+							return ShaderType.Int.ToVectorType(ltype.GetComponentCount()).Value;
+						return ShaderType.UInt.ToVectorType(ltype.GetComponentCount()).Value;
 					}
 				}
 			}
@@ -185,15 +185,15 @@ namespace SSLang
 				{
 					if (ltype.IsMatrixType() || rtype.IsMatrixType())
 						vis._THROW(op, $"Can only add/sub a matrix to another matrix of the same size ({ltype} {op.Text} {rtype}).");
-					if (ltype.GetVectorSize() != rtype.GetVectorSize())
+					if (ltype.GetComponentCount() != rtype.GetComponentCount())
 						vis._THROW(op, $"Can only add/sub vectors of the same size ({ltype}, {rtype}).");
 					if (ltype.GetComponentType() == ShaderType.Bool || rtype.GetComponentType() == ShaderType.Bool)
 						vis._THROW(op, $"Cannot add/sub boolean types ({ltype} {op.Text} {rtype}).");
-					if (!ltype.CanCastTo(rtype) && !rtype.CanCastTo(ltype))
+					if (!ltype.CanPromoteTo(rtype) && !rtype.CanPromoteTo(ltype))
 						vis._THROW(op, $"No implicit cast available to add/sub different types ({ltype} {op.Text} {rtype}).");
 					// THIS ONLY WORKS BECAUSE OF THE ORDERING OF THE SHADERTYPE ENUM, AND WILL BREAK IF THE ORDERING IS CHANGED
 					var ctype = (ShaderType)Math.Max((int)ltype.GetComponentType(), (int)rtype.GetComponentType());
-					return ctype.ToVectorType(ltype.GetVectorSize());
+					return ctype.ToVectorType(ltype.GetComponentCount()).Value;
 				}
 				return ltype;
 			}
@@ -207,7 +207,7 @@ namespace SSLang
 			{
 				if (!ltype.IsScalarType() || !rtype.IsScalarType() || ltype == ShaderType.Bool || rtype == ShaderType.Bool)
 					vis._THROW(op, $"The relational operator '{op.Text}' can only be applied to numeric scalar types ({ltype}, {rtype}).");
-				if (!ltype.CanCastTo(rtype) && !rtype.CanCastTo(ltype))
+				if (!ltype.CanPromoteTo(rtype) && !rtype.CanPromoteTo(ltype))
 					vis._THROW(op, $"No implicit cast available to compare relation between different types ({ltype} {op.Text} {rtype}).");
 				return ShaderType.Bool;
 			}
@@ -217,9 +217,9 @@ namespace SSLang
 				{
 					if (ltype.IsMatrixType() || rtype.IsMatrixType())
 						vis._THROW(op, $"Can only compare a matrix to another matrix of the same size ({ltype} {op.Text} {rtype}).");
-					if (ltype.GetVectorSize() != rtype.GetVectorSize())
+					if (ltype.GetComponentCount() != rtype.GetComponentCount())
 						vis._THROW(op, $"Can only compare equality of vectors of the same size ({ltype}, {rtype}).");
-					if (!ltype.CanCastTo(rtype) && !rtype.CanCastTo(ltype))
+					if (!ltype.CanPromoteTo(rtype) && !rtype.CanPromoteTo(ltype))
 						vis._THROW(op, $"No implicit cast available to compare equality between different types ({ltype} {op.Text} {rtype}).");
 				}
 				return ShaderType.Bool;
@@ -239,7 +239,7 @@ namespace SSLang
 			}
 
 			vis._THROW(op, $"The binary operator '{op.Text}' was not understood.");
-			return ShaderType.Error;
+			return ShaderType.Void;
 		}
 	}
 }
