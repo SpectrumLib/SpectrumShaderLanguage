@@ -39,6 +39,7 @@
   <PropertyGroup>
     <IsTravisCI>true</IsTravisCI>
     <IsTravisCI Condition="'$(OS)' != 'Unix' or !Exists('/home/travis/build/SpectrumLib/Spectrum/Spectrum.sln')">false</IsTravisCI>
+    <Version>0.1.0</Version>
   </PropertyGroup>
   
   <!-- See https://www.meziantou.net/2018/08/28/merging-assemblies-using-ilrepack -->
