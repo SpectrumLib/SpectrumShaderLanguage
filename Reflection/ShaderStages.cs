@@ -66,5 +66,24 @@ namespace SSLang.Reflection
 		/// <param name="stage">The stage to remove to the set.</param>
 		/// <returns>A new set of stages representing the stage set with the given stage removed.</returns>
 		public static ShaderStages RemoveStage(this ShaderStages flags, ShaderStages stage) => flags & ~stage;
+
+		/// <summary>
+		/// Gets the short name for the stage (4 letter, all lowercase). These are the abbreviations that Vulkan uses
+		/// to differentiate the stages.
+		/// </summary>
+		/// <param name="stage">The stage to get a name for. Cannot be a set of stages.</param>
+		/// <returns>The short name for the stage. If the stage is not a single stage, then null is returned.</returns>
+		public static string GetShortName(this ShaderStages stage)
+		{
+			switch (stage)
+			{
+				case ShaderStages.Vertex: return "vert";
+				case ShaderStages.TessControl: return "tesc";
+				case ShaderStages.TessEval: return "tese";
+				case ShaderStages.Geometry: return "geom";
+				case ShaderStages.Fragment: return "frag";
+				default: return null;
+			}
+		}
 	}
 }

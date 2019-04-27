@@ -157,6 +157,21 @@ namespace SSLang.Reflection
 	/// </summary>
 	public static class ShaderTypeHelper
 	{
+		// This must be kept in the same order as the enums, as it depends on direct casting to access
+		internal static readonly string[] SSL_KEYWORDS = {
+			// Value types (must remain contiguous and equivalent to enum)
+			"void",
+			"bool", "bvec2", "bvec3", "bvec4", "int", "ivec2", "ivec3", "ivec4", "uint", "uvec2", "uvec3", "uvec4",
+			"float", "vec2", "vec3", "vec4", "mat2", "mat3", "mat4",
+			// Handle types (must remain contiguous and equivalent to enum)
+			"tex1D", "tex2D", "tex3D", "texCube", "tex1dArray", "tex2DArray", "image1D", "image2D", "image3D",
+			"image1dArray", "image2DArray", "subpassInput"
+		};
+		// This must be kept organized to the enums, as it only contains the types that dont match between SSL and GLSL
+		internal static readonly string[] GLSL_KEYWORDS = {
+			"sampler1D", "sampler2D", "sampler3D", "samplerCube", "sampler1DArray", "sampler2DArray"
+		};
+
 		// Constant reference points in the types enum to make adding new types in the future easier, and the helper
 		//    functions below be less error prone
 		internal const ShaderType VALUE_TYPE_START = ShaderType.Bool;
@@ -173,6 +188,36 @@ namespace SSLang.Reflection
 		internal const ShaderType MATRIX_TYPE_END = ShaderType.Mat4;
 		internal const ShaderType TEXEL_DATA_START = ShaderType.Tex1D;
 		internal const ShaderType TEXEL_DATA_END = ShaderType.Image2DArray;
+
+		#region Keywords
+		// Gets the SSL keyword that represents the type
+		internal static string ToSSLKeyword(this ShaderType type)
+		{
+			if (type <= VALUE_TYPE_END)
+				return SSL_KEYWORDS[(int)type];
+			else if (type <= HANDLE_TYPE_END)
+				return SSL_KEYWORDS[(int)(type - HANDLE_TYPE_START + VALUE_TYPE_END) + 1];
+			else return null;
+		}
+
+		// Gets the GLSL keyword that represents the type
+		// Image handle types require a format to get the current image type
+		internal static string ToGLSLKeyword(this ShaderType type, ImageFormat? ifmt = null)
+		{
+			if ((type >= TEX_TYPE_START) && (type <= TEX_TYPE_END))
+				return GLSL_KEYWORDS[type - TEX_TYPE_START];
+			else if (type >= IMG_TYPE_START && type <= IMG_TYPE_END)
+			{
+				if (!ifmt.HasValue)
+					return null;
+				var ctype = ifmt.Value.GetComponentType();
+				var prefix = (ctype == ShaderType.Int) ? "i" : (ctype == ShaderType.UInt) ? "u" : "";
+				return prefix + ToSSLKeyword(type);
+			}
+			else
+				return ToSSLKeyword(type);
+		}
+		#endregion // Keywords
 
 		#region Type Checking
 		/// <summary>

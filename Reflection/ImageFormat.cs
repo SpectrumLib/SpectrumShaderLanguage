@@ -50,6 +50,21 @@ namespace SSLang.Reflection
 	/// </summary>
 	public static class ImageFormatHelper
 	{
+		// This must be kept in the same order as the enums, as it depends on direct casting to access
+		internal static readonly string[] SSL_KEYWORDS = {
+			"rgba_f", "rgba_i", "rgba_u", "rg_f", "rg_i", "rg_u", "r_f", "r_i", "r_u"
+		};
+		// This must be kept in the same order as the enums, as it depends on direct casting to access
+		internal static readonly string[] GLSL_KEYWORDS = {
+			"rgba32f", "rgba32i", "rgba32ui", "rg32f", "rg32i", "rg32ui", "r32f", "r32i", "r32ui"
+		};
+
+		// Gets the SSL qualifier that represents the format
+		public static string ToSSLKeyword(this ImageFormat fmt) => SSL_KEYWORDS[(int)fmt];
+
+		// Gets the GLSL qualifier that represents the format
+		public static string ToGLSLKeyword(this ImageFormat fmt) => GLSL_KEYWORDS[(int)fmt];
+
 		/// <summary>
 		/// Gets the number of color channels per texel for the format.
 		/// </summary>
