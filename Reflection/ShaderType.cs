@@ -271,9 +271,9 @@ namespace SSLang.Reflection
 		/// </para>
 		/// </summary>
 		/// <param name="type">The type to get the slot count for.</param>
-		/// <param name="arraySize">The size of the array, or 0 if not checking for an array.</param>
+		/// <param name="arraySize">The size of the array, or 1 if not checking for an array.</param>
 		/// <returns>The number of binding slots the type takes.</returns>
-		public static uint GetSlotCount(this ShaderType type, uint arraySize = 0) => 
+		public static uint GetSlotCount(this ShaderType type, uint arraySize = 1) => 
 			(uint)Math.Ceiling(GetSize(type) / 16f) * Math.Max(arraySize, 1);
 
 		/// <summary>

@@ -18,7 +18,7 @@ namespace SSLang.Reflection
 		/// </summary>
 		public readonly ShaderType Type;
 		/// <summary>
-		/// Gets if the size of the uniform array. If the uniform is not an array, this will be 1.
+		/// Gets the size of the uniform array, in bytes. Takes the array size into account.
 		/// </summary>
 		/// <seealso cref="IsArray"/>
 		public readonly uint ArraySize;
