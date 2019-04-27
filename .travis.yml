@@ -14,6 +14,8 @@ script:
   - ./build.sh
   - cd ../Generated
   - dotnet build -c Debug -p:Platform=AnyCPU
+  - cd ../Reflection
+  - dotnet build -c Debug -p:Platform=AnyCPU
   - cd ../Compiler
   - dotnet build -c Debug -p:Platform=AnyCPU
   - cd ../SSLC

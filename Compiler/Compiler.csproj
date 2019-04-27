@@ -9,7 +9,7 @@
     <Copyright>Sean Moss 2019</Copyright>
     <PackageProjectUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</PackageProjectUrl>
     <RepositoryUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</RepositoryUrl>
-	<LangVersion>7.3</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <Description>The API for compiling SpectrumShaderLanuage files into Vulkan-consumable SPIR-V bytecode.</Description>
   </PropertyGroup>
 
@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Generated\Generated.csproj" />
+    <ProjectReference Include="..\Reflection\Reflection.csproj" />
   </ItemGroup>
   
   <ItemGroup>
@@ -46,7 +47,7 @@
       <RepackPrefix Condition="'$(OS)' == 'Unix'">mono</RepackPrefix>
       <RepackExe>$(ProjectDir)../Dependencies/ILRepack.exe</RepackExe>
       <RepackFlags>/target:library /internalize /parallel /log:ILRepack.log</RepackFlags>
-      <RepackInput>SSLang.tmp.dll Generated.dll Antlr4.Runtime.Standard.dll</RepackInput>
+      <RepackInput>SSLang.tmp.dll Generated.dll SSLReflect.dll Antlr4.Runtime.Standard.dll</RepackInput>
     </PropertyGroup>
 
     <Move SourceFiles="$(OUTDIR)/SSLang.dll" DestinationFiles="$(OUTDIR)/SSLang.tmp.dll" />

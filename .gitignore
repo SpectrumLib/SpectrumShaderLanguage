@@ -10,6 +10,9 @@ Generated/bin/
 Compiler/obj/
 Compiler/bin/
 
+Reflection/obj/
+Reflection/bin/
+
 SSLC/obj/
 SSLC/bin/
 SSLC/Properties/

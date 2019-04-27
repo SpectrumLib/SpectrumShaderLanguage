@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>SSLang.Reflection</RootNamespace>
+    <AssemblyName>SSLReflect</AssemblyName>
+    <Authors>Sean Moss</Authors>
+    <Product>SSLang</Product>
+    <Copyright>Sean Moss 2019</Copyright>
+    <PackageProjectUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SpectrumLib/SpectrumShaderLanguage</RepositoryUrl>
+    <LangVersion>7.3</LangVersion>
+    <Description>Library for compile- and run-time reflection of Spectrum Shader Langauge programs.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsTravisCI>true</IsTravisCI>
+    <IsTravisCI Condition="'$(OS)' != 'Unix' or !Exists('/home/travis/build/SpectrumLib/Spectrum/Spectrum.sln')">false</IsTravisCI>
+  </PropertyGroup>
+
+</Project>
