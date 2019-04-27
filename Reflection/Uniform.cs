@@ -105,6 +105,10 @@ namespace SSLang.Reflection
 		/// The size of the uniform block, in bytes.
 		/// </summary>
 		public uint Size { get; private set; }
+		/// <summary>
+		/// The number of members in the block.
+		/// </summary>
+		public uint MemberCount => (uint)Members.Count;
 		#endregion // Fields
 
 		// Can only construct from this assembly and friend assemblies

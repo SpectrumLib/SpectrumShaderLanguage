@@ -91,7 +91,7 @@ namespace SSLang
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
+				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_attributes.Add(v.Name, v);
 			return v;
@@ -103,7 +103,7 @@ namespace SSLang
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
+				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_outputs.Add(v.Name, v);
 			return v;
@@ -115,7 +115,7 @@ namespace SSLang
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
+				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_uniforms.Add(v.Name, v);
 			return v;
@@ -127,7 +127,7 @@ namespace SSLang
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
+				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_uniforms.Add(v.Name, v);
 			return v;
@@ -139,7 +139,7 @@ namespace SSLang
 
 			var pre = FindGlobal(v.Name);
 			if (pre != null)
-				vis._THROW(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
+				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_internals.Add(v.Name, v);
 			return v;
@@ -151,7 +151,7 @@ namespace SSLang
 
 			var pre = FindFunction(func.Name);
 			if (pre != null)
-				vis._THROW(ctx, $"A function with the name '{func.Name}' already exists in the shader.");
+				vis.Error(ctx, $"A function with the name '{func.Name}' already exists in the shader.");
 
 			_functions.Add(func.Name, func);
 			return func;
@@ -173,7 +173,7 @@ namespace SSLang
 		{
 			var v = Variable.FromContext(ctx, vis, VariableScope.Local);
 			if (!_scopes.Peek().TryAddVariable(v, out var error))
-				vis._THROW(ctx, error);
+				vis.Error(ctx, error);
 			return v;
 		}
 
@@ -181,7 +181,7 @@ namespace SSLang
 		{
 			var v = Variable.FromContext(ctx, vis, VariableScope.Local);
 			if (!_scopes.Peek().TryAddVariable(v, out var error))
-				vis._THROW(ctx, error);
+				vis.Error(ctx, error);
 			return v;
 		}
 

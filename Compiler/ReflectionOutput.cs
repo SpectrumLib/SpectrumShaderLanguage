@@ -43,17 +43,16 @@ namespace SSLang.Reflection
 			uint uidx = 0;
 			foreach (var uni in info.Uniforms)
 			{
-				//var qualstr =
-				//	uni.Variable.IsArray ? $"[{uni.Variable.ArraySize}]" :
-				//	uni.Variable.Type.IsSubpassInput() ? $"<{uni.Variable.SubpassIndex}>" :
-				//	uni.Variable.Type.IsImageHandle() ? $"<{uni.Variable.ImageFormat.ToKeyword()}>" : "";
-				//var tstr = $"{uni.Variable.Type}{qualstr}";
-				//var bstr = "";
-				//if (uni.Variable.Type.IsValueType()) // It will be in a block
-				//	bstr = $"Block={uni.Location,-3} Idx={uni.Index,-3} Off={uni.Offset,-3}";
-				//var size = uni.Variable.Type.GetSize() * Math.Max(1, uni.Variable.ArraySize);
-				//sb.AppendLine($"{uni.Variable.Name,-20} {tstr,-20} Loc={uni.Location,-3} Size={size,-3} {bstr}");
-				//++uidx;
+				var qualstr =
+					uni.IsArray ? $"[{uni.ArraySize}]" :
+					uni.Type.IsSubpassInput() ? $"<{uni.SubpassIndex}>" :
+					uni.Type.IsImageType() ? $"<{uni.ImageFormat.Value.ToSSLKeyword()}>" : "";
+				var tstr = $"{uni.Type}{qualstr}";
+				var bstr = "";
+				if (uni.Type.IsValueType()) // It will be in a block
+					bstr = $"Block={uni.Location,-3} Idx={uni.Index,-3} Off={uni.Offset,-3}";
+				sb.AppendLine($"{uni.Name,-20} {tstr,-20} Loc={uni.Location,-3} Size={uni.Size,-3} {bstr}");
+				++uidx;
 			}
 			sb.AppendLine();
 			if (!info.AreUniformsContiguous())
@@ -67,10 +66,8 @@ namespace SSLang.Reflection
 			sb.AppendLine("----------");
 			foreach (var attr in info.Attributes)
 			{
-				//var tstr = $"{attr.Variable.Type}{(attr.Variable.IsArray ? $"[{attr.Variable.ArraySize}]" : "")}";
-				//var size = attr.Variable.Type.GetSize() * Math.Max(1, attr.Variable.ArraySize);
-				//var bsize = attr.Variable.Type.GetSlotCount(attr.Variable.ArraySize);
-				//sb.AppendLine($"{attr.Variable.Name,-20} {tstr,-20} Loc={attr.Location,-3} Size={size,-3} Slots={bsize,-3}");
+				var tstr = $"{attr.Type}{(attr.IsArray ? $"[{attr.ArraySize}]" : "")}";
+				sb.AppendLine($"{attr.Name,-20} {tstr,-20} Loc={attr.Location,-3} Size={attr.Size,-3} Slots={attr.SlotCount,-3}");
 			}
 			sb.AppendLine();
 
@@ -133,32 +130,32 @@ namespace SSLang.Reflection
 				uint uidx = 0;
 				foreach (var uni in info.Uniforms)
 				{
-					//writer.Write((byte)uni.Variable.Name.Length);
-					//writer.Write(Encoding.ASCII.GetBytes(uni.Variable.Name));
-					//writer.Write((byte)uni.Variable.Type);
-					//writer.Write((byte)uni.Variable.Type.GetSize());
-					//writer.Write((byte)uni.Variable.ArraySize);
-					//writer.Write(uni.Variable.Type.IsSubpassInput() ? (byte)uni.Variable.SubpassIndex : uni.Variable.Type.IsImageHandle() ? (byte)uni.Variable.ImageFormat : (byte)0xFF);
-					//writer.Write((byte)uni.Location);
-					//writer.Write(uni.Variable.Type.IsValueType());
-					//if (uni.Variable.Type.IsValueType()) // It will be in a block
-					//	writer.Write((byte)uni.Index);
-					//else
-					//	writer.Write((byte)0xFF);
-					//++uidx;
+					writer.Write((byte)uni.Name.Length);
+					writer.Write(Encoding.ASCII.GetBytes(uni.Name));
+					writer.Write((byte)uni.Type);
+					writer.Write((byte)uni.Type.GetSize());
+					writer.Write(uni.IsArray ? (byte)uni.ArraySize : (byte)0);
+					writer.Write(uni.Type.IsSubpassInput() ? (byte)uni.SubpassIndex : uni.Type.IsImageType() ? (byte)uni.ImageFormat : (byte)0xFF);
+					writer.Write((byte)uni.Location);
+					writer.Write(uni.Type.IsValueType());
+					if (uni.Type.IsValueType()) // It will be in a block
+						writer.Write((byte)uni.Index);
+					else
+						writer.Write((byte)0xFF);
+					++uidx;
 				}
 
 				// Write the vertex attributes
 				writer.Write((byte)info.Attributes.Count);
 				foreach (var attr in info.Attributes)
 				{
-					//writer.Write((byte)attr.Variable.Name.Length);
-					//writer.Write(Encoding.ASCII.GetBytes(attr.Variable.Name));
-					//writer.Write((byte)attr.Variable.Type);
-					//writer.Write((byte)attr.Variable.Type.GetSize());
-					//writer.Write((byte)attr.Variable.ArraySize);
-					//writer.Write((byte)attr.Location);
-					//writer.Write((byte)attr.Variable.Type.GetSlotCount(attr.Variable.ArraySize));
+					writer.Write((byte)attr.Name.Length);
+					writer.Write(Encoding.ASCII.GetBytes(attr.Name));
+					writer.Write((byte)attr.Type);
+					writer.Write((byte)attr.Type.GetSize());
+					writer.Write(attr.IsArray ? (byte)attr.ArraySize : (byte)0);
+					writer.Write((byte)attr.Location);
+					writer.Write((byte)attr.SlotCount);
 				}
 
 				// Write the outputs

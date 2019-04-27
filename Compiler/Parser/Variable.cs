@@ -69,24 +69,24 @@ namespace SSLang
 		{
 			var name = ctx.Name.Text;
 			if (name[0] == '$')
-				vis._THROW(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
+				vis.Error(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
 			if (name.Length > 32)
-				vis._THROW(ctx, "Variable names cannot be longer than 32 characters.");
+				vis.Error(ctx, "Variable names cannot be longer than 32 characters.");
 
 			var type = ReflectionUtils.TranslateTypeContext(ctx.type());
 			if (!type.HasValue)
-				vis._THROW(ctx, $"Unable to convert variable '{name}' to internal type.");
+				vis.Error(ctx, $"Unable to convert variable '{name}' to internal type.");
 			if (type.Value == ShaderType.Void)
-				vis._THROW(ctx, $"The variable '{name}' cannot be of type 'void'.");
+				vis.Error(ctx, $"The variable '{name}' cannot be of type 'void'.");
 			
 			uint asize = 0;
 			if (ctx.arrayIndexer() != null)
 			{
 				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out var error);
 				if (!val.HasValue)
-					vis._THROW(ctx, error);
+					vis.Error(ctx, error);
 				if (val.Value <= 0)
-					vis._THROW(ctx, $"The variable '{name}' cannot have a negative or zero array size.");
+					vis.Error(ctx, $"The variable '{name}' cannot have a negative or zero array size.");
 				asize = (uint)val.Value;
 			}
 
@@ -97,24 +97,24 @@ namespace SSLang
 		{
 			var name = ctx.Name.Text;
 			if (name[0] == '$')
-				vis._THROW(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
+				vis.Error(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
 			if (name.Length > 32)
-				vis._THROW(ctx, "Variable names cannot be longer than 32 characters.");
+				vis.Error(ctx, "Variable names cannot be longer than 32 characters.");
 
 			var type = ReflectionUtils.TranslateTypeContext(ctx.type());
 			if (!type.HasValue)
-				vis._THROW(ctx, $"Unable to convert variable '{name}' to internal type.");
+				vis.Error(ctx, $"Unable to convert variable '{name}' to internal type.");
 			if (type.Value == ShaderType.Void)
-				vis._THROW(ctx, $"The variable '{name}' cannot be of type 'void'.");
+				vis.Error(ctx, $"The variable '{name}' cannot be of type 'void'.");
 
 			uint asize = 0;
 			if (ctx.arrayIndexer() != null)
 			{
 				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out var error);
 				if (!val.HasValue)
-					vis._THROW(ctx, error);
+					vis.Error(ctx, error);
 				if (val.Value <= 0)
-					vis._THROW(ctx, $"The variable '{name}' cannot have a negative or zero array size.");
+					vis.Error(ctx, $"The variable '{name}' cannot have a negative or zero array size.");
 				asize = (uint)val.Value;
 			}
 
@@ -125,37 +125,37 @@ namespace SSLang
 		{
 			var name = ctx.Name.Text;
 			if (name[0] == '$')
-				vis._THROW(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
+				vis.Error(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
 			if (name.Length > 32)
-				vis._THROW(ctx, "Uniform names cannot be longer than 32 characters.");
+				vis.Error(ctx, "Uniform names cannot be longer than 32 characters.");
 
 			var type = ReflectionUtils.TranslateTypeContext(ctx.type());
 			if (!type.HasValue)
-				vis._THROW(ctx, $"Unable to convert variable '{name}' to internal type.");
+				vis.Error(ctx, $"Unable to convert variable '{name}' to internal type.");
 			if (type == ShaderType.Void)
-				vis._THROW(ctx, $"The variable '{name}' cannot be of type 'void'.");
+				vis.Error(ctx, $"The variable '{name}' cannot be of type 'void'.");
 
 			ImageFormat? ifmt = null;
 			uint? si = null;
 			if (type.Value.IsImageType())
 			{
 				if (ctx.Qualifier?.imageLayoutQualifier() == null)
-					vis._THROW(ctx, "Storage image types must have a format qualifier.");
+					vis.Error(ctx, "Storage image types must have a format qualifier.");
 				ifmt = ReflectionUtils.TranslateImageFormat(ctx.Qualifier.imageLayoutQualifier());
 			}
 			else if (type.Value.IsSubpassInput())
 			{
 				if (ctx.Qualifier?.INTEGER_LITERAL() == null)
-					vis._THROW(ctx, "Subpass inputs must have an index qualifier.");
+					vis.Error(ctx, "Subpass inputs must have an index qualifier.");
 				var pv = SSLVisitor.ParseIntegerLiteral(ctx.Qualifier.INTEGER_LITERAL().GetText(), out var isus, out var error);
 				if (!pv.HasValue)
-					vis._THROW(ctx, error);
+					vis.Error(ctx, error);
 				si = (uint)pv.Value;
 			}
 			else
 			{
 				if (ctx.Qualifier?.imageLayoutQualifier() != null || ctx.Qualifier?.INTEGER_LITERAL() != null)
-					vis._THROW(ctx, $"The handle type '{type}' cannot have qualifiers.");
+					vis.Error(ctx, $"The handle type '{type}' cannot have qualifiers.");
 			}
 
 			return new Variable(type.Value, name, VariableScope.Uniform, false, 0, ifmt: ifmt, si: si);

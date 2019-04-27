@@ -31,8 +31,8 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// The input vertex attributes in the shader program.
 		/// </summary>
-		public IReadOnlyList<Attribute> Attributes => _attributes;
-		internal readonly List<Attribute> _attributes;
+		public IReadOnlyList<VertexAttribute> Attributes => _attributes;
+		internal readonly List<VertexAttribute> _attributes;
 		/// <summary>
 		/// The fragment shader outputs in the shader program.
 		/// </summary>
@@ -48,7 +48,7 @@ namespace SSLang.Reflection
 		{
 			_uniforms = new List<Uniform>();
 			_blocks = new List<UniformBlock>();
-			_attributes = new List<Attribute>();
+			_attributes = new List<VertexAttribute>();
 			_outputs = new List<FragmentOutput>();
 		}
 

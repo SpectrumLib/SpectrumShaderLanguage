@@ -16,7 +16,7 @@ namespace SSLang
 		{
 			var btidx = Array.FindIndex(args, a => a.IsArray);
 			if (btidx != -1)
-				vis._THROW(token, $"Arguments to built-in functions cannot be arrays (arg {btidx+1}).");
+				vis.Error(token, $"Arguments to built-in functions cannot be arrays (arg {btidx+1}).");
 
 			ShaderType a1t = args[0].Type,
 					   a2t = (args.Length > 1) ? args[1].Type : ShaderType.Void,
@@ -28,7 +28,7 @@ namespace SSLang
 			if (type >= SSLParser.BIF_TEXSIZE && type <= SSLParser.BIF_TEXFETCH) // Functions that deal with texture handles
 			{
 				if (!a1t.IsTextureType())
-					vis._THROW(token, $"The built-in function '{name}' requires a texture handle as argument 1.");
+					vis.Error(token, $"The built-in function '{name}' requires a texture handle as argument 1.");
 				var tdim = a1t.GetTexelDim();
 
 				if (type == SSLParser.BIF_TEXSIZE)
@@ -36,48 +36,48 @@ namespace SSLang
 				else if (type == SSLParser.BIF_TEXTURE)
 				{
 					if (!a2c.CanPromoteTo(ShaderType.Float))
-						vis._THROW(token, $"The built-in function '{name}' requires a floating-point vector or scalar as argument 2.");
+						vis.Error(token, $"The built-in function '{name}' requires a floating-point vector or scalar as argument 2.");
 					if (a2t.GetComponentCount() != tdim)
-						vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
+						vis.Error(token, "The size of the texture access coordinates does not match the size of the texture.");
 				}
 				else
 				{
 					if (a2c != ShaderType.Int)
-						vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
+						vis.Error(token, $"The built-in function '{name}' requires integer texture coordinates.");
 					if (a2t.GetComponentCount() != tdim)
-						vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
+						vis.Error(token, "The size of the texture access coordinates does not match the size of the texture.");
 				}
 				return ShaderType.Float4;
 			}
 			else if (type >= SSLParser.BIF_IMAGESIZE && type <= SSLParser.BIF_IMAGESTORE) // Functions that deal with image handles
 			{
 				if (!a1t.IsImageType())
-					vis._THROW(token, $"The built-in function '{name}' requires an image handle as argument 1.");
+					vis.Error(token, $"The built-in function '{name}' requires an image handle as argument 1.");
 				var tdim = a1t.GetTexelDim();
 
 				if (type == SSLParser.BIF_IMAGESIZE)
 					return ShaderType.Int.ToVectorType(tdim).Value;
 
 				if (a2c != ShaderType.Int)
-					vis._THROW(token, $"The built-in function '{name}' requires integer texture coordinates.");
+					vis.Error(token, $"The built-in function '{name}' requires integer texture coordinates.");
 				if (a2t.GetComponentCount() != tdim)
-					vis._THROW(token, "The size of the texture access coordinates does not match the size of the texture.");
+					vis.Error(token, "The size of the texture access coordinates does not match the size of the texture.");
 
 				var ttype = args[0].ImageFormat.Value;
 				if ((type == SSLParser.BIF_IMAGESTORE) && !a3t.CanPromoteTo(ttype.GetTexelType()))
-					vis._THROW(token, $"The built-in function '{name}' requires the type {ttype.GetTexelType()} for argument 3.");
+					vis.Error(token, $"The built-in function '{name}' requires the type {ttype.GetTexelType()} for argument 3.");
 				return (type == SSLParser.BIF_IMAGESTORE) ? ShaderType.Void : ttype.GetTexelType();
 			}
 			else if (type >= SSLParser.BIF_MATCOMPMUL && type <= SSLParser.BIF_DETERMINANT) // Functions that deal with matrices
 			{
 				btidx = Array.FindIndex(args, a => !a.Type.IsMatrixType());
 				if (btidx != -1)
-					vis._THROW(token, $"The built-in function '{name}' does not support non-matrix arguments (arg {btidx+1}).");
+					vis.Error(token, $"The built-in function '{name}' does not support non-matrix arguments (arg {btidx+1}).");
 
 				if (type == SSLParser.BIF_MATCOMPMUL) // 'matCompMul' function
 				{
 					if (a1t != a2t)
-						vis._THROW(token, $"The built-in function '{name}' expects two identically sized matrix types for both arguments.");
+						vis.Error(token, $"The built-in function '{name}' expects two identically sized matrix types for both arguments.");
 					return a1t;
 				}
 				else if (type == SSLParser.BIF_TRANSPOSE || type == SSLParser.BIF_INVERSE) // 'transpose' and 'inverse' functions
@@ -88,14 +88,14 @@ namespace SSLang
 			else if (type == SSLParser.BIF_SUBPASSLOAD) // 'subpassLoad' function
 			{
 				if (!a1t.IsSubpassInput())
-					vis._THROW(token, "The 'subpassLoad' function requires a subpass input as an argument.");
+					vis.Error(token, "The 'subpassLoad' function requires a subpass input as an argument.");
 				return ShaderType.Float4;
 			}
 			else // Functions that deal with scalar and vector types
 			{
 				btidx = Array.FindIndex(args, a => !(a.Type.IsScalarType() || a.Type.IsVectorType()));
 				if (btidx != -1)
-					vis._THROW(token, $"The built-in function '{name}' does not support handle or matrix arguments (arg {btidx+1}).");
+					vis.Error(token, $"The built-in function '{name}' does not support handle or matrix arguments (arg {btidx+1}).");
 
 				if (type >= SSLParser.BIF_DEG2RAD && type <= SSLParser.BIF_FRACT) // trig, exponential, and 1-arg common functions
 				{
@@ -159,7 +159,7 @@ namespace SSLang
 				{
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					if (a1t.GetComponentCount() != 3 || a2t.GetComponentCount() != 3)
-						vis._THROW(token, $"The built-in function '{name}' expects 3-component floating-point vector arguments.");
+						vis.Error(token, $"The built-in function '{name}' expects 3-component floating-point vector arguments.");
 					return ShaderType.Float3;
 				}
 				else if (type == SSLParser.BIF_NORMALIZE) // 'normalize' function
@@ -184,7 +184,7 @@ namespace SSLang
 					EnsureCastableComponents(vis, token, name, a1c, a2c, a3c, ShaderType.Float);
 					EnsureVectorSizes(vis, token, name, a1t, a2t, ShaderType.Void);
 					if (!a3t.CanPromoteTo(ShaderType.Float))
-						vis._THROW(token, $"The built-in function '{name}' expects a floating-point scalar for argument 3.");
+						vis.Error(token, $"The built-in function '{name}' expects a floating-point scalar for argument 3.");
 					return ShaderType.Float.ToVectorType(a1t.GetComponentCount()).Value;
 				}
 				else if (type >= SSLParser.BIF_VECLT && type <= SSLParser.BIF_VECGE) // 2-arg relational vector functions
@@ -198,7 +198,7 @@ namespace SSLang
 					if ((a1c == ShaderType.Bool) || a1c.CanPromoteTo(ShaderType.Float))
 						EnsureMatchingComponents(vis, token, name, a1c, a2c, a3c);
 					else
-						vis._THROW(token, $"The built-in function '{name}' expects floating-point or boolean vectors for all arguments.");
+						vis.Error(token, $"The built-in function '{name}' expects floating-point or boolean vectors for all arguments.");
 					EnsureVectorSizes(vis, token, name, a1t, a2t, a3t);
 					return ShaderType.Bool.ToVectorType(a1t.GetComponentCount()).Value;
 				}
@@ -210,7 +210,7 @@ namespace SSLang
 			}
 
 			// Error
-			vis._THROW(token, $"The built-in function '{name}' was not understood.");
+			vis.Error(token, $"The built-in function '{name}' was not understood.");
 			return ShaderType.Void;
 		}
 
@@ -220,32 +220,32 @@ namespace SSLang
 		private static void EnsureCastableComponents(SSLVisitor vis, IToken token, string name, ShaderType a1c, ShaderType a2c, ShaderType a3c, ShaderType dstType)
 		{
 			if (!a1c.CanPromoteTo(dstType))
-				vis._THROW(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 1 (actual is '{a1c}').");
+				vis.Error(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 1 (actual is '{a1c}').");
 			if ((a2c != ShaderType.Void) && !a2c.CanPromoteTo(dstType))
-				vis._THROW(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 2 (actual is '{a2c}').");
+				vis.Error(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 2 (actual is '{a2c}').");
 			if ((a3c != ShaderType.Void) && !a3c.CanPromoteTo(dstType))
-				vis._THROW(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 3 (actual is '{a3c}').");
+				vis.Error(token, $"The built-in function '{name}' requires a '{dstType}' compatible type for argument 3 (actual is '{a3c}').");
 		}
 		private static void EnsureMatchingComponents(SSLVisitor vis, IToken token, string name, ShaderType a1c, ShaderType a2c, ShaderType a3c)
 		{
 			if (!a2c.CanPromoteTo(a1c))
-				vis._THROW(token, $"The built-in function '{name}' requires a '{a1c}' compatible type for argument 2 (actual is '{a2c}').");
+				vis.Error(token, $"The built-in function '{name}' requires a '{a1c}' compatible type for argument 2 (actual is '{a2c}').");
 			if ((a3c != ShaderType.Void) && !a3c.CanPromoteTo(a1c))
-				vis._THROW(token, $"The built-in function '{name}' requires a '{a1c}' compatible type for argument 3 (actual is '{a3c}').");
+				vis.Error(token, $"The built-in function '{name}' requires a '{a1c}' compatible type for argument 3 (actual is '{a3c}').");
 		}
 		private static void EnsureVectorSizes(SSLVisitor vis, IToken token, string name, ShaderType a1t, ShaderType a2t, ShaderType a3t)
 		{
 			if ((a1t != ShaderType.Void) && (a2t != ShaderType.Void) && (a2t.GetComponentCount() != a1t.GetComponentCount()))
-				vis._THROW(token, $"The built-in function '{name}' requires matching vector sizes for arguments 1 and 2.");
+				vis.Error(token, $"The built-in function '{name}' requires matching vector sizes for arguments 1 and 2.");
 			if ((a1t != ShaderType.Void) && (a3t != ShaderType.Void) && (a3t.GetComponentCount() != a1t.GetComponentCount()))
-				vis._THROW(token, $"The built-in function '{name}' requires matching vector sizes for arguments 1 and 3.");
+				vis.Error(token, $"The built-in function '{name}' requires matching vector sizes for arguments 1 and 3.");
 			if ((a2t != ShaderType.Void) && (a3t != ShaderType.Void) && (a3t.GetComponentCount() != a2t.GetComponentCount()))
-				vis._THROW(token, $"The built-in function '{name}' requires matching vector sizes for arguments 2 and 3.");
+				vis.Error(token, $"The built-in function '{name}' requires matching vector sizes for arguments 2 and 3.");
 		}
 		private static void EnsureSizeIfNotScalar(SSLVisitor vis, IToken token, string name, ShaderType vtype, ShaderType ctype, int vp, int cp)
 		{
 			if (!ctype.IsScalarType() && (ctype.GetComponentCount() != vtype.GetComponentCount()))
-				vis._THROW(token, $"The built-in function '{name}' requires argument {cp} to be a scalar, or a matching vector size to argument {vp}.");
+				vis.Error(token, $"The built-in function '{name}' requires argument {cp} to be a scalar, or a matching vector size to argument {vp}.");
 		}
 
 		// Gets if the type can be constructed from the given list of expressions

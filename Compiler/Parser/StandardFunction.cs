@@ -45,10 +45,10 @@ namespace SSLang
 					var acs = (aidx == SSLParser.KW_OUT) ? Access.Out : (aidx == SSLParser.KW_INOUT) ? Access.InOut : Access.In;
 					var ptype = ReflectionUtils.TranslateTypeContext(pctx.type());
 					if (ptype == ShaderType.Void)
-						vis._THROW(ctx, $"The parameter '{pname}' cannot have type 'void'.");
+						vis.Error(ctx, $"The parameter '{pname}' cannot have type 'void'.");
 					var fidx = pars.FindIndex(ep => ep.Name == pname);
 					if (fidx != -1)
-						vis._THROW(ctx, $"Duplicate parameter name '{pname}' in the function parameter list.");
+						vis.Error(ctx, $"Duplicate parameter name '{pname}' in the function parameter list.");
 					pars.Add(new Param { Name = pname, Type = ptype.Value, Access = acs });
 				}
 			}

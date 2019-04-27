@@ -5,7 +5,7 @@ namespace SSLang.Reflection
 	/// <summary>
 	/// Represents a vertex attribute shader input value and its information in an SSL program.
 	/// </summary>
-	public sealed class Attribute
+	public sealed class VertexAttribute
 	{
 		#region Fields
 		/// <summary>
@@ -41,7 +41,7 @@ namespace SSLang.Reflection
 		#endregion // Fields
 
 		// Can only construct from this assembly and friend assemblies
-		internal Attribute(string name, ShaderType type, uint? arrSize, uint loc)
+		internal VertexAttribute(string name, ShaderType type, uint? arrSize, uint loc)
 		{
 			Name = name;
 			Type = type;
