@@ -42,6 +42,16 @@ namespace SSLang.Reflection
 		public readonly uint Offset;
 
 		/// <summary>
+		/// Gets the image format of the uniform. If the uniform is not a storage image type, then this will be null.
+		/// </summary>
+		public ImageFormat? ImageFormat { get; internal set; } = null;
+		/// <summary>
+		/// Gets the input attachment index of the uniform. If the uniform is not a subpass input type, then this will
+		/// be null.
+		/// </summary>
+		public uint? SubpassIndex { get; internal set; } = null;
+
+		/// <summary>
 		/// Gets if the uniform is a value type. Value type uniforms will always appear inside of a uniform block.
 		/// </summary>
 		public bool IsValueType => Type.IsValueType();
