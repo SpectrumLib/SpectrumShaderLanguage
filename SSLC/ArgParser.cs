@@ -14,10 +14,10 @@ namespace SLLC
 		public static bool TryLoadValueArg(out string value, params string[] args)
 		{
 			value = null;
-			var idx = Array.FindIndex(Args, a => args.Contains('@' + a));
+			var idx = Array.FindIndex(Args, a => a[0] == '@' && args.Contains(a.Substring(1)));
 			if (idx == -1)
 				return false;
-			if (idx == Args.Length - 1)
+			if (idx == (Args.Length - 1))
 			{
 				value = "";
 				return false;
@@ -43,6 +43,8 @@ namespace SLLC
 		}
 
 		public static bool Help => ContainsArg("help") || ContainsArg("?") || ContainsArg("h");
+
+		public static bool NoWarn => ContainsArg("nw") || ContainsArg("no-warn");
 
 		public static bool NoCompile => ContainsArg("nc") || ContainsArg("no-compile");
 

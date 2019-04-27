@@ -297,8 +297,8 @@ namespace SSLang
 				loc += vrbl.Type.GetSlotCount(vrbl.ArraySize);
 			}
 
-			if (loc > 16)
-				_THROW(context, $"The vertex attributes cannot take up more than 16 binding points.");
+			if (loc > Options.LimitAttributes)
+				_THROW(context, $"The vertex attributes cannot take up more than {Options.LimitAttributes} binding points.");
 
 			return null;
 		}
@@ -311,8 +311,8 @@ namespace SSLang
 			var block = context.typeBlock();
 			if (block._Types.Count == 0)
 				_THROW(context, "The 'output' block cannot be empty.");
-			if (block._Types.Count > 4)
-				_THROW(context, "A maximum of 4 shader outputs can be specified.");
+			if (block._Types.Count > Options.LimitOutputs)
+				_THROW(context, $"A maximum of {Options.LimitOutputs} shader outputs can be specified.");
 
 			uint loc = 0;
 			foreach (var tctx in block._Types)
@@ -338,6 +338,11 @@ namespace SSLang
 				_THROW(context, error);
 			if (loc.Value < 0)
 				_THROW(context, $"Uniforms cannot have a negative location.");
+			if (loc.Value >= Options.LimitUniforms)
+				_THROW(context, $"Uniforms cannot have binding points past the limit {Options.LimitUniforms}.");
+			var ucnt = Info._blocks.Count + Info._uniforms.Sum(u => u.v.Type.IsHandleType() ? 1 : 0);
+			if (ucnt >= Options.LimitUniforms)
+				_THROW(context, $"Cannot bind more than {Options.LimitUniforms} uniforms.");
 
 			// Check if the location is already taken
 			var fidx = Info._uniforms.FindIndex(u => u.l == loc.Value);
@@ -354,8 +359,8 @@ namespace SSLang
 					_THROW(context, $"The uniform '{vrbl.Name}' must be a handle type if declared outside of a block.");
 				if (vrbl.Type.IsSubpassInput())
 				{
-					if (vrbl.SubpassIndex >= 4)
-						_THROW(context, $"Cannot attach more than 4 subpass inputs ({vrbl.SubpassIndex} given).");
+					if (vrbl.SubpassIndex >= Options.LimitSubpassInputs)
+						_THROW(context, $"Cannot attach more than {Options.LimitSubpassInputs} subpass inputs ({vrbl.SubpassIndex} given).");
 					fidx = Info._uniforms.FindIndex(u => u.v.Type.IsSubpassInput() && u.v.SubpassIndex == vrbl.SubpassIndex);
 					if (fidx != -1)
 						_THROW(context, $"Cannot bind two subpasses to the same index ({vrbl.SubpassIndex}).");
@@ -401,8 +406,8 @@ namespace SSLang
 			}
 
 			var sum = ScopeManager.Internals.Values.Sum(v => v.Type.GetSlotCount(v.ArraySize));
-			if (sum > 16)
-				_THROW(context, "Internals cannot take up more than 16 binding slots.");
+			if (sum > Options.LimitInternals)
+				_THROW(context, $"Internals cannot take up more than {Options.LimitInternals} binding slots.");
 
 			return null;
 		}

@@ -8,10 +8,32 @@ namespace SSLang
 	/// </summary>
 	public sealed class CompileOptions
 	{
+		#region Defaults
 		/// <summary>
 		/// Default timeout for the compiler (5 seconds).
 		/// </summary>
-		public const int DEFAULT_TIMEOUT = 5000;
+		public const uint DEFAULT_TIMEOUT = 5000;
+		/// <summary>
+		/// The default limit on the number of binding slots occupied by vertex attributes.
+		/// </summary>
+		public const uint DEFAULT_LIMIT_ATTRIBUTES = 16;
+		/// <summary>
+		/// The default limit on the number of fragment shader outputs.
+		/// </summary>
+		public const uint DEFAULT_LIMIT_OUTPUTS = 4;
+		/// <summary>
+		/// The default limit on the number of binding slots occupied by internal values.
+		/// </summary>
+		public const uint DEFAULT_LIMIT_INTERNALS = 16;
+		/// <summary>
+		/// The default limit on the number of uniforms.
+		/// </summary>
+		public const uint DEFUALT_LIMIT_UNIFORMS = 16;
+		/// <summary>
+		/// The default limit on the number of subpass inputs.
+		/// </summary>
+		public const uint DEFAULT_LIMIT_SUBPASS_INPUTS = 4;
+		#endregion // Defaults
 
 		#region Fields
 		/// <summary>
@@ -72,15 +94,38 @@ namespace SSLang
 		public bool ForceContiguousUniforms = false;
 		/// <summary>
 		/// The number of milliseconds to wait for the Vulkan GLSL compiler to complete before timing out. Defaults to 5000
-		/// (5 seconds), and a value <= 0 will wait indefinitely.
+		/// (5 seconds).
 		/// </summary>
-		public int CompilerTimeout = DEFAULT_TIMEOUT;
+		public uint CompilerTimeout = DEFAULT_TIMEOUT;
 		/// <summary>
 		/// Gets if the output bytecode is run through a secondary optimization step to optimize the bytecode for
 		/// execution speed. Not required but strongly recommended. Defaults to true.
 		/// </summary>
 		public bool OptimizeBytecode = true;
 		#endregion // Compiler Options
+
+		#region Resource Limits
+		/// <summary>
+		/// The limit on the number of binding slots occupied by vertex attributes. Defaults to 16.
+		/// </summary>
+		public uint LimitAttributes = DEFAULT_LIMIT_ATTRIBUTES;
+		/// <summary>
+		/// The limit on the number of fragment shader outputs. Defaults to 4.
+		/// </summary>
+		public uint LimitOutputs = DEFAULT_LIMIT_OUTPUTS;
+		/// <summary>
+		/// The limit on the number of binding slots occupied by internals. Defaults to 16.
+		/// </summary>
+		public uint LimitInternals = DEFAULT_LIMIT_INTERNALS;
+		/// <summary>
+		/// The limit on the number of bound uniforms. Defaults to 16.
+		/// </summary>
+		public uint LimitUniforms = DEFUALT_LIMIT_UNIFORMS;
+		/// <summary>
+		/// The limit on the number of subpass inputs. Defaults to 4.
+		/// </summary>
+		public uint LimitSubpassInputs = DEFAULT_LIMIT_SUBPASS_INPUTS;
+		#endregion // Resource Limits
 		#endregion // Fields
 
 		// Checks the options for validity, and throws exceptions if invalid
@@ -96,9 +141,6 @@ namespace SSLang
 			OutputPath = (Compile && OutputPath != null) ? Path.GetFullPath(OutputPath) : null;
 			ReflectionPath = (OutputReflection && ReflectionPath != null) ? Path.GetFullPath(ReflectionPath) : null;
 			GLSLPath = (OutputGLSL && GLSLPath != null) ? Path.GetFullPath(GLSLPath) : null;
-
-			CompilerTimeout = Math.Max(CompilerTimeout, 0);
-			CompilerTimeout = (CompilerTimeout == 0) ? Int32.MaxValue : CompilerTimeout;
 		}
 
 		/// <summary>

@@ -68,7 +68,7 @@ namespace SSLang
 				proc.StandardInput.AutoFlush = true;
 				proc.StandardInput.Write(glsl);
 				proc.StandardInput.Close();
-				bool done = proc.WaitForExit(options.CompilerTimeout);
+				bool done = proc.WaitForExit((int)options.CompilerTimeout);
 				if (!done)
 				{
 					proc.Kill();

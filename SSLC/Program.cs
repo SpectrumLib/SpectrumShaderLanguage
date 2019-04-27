@@ -6,6 +6,8 @@ namespace SLLC
 {
 	static class Program
 	{
+		public static bool NoWarn { get; private set; } = false;
+
 		static void Main(string[] args)
 		{
 			if (args.Length == 0)
@@ -24,6 +26,7 @@ namespace SLLC
 				CConsole.Error("No input file specified. Make sure the input file is the last argument.");
 				return;
 			}
+			NoWarn = ArgParser.NoWarn;
 
 			// Try to get the paths
 			string oPath = null;
@@ -46,17 +49,18 @@ namespace SLLC
 			}
 
 			// Load other arguments
-			if (!ArgParser.TryLoadValueArg(out var to_str, "timeout", "to") && to_str != null)
-			{
-				CConsole.Error("Invalid value for timeout option.");
+			if (!LoadIntegerArg(out var timeout, CompileOptions.DEFAULT_TIMEOUT, "timeout", "to"))
 				return;
-			}
-			int timeout = CompileOptions.DEFAULT_TIMEOUT;
-			if (to_str != null && !Int32.TryParse(to_str, out timeout))
-			{
-				CConsole.Error("Could not parse the timeout argument into a signed integer.");
+			if (!LoadIntegerArg(out var limAttr, CompileOptions.DEFAULT_LIMIT_ATTRIBUTES, "rla"))
 				return;
-			}
+			if (!LoadIntegerArg(out var limOut, CompileOptions.DEFAULT_LIMIT_OUTPUTS, "rlo"))
+				return;
+			if (!LoadIntegerArg(out var limInt, CompileOptions.DEFAULT_LIMIT_INTERNALS, "rli"))
+				return;
+			if (!LoadIntegerArg(out var limUni, CompileOptions.DEFUALT_LIMIT_UNIFORMS, "rlu"))
+				return;
+			if (!LoadIntegerArg(out var limSI, CompileOptions.DEFAULT_LIMIT_SUBPASS_INPUTS, "rlsi"))
+				return;
 
 			try
 			{
@@ -75,7 +79,12 @@ namespace SLLC
 						OutputReflection = ArgParser.OutputReflection || ArgParser.UseBinaryReflection,
 						UseBinaryReflection = ArgParser.UseBinaryReflection,
 						ForceContiguousUniforms = ArgParser.ForceContiguousUniforms,
-						CompilerTimeout = timeout
+						CompilerTimeout = timeout,
+						LimitAttributes = limAttr,
+						LimitOutputs = limOut,
+						LimitInternals = limInt,
+						LimitUniforms = limUni,
+						LimitSubpassInputs = limSI
 					};
 
 					if (!compiler.Compile(options, out var error))
@@ -118,8 +127,27 @@ namespace SLLC
 			}
 		}
 
+		private static bool LoadIntegerArg(out uint value, uint @default, params string[] names)
+		{
+			value = @default;
+			if (!ArgParser.TryLoadValueArg(out var valstr, names) && valstr != null)
+			{
+				CConsole.Error("Invalid value for timeout option.");
+				return false;
+			}
+			if (valstr != null && !UInt32.TryParse(valstr, out value))
+			{
+				CConsole.Error("Could not parse the timeout argument into an unsigned integer.");
+				return false;
+			}
+			return true;
+		}
+
 		private static void WarnCallback(SSLCompiler compiler, ErrorSource source, uint line, string msg)
 		{
+			if (NoWarn)
+				return;
+
 			if ((source == ErrorSource.Parser) || (source == ErrorSource.Translator))
 				CConsole.Warn($"'{compiler.SourceFile}'[line {line}] - {msg}");
 			else
@@ -157,11 +185,17 @@ namespace SLLC
 			Console.WriteLine("    > timeout;to        - Specifies the time, in milliseconds, to wait to compile/optimize");
 			Console.WriteLine("                           each shader stage before throwing an error. A value of <= 0 will");
 			Console.WriteLine("                           wait indefinitely. By default, the timout is 5000 (5 seconds).");
+			Console.WriteLine("    > rla               - Sets the limit on vertex attribute binding slots. Defaults to 16.");
+			Console.WriteLine("    > rlo               - Sets the limit on fragment shader outputs. Defaults to 4.");
+			Console.WriteLine("    > rli               - Sets the limit on internal variable binding slots. Defaults to 16.");
+			Console.WriteLine("    > rlu               - Sets the limit on bound uniforms. Defaults to 16.");
+			Console.WriteLine("    > rlsi              - Sets the limit on subpass inputs. Defaults to 4.");
 
 			// =============================================================================================================
 			Console.WriteLine();
 			Console.WriteLine("The command line flags are:");
 			Console.WriteLine("    > help;?;h          - Prints this help message, then exits.");
+			Console.WriteLine("    > no-warn;nw        - Disables printing warning messages.");
 			Console.WriteLine("    > no-compile;nc     - Disables compiling to SPIR-V. If this option is set, then the");
 			Console.WriteLine("                           tool can be run without the Vulkan SDK installed.");
 			Console.WriteLine("    > glsl;i            - Output the generated intermediate glsl to files. One file will");
