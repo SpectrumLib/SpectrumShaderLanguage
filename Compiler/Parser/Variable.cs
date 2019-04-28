@@ -31,7 +31,7 @@ namespace SSLang
 		// Used internally to throw an error for attempting to read write-only built-in variables or 'out' function parameters
 		public readonly bool CanRead;
 
-		public uint Size => Type.GetSize() * (IsArray ? ArraySize : 1);
+		public uint Size => Type.GetSize() * ArraySize;
 		public bool IsUniform => (Scope == VariableScope.Uniform);
 		public bool IsAttribute => (Scope == VariableScope.Attribute);
 		public bool IsFragmentOutput => (Scope == VariableScope.FragmentOutput);
@@ -48,8 +48,8 @@ namespace SSLang
 			Name = name;
 			Scope = scope;
 			Constant = (Scope == VariableScope.Uniform) || (Scope == VariableScope.Attribute) || @const;
-			ArraySize = asize.GetValueOrDefault(1);
-			IsArray = asize.HasValue;
+			ArraySize = Math.Max(asize.GetValueOrDefault(1), 1);
+			IsArray = asize.HasValue && asize.Value != 0;
 			CanRead = cr;
 			ImageFormat = ifmt;
 			SubpassIndex = si;
@@ -78,8 +78,8 @@ namespace SSLang
 				vis.Error(ctx, $"Unable to convert variable '{name}' to internal type.");
 			if (type.Value == ShaderType.Void)
 				vis.Error(ctx, $"The variable '{name}' cannot be of type 'void'.");
-			
-			uint asize = 0;
+
+			uint? asize = null;
 			if (ctx.arrayIndexer() != null)
 			{
 				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out var error);
@@ -107,7 +107,7 @@ namespace SSLang
 			if (type.Value == ShaderType.Void)
 				vis.Error(ctx, $"The variable '{name}' cannot be of type 'void'.");
 
-			uint asize = 0;
+			uint? asize = null;
 			if (ctx.arrayIndexer() != null)
 			{
 				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out var error);
@@ -158,7 +158,7 @@ namespace SSLang
 					vis.Error(ctx, $"The handle type '{type}' cannot have qualifiers.");
 			}
 
-			return new Variable(type.Value, name, VariableScope.Uniform, false, 0, ifmt: ifmt, si: si);
+			return new Variable(type.Value, name, VariableScope.Uniform, false, null, ifmt: ifmt, si: si);
 		}
 	}
 

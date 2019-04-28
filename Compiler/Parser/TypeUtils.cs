@@ -17,7 +17,7 @@ namespace SSLang
 
 			// This prevents duplication in the event that there is an ssa already, and there is no array indexer or swizzle
 			if (res.HasSSA)
-				res = new ExprResult(res.Type, 0, res.SSA.Name);
+				res = new ExprResult(res.Type, null, res.SSA.Name);
 
 			if (hasa)
 			{
@@ -31,7 +31,7 @@ namespace SSLang
 				var asize = res.IsArray ? res.ArraySize : res.Type.GetComponentCount();
 				if (aidx.Value >= asize)
 					vis.Error(actx.Index, "The array indexer is too large for the preceeding expression.");
-				res = new ExprResult(res.Type, 0, $"{res.RefText}[{aidx.Value}]");
+				res = new ExprResult(res.Type, null, $"{res.RefText}[{aidx.Value}]");
 			}
 
 			if (hass)
@@ -46,7 +46,7 @@ namespace SSLang
 					if (!ReflectionUtils.IsSwizzleValid(res.Type, swc))
 						vis.Error(swizzle.Symbol, $"The swizzle character '{swc}' is not valid for this type.");
 				}
-				res = new ExprResult(res.Type.ToVectorType((uint)stxt.Length).Value, 0, $"{res.RefText}.{stxt}");
+				res = new ExprResult(res.Type.ToVectorType((uint)stxt.Length).Value, null, $"{res.RefText}.{stxt}");
 			}
 
 			return res;

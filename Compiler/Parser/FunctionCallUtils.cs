@@ -268,7 +268,7 @@ namespace SSLang
 			var badarg = args.FindIndex(arg => arg.IsArray || arg.Type.IsHandleType());
 			if (badarg != -1)
 			{
-				error = $"Type construction argument {badarg} cannot be an array or handle type.";
+				error = $"Type construction argument {badarg} cannot be an array or handle type ({args[badarg].Type}[{args[badarg].IsArray}].";
 				return false;
 			}
 

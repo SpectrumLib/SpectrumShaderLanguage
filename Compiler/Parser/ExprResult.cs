@@ -10,6 +10,8 @@ namespace SSLang
 		public readonly ShaderType Type;
 		// The size of the array, if the result is an array
 		public readonly uint ArraySize;
+		// If the expr is an array type
+		public readonly bool IsArray;
 		// The SSA variable holding the expr result, if any
 		public readonly Variable SSA;
 		// This is the GLSL text used to initialize the SSA, or to inline the value
@@ -24,13 +26,13 @@ namespace SSLang
 		// Used sparingly, only for lvalue variable references to image types
 		public ImageFormat? ImageFormat => LValue?.ImageFormat;
 
-		public bool IsArray => ArraySize != 0;
 		public bool HasSSA => SSA != null;
 
-		public ExprResult(ShaderType type, uint asize, string text)
+		public ExprResult(ShaderType type, uint? asize, string text)
 		{
 			Type = type;
-			ArraySize = asize;
+			ArraySize = Math.Max(asize.GetValueOrDefault(1), 1);
+			IsArray = asize.HasValue && asize.Value != 0;
 			SSA = null;
 			ValueText = text;
 		}
@@ -39,6 +41,7 @@ namespace SSLang
 		{
 			Type = ssa.Type;
 			ArraySize = ssa.ArraySize;
+			IsArray = ssa.IsArray;
 			SSA = ssa;
 			ValueText = text;
 		}

@@ -45,7 +45,7 @@ namespace SSLang.Reflection
 			{
 				var qualstr =
 					uni.IsArray ? $"[{uni.ArraySize}]" :
-					uni.Type.IsSubpassInput() ? $"<{uni.SubpassIndex}>" :
+					uni.Type.IsSubpassInput() ? $"<{uni.SubpassIndex.Value}>" :
 					uni.Type.IsImageType() ? $"<{uni.ImageFormat.Value.ToSSLKeyword()}>" : "";
 				var tstr = $"{uni.Type}{qualstr}";
 				var bstr = "";

@@ -361,7 +361,10 @@ namespace SSLang
 						Error(context, $"Cannot bind two subpasses to the same index ({vrbl.SubpassIndex}).");
 				}
 
-				Info._uniforms.Add(new Uniform(vrbl.Name, vrbl.Type, vrbl.IsArray ? vrbl.ArraySize : (uint?)null, (uint)loc.Value, null, 0, 0));
+				var uni = new Uniform(vrbl.Name, vrbl.Type, vrbl.IsArray ? vrbl.ArraySize : (uint?)null, (uint)loc.Value, null, 0, 0);
+				uni.SubpassIndex = vrbl.SubpassIndex;
+				uni.ImageFormat = vrbl.ImageFormat;
+				Info._uniforms.Add(uni);
 				GLSL.EmitUniform(vrbl, (uint)loc.Value);
 			}
 			else
@@ -379,7 +382,7 @@ namespace SSLang
 					var uni = new Uniform(vrbl.Name, vrbl.Type, vrbl.IsArray ? vrbl.ArraySize : (uint?)null, (uint)loc.Value, block, block.MemberCount, block.Size);
 					Info._uniforms.Add(uni);
 					block.AddMember(uni);
-					GLSL.EmitUniformBlockMember(vrbl, block.Size);
+					GLSL.EmitUniformBlockMember(vrbl, uni.Offset);
 				}
 				Info._blocks.Add(block);
 				GLSL.EmitUniformBlockClose();
@@ -684,7 +687,7 @@ namespace SSLang
 				if (!expr.Type.CanPromoteTo(vrbl.Type))
 					Error(vdc.expression(), $"The expression type '{expr.Type}' cannot be assigned to the variable type '{vrbl.Type}'.");
 
-				return new ExprResult(ShaderType.Void, 0, $"{vrbl.GetGLSLDecl(null)} = {expr.RefText}");
+				return new ExprResult(ShaderType.Void, null, $"{vrbl.GetGLSLDecl(null)} = {expr.RefText}");
 			}
 			else
 			{
@@ -713,7 +716,7 @@ namespace SSLang
 					++count;
 				}
 
-				return new ExprResult(ShaderType.Void, 0, sb.ToString());
+				return new ExprResult(ShaderType.Void, null, sb.ToString());
 			}
 		}
 
@@ -769,7 +772,7 @@ namespace SSLang
 					sb.Append(", ");
 			}
 
-			return new ExprResult(ShaderType.Void, 0, sb.ToString());
+			return new ExprResult(ShaderType.Void, null, sb.ToString());
 		}
 
 		public override ExprResult VisitWhileLoop([NotNull] SSLParser.WhileLoopContext context)
@@ -861,7 +864,7 @@ namespace SSLang
 			if (vrbl.IsArray)
 				Error(context, $"Cannot apply the postfix operator '{context.Op.Text}' to an array.");
 			ScopeManager.AddAssignment(vrbl);
-			return new ExprResult(vrbl.Type, 0, "(" + vrbl.GetOutputName(_currStage) + context.Op.Text + ")");
+			return new ExprResult(vrbl.Type, null, "(" + vrbl.GetOutputName(_currStage) + context.Op.Text + ")");
 		}
 
 		public override ExprResult VisitUnOpPrefix([NotNull] SSLParser.UnOpPrefixContext context)
@@ -872,7 +875,7 @@ namespace SSLang
 			if (vrbl.IsArray)
 				Error(context, $"Cannot apply the prefix operator '{context.Op.Text}' to an array.");
 			ScopeManager.AddAssignment(vrbl);
-			return new ExprResult(vrbl.Type, 0, "(" + context.Op.Text + vrbl.GetOutputName(_currStage) + ")");
+			return new ExprResult(vrbl.Type, null, "(" + context.Op.Text + vrbl.GetOutputName(_currStage) + ")");
 		}
 
 		public override ExprResult VisitUnOpFactor([NotNull] SSLParser.UnOpFactorContext context)
@@ -882,7 +885,7 @@ namespace SSLang
 				Error(context, $"The unary operator '{context.Op.Text}' cannot be applied to the type '{expr.Type}'.");
 			if (expr.IsArray)
 				Error(context, $"Cannot apply the unary operator '{context.Op.Text}' to an array.");
-			return new ExprResult(expr.Type, 0, "(" + context.Op.Text + expr.RefText + ")");
+			return new ExprResult(expr.Type, null, "(" + context.Op.Text + expr.RefText + ")");
 		}
 
 		public override ExprResult VisitUnOpNegate([NotNull] SSLParser.UnOpNegateContext context)
@@ -894,13 +897,13 @@ namespace SSLang
 			{
 				if (expr.Type != ShaderType.Bool)
 					Error(context, "The negation operator '!' can only be applied to scalar booleans.");
-				return new ExprResult(ShaderType.Bool, 0, "(!" + expr.RefText + ")");
+				return new ExprResult(ShaderType.Bool, null, "(!" + expr.RefText + ")");
 			}
 			else
 			{
 				if (expr.Type != ShaderType.Int && expr.Type != ShaderType.UInt)
 					Error(context, "The negation operator '~' can only be applied to integer types.");
-				return new ExprResult(expr.Type, 0, "(~" + expr.RefText + ")");
+				return new ExprResult(expr.Type, null, "(~" + expr.RefText + ")");
 			}
 		}
 
@@ -912,7 +915,7 @@ namespace SSLang
 			if (lexpr.IsArray || rexpr.IsArray)
 				Error(lexpr.IsArray ? left : right, $"Cannot apply binary operator '{op.Text}' to an array type.");
 			var rtype = TypeUtils.CheckOperator(this, op, lexpr.Type, rexpr.Type);
-			return new ExprResult(rtype, 0, $"({lexpr.RefText} " + op.Text + $" {rexpr.RefText})");
+			return new ExprResult(rtype, null, $"({lexpr.RefText} " + op.Text + $" {rexpr.RefText})");
 		}
 
 		public override ExprResult VisitBinOpMulDivMod([NotNull] SSLParser.BinOpMulDivModContext context) =>
@@ -998,7 +1001,7 @@ namespace SSLang
 			else
 			{
 				GLSL.EmitCall(GLSLBuilder.GetBuiltinFuncName(fname, ftype), aexpr);
-				return new ExprResult(ShaderType.Void, 0, "");
+				return new ExprResult(ShaderType.Void, null, "");
 			}
 		}
 
@@ -1021,7 +1024,7 @@ namespace SSLang
 			else
 			{
 				GLSL.EmitCall(GLSLBuilder.GetBuiltinFuncName(fname, ftype), aexpr);
-				return new ExprResult(ShaderType.Void, 0, "");
+				return new ExprResult(ShaderType.Void, null, "");
 			}
 		}
 
@@ -1049,7 +1052,7 @@ namespace SSLang
 					GLSL.EmitDefinition(ssa, aexpr[2]);
 				}
 				GLSL.EmitCall(GLSLBuilder.GetBuiltinFuncName(fname, ftype), aexpr);
-				return new ExprResult(ShaderType.Void, 0, "");
+				return new ExprResult(ShaderType.Void, null, "");
 			}
 		}
 
@@ -1090,16 +1093,16 @@ namespace SSLang
 		{
 			var vl = context.valueLiteral();
 			if (vl.BOOLEAN_LITERAL() != null)
-				return new ExprResult(ShaderType.Bool, 0, vl.BOOLEAN_LITERAL().Symbol.Text);
+				return new ExprResult(ShaderType.Bool, null, vl.BOOLEAN_LITERAL().Symbol.Text);
 			if (vl.FLOAT_LITERAL() != null)
-				return new ExprResult(ShaderType.Float, 0, vl.FLOAT_LITERAL().Symbol.Text);
+				return new ExprResult(ShaderType.Float, null, vl.FLOAT_LITERAL().Symbol.Text);
 			if (vl.INTEGER_LITERAL() != null)
 			{
 				var ltxt = vl.INTEGER_LITERAL().Symbol.Text;
 				var val = ParseIntegerLiteral(ltxt, out bool isus, out var error);
 				if (!val.HasValue)
 					Error(vl.INTEGER_LITERAL().Symbol, "Unable to parse the integer literal.");
-				return new ExprResult(isus ? ShaderType.UInt : ShaderType.Int, 0, val.Value.ToString());
+				return new ExprResult(isus ? ShaderType.UInt : ShaderType.Int, null, val.Value.ToString());
 			}
 			return null; // Never reached
 		}
@@ -1107,7 +1110,7 @@ namespace SSLang
 		public override ExprResult VisitVariableAtom([NotNull] SSLParser.VariableAtomContext context)
 		{
 			var vrbl = findVariable(context, context.IDENTIFIER().Symbol.Text, true, false);
-			var expr = new ExprResult(vrbl.Type, vrbl.ArraySize, vrbl.GetOutputName(_currStage));
+			var expr = new ExprResult(vrbl.Type, vrbl.IsArray ? vrbl.ArraySize : (uint?)null, vrbl.GetOutputName(_currStage));
 			expr.LValue = vrbl;
 			return TypeUtils.ApplyModifiers(this, expr, context.arrayIndexer(), context.SWIZZLE());
 		}

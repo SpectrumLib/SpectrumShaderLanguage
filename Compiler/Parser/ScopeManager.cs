@@ -197,19 +197,19 @@ namespace SSLang
 			var scope = _scopes.Peek();
 			if (stage == ShaderStages.Vertex)
 			{
-				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", VariableScope.Builtin, false, 0, false));
-				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", VariableScope.Builtin, false, 0));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", VariableScope.Builtin, false, null, false));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", VariableScope.Builtin, false, null));
 			}
 			else
 			{
-				scope.AddBuiltin(new Variable(ShaderType.Float4, "$FragCoord", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Bool, "$FrontFacing", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", VariableScope.Builtin, true, 0));
-				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", VariableScope.Builtin, false, 0, false));
+				scope.AddBuiltin(new Variable(ShaderType.Float4, "$FragCoord", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Bool, "$FrontFacing", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", VariableScope.Builtin, false, null, false));
 			}
 		}
 		#endregion // Functions
@@ -284,7 +284,7 @@ namespace SSLang
 				return false;
 			}
 
-			var vrbl = new Variable(p.Type, p.Name, VariableScope.Argument, p.Access == StandardFunction.Access.In, 0, p.Access != StandardFunction.Access.Out);
+			var vrbl = new Variable(p.Type, p.Name, VariableScope.Argument, p.Access == StandardFunction.Access.In, null, p.Access != StandardFunction.Access.Out);
 			_params.Add(p.Name, (vrbl, p));
 
 			error = null;

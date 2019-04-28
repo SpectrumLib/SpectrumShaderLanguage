@@ -11,9 +11,9 @@ namespace SSLang
 		{
 			var token = ctx.Start.Type;
 			if (token == SSLParser.KWT_VOID) return ShaderType.Void;
-			if (token <= (int)ShaderTypeHelper.VALUE_TYPE_END) // Value types
+			if (token <= SSLParser.KWT_MAT4) // Value types
 				return (ShaderType)((token - SSLParser.KWT_BOOL) + (int)ShaderTypeHelper.VALUE_TYPE_START); 
-			if (token <= (int)ShaderTypeHelper.HANDLE_TYPE_END) // Handle types
+			if (token <= SSLParser.KWT_SUBPASSINPUT) // Handle types
 				return (ShaderType)((token - SSLParser.KWT_TEX1D) + (int)ShaderTypeHelper.HANDLE_TYPE_START);
 			return null;
 		}
