@@ -153,8 +153,14 @@ namespace SSLang
 			error = null;
 			var rPath = options.ReflectionPath ?? CompileOptions.MakeDefaultReflectionPath(SourceFile) ?? Path.Combine(Directory.GetCurrentDirectory(), "shader.refl");
 
-			if (!ReflectionOutput.Generate(rPath, options.UseBinaryReflection, vis.Info, out var reflError))
-				error = new CompileError(ErrorSource.Output, 0, 0, $"Unable to generate reflection info: {reflError}");
+			try
+			{
+				vis.Info.SaveToFile(rPath, options.UseBinaryReflection);
+			}
+			catch (Exception e)
+			{
+				error = new CompileError(ErrorSource.Output, 0, 0, $"Unable to generate reflection info: {e.Message}.");
+			}
 
 			return error == null;
 		}

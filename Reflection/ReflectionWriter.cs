@@ -1,26 +1,23 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace SSLang.Reflection
 {
-	// Controls formatting and output of reflection info to a file
-	internal static class ReflectionOutput
+	// Contains the logic for converting reflection information into text or binary format and writing them to a file
+	internal static class ReflectionWriter
 	{
 		private static readonly Version TOOL_VERSION;
 
-		public static bool Generate(string outPath, bool binary, ShaderInfo info, out string error)
+		public static void SaveTo(string outPath, bool binary, ShaderInfo info)
 		{
-			if (binary)
-				return GenerateBinary(outPath, info, out error);
-			return GenerateText(outPath, info, out error);
+			if (binary) SaveBinary(outPath, info);
+			else SaveText(outPath, info);
 		}
 
-		private static bool GenerateText(string outPath, ShaderInfo info, out string error)
+		private static void SaveText(string outPath, ShaderInfo info)
 		{
-			error = null;
 			StringBuilder sb = new StringBuilder(1024);
 
 			sb.AppendLine($"SSL Reflection Dump (v{TOOL_VERSION.Major}.{TOOL_VERSION.Minor}.{TOOL_VERSION.Revision})");
@@ -91,27 +88,16 @@ namespace SSLang.Reflection
 			}
 			catch (PathTooLongException)
 			{
-				error = "the output path is too long.";
-				return false;
+				throw new Exception("The output path is too long.");
 			}
 			catch (DirectoryNotFoundException)
 			{
-				error = "the output directory could not be found, or does not exist.";
-				return false;
+				throw new Exception("The output directory could not be found, or does not exist.");
 			}
-			catch (Exception e)
-			{
-				error = $"could not open and write output file ({e.Message}).";
-				return false;
-			}
-
-			return true;
 		}
 
-		private static bool GenerateBinary(string outPath, ShaderInfo info, out string error)
+		private static void SaveBinary(string outPath, ShaderInfo info)
 		{
-			error = null;
-
 			using (MemoryStream buffer = new MemoryStream(1024))
 			using (BinaryWriter writer = new BinaryWriter(buffer))
 			{
@@ -125,9 +111,8 @@ namespace SSLang.Reflection
 				writer.Write((byte)info.Stages); // Stage mask
 
 				// Write the uniforms
-				writer.Write((byte)info.Uniforms.Count());
+				writer.Write((byte)info.Uniforms.Count);
 				writer.Write(info.AreUniformsContiguous());
-				uint uidx = 0;
 				foreach (var uni in info.Uniforms)
 				{
 					writer.Write((byte)uni.Name.Length);
@@ -142,7 +127,6 @@ namespace SSLang.Reflection
 						writer.Write((byte)uni.Index);
 					else
 						writer.Write((byte)0xFF);
-					++uidx;
 				}
 
 				// Write the vertex attributes
@@ -179,25 +163,16 @@ namespace SSLang.Reflection
 				}
 				catch (PathTooLongException)
 				{
-					error = "the output path is too long.";
-					return false;
+					throw new Exception("The output path is too long.");
 				}
 				catch (DirectoryNotFoundException)
 				{
-					error = "the output directory could not be found, or does not exist.";
-					return false;
-				}
-				catch (Exception e)
-				{
-					error = $"could not open and write output file ({e.Message}).";
-					return false;
+					throw new Exception("The output directory could not be found, or does not exist.");
 				}
 			}
-
-			return true;
 		}
 
-		static ReflectionOutput()
+		static ReflectionWriter()
 		{
 			TOOL_VERSION = Assembly.GetExecutingAssembly().GetName().Version;
 		}
