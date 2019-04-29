@@ -11,8 +11,8 @@ namespace SSLang
 		private readonly Dictionary<string, string> BUILTIN_MAP = new Dictionary<string, string>() {
 			{ "$Position", "gl_Position" }, { "$VertexIndex", "gl_VertexIndex" }, { "$InstanceIndex", "gl_InstanceIndex" },
 			{ "$PointSize", "gl_PointSize" }, { "$FragCoord", "gl_FragCoord" }, { "$FrontFacing", "gl_FrontFacing" },
-			{ "$PointCoord", "gl_PointCoord" }, { "$SampleId", "gl_SampleId" }, { "$SamplePosition", "gl_SamplePosition" },
-			{ "$FragDepth", "gl_FragDepth" }
+			{ "$PointCoord", "gl_PointCoord" }, { "$SampleId", "gl_SampleId" }, { "$NumSamples", "gl_NumSamples" },
+			{ "$SamplePosition", "gl_SamplePosition" }, { "$FragDepth", "gl_FragDepth" }
 		};
 
 		#region Fields
@@ -82,12 +82,11 @@ namespace SSLang
 			uint? asize = null;
 			if (ctx.arrayIndexer() != null)
 			{
-				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out var error);
-				if (!val.HasValue)
-					vis.Error(ctx, error);
-				if (val.Value <= 0)
-					vis.Error(ctx, $"The variable '{name}' cannot have a negative or zero array size.");
-				asize = (uint)val.Value;
+				if (!SSLVisitor.TryParseArrayIndexer(ctx.arrayIndexer(), out var aidx, out var error))
+					vis.Error(ctx.arrayIndexer(), error);
+				if (aidx.Index2.HasValue)
+					vis.Error(ctx.arrayIndexer(), "Cannot declare multi-dimensional arrays.");
+				asize = aidx.Index1;
 			}
 
 			return new Variable(type.Value, name, scope, false, asize);
@@ -110,12 +109,11 @@ namespace SSLang
 			uint? asize = null;
 			if (ctx.arrayIndexer() != null)
 			{
-				var val = SSLVisitor.ParseIntegerLiteral(ctx.arrayIndexer().Index.Text, out var isUnsigned, out var error);
-				if (!val.HasValue)
-					vis.Error(ctx, error);
-				if (val.Value <= 0)
-					vis.Error(ctx, $"The variable '{name}' cannot have a negative or zero array size.");
-				asize = (uint)val.Value;
+				if (!SSLVisitor.TryParseArrayIndexer(ctx.arrayIndexer(), out var aidx, out var error))
+					vis.Error(ctx.arrayIndexer(), error);
+				if (aidx.Index2.HasValue)
+					vis.Error(ctx.arrayIndexer(), "Cannot declare multi-dimensional arrays.");
+				asize = aidx.Index1;
 			}
 
 			return new Variable(type.Value, name, scope, ctx.KW_CONST() != null, asize);

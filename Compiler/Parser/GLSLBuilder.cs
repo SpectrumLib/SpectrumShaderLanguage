@@ -147,8 +147,16 @@ namespace SSLang
 		public void EmitDefinition(Variable v, ExprResult expr) =>
 			_funcSource.AppendLine($"{_indent}{v.GetGLSLDecl()} = {expr.ValueText};");
 
-		public void EmitAssignment(string name, long? arrIndex, string swiz, string op, ExprResult expr) =>
-			_funcSource.AppendLine($"{_indent}{name}{(arrIndex.HasValue ? $"[{arrIndex.Value}]" : "")}{swiz ?? ""} {op} {expr.RefText};");
+		public void EmitAssignment(string name, (uint i1, uint? i2)? aidx, string swiz, string op, ExprResult expr)
+		{
+			if (aidx.HasValue)
+			{
+				var atxt = $"[{aidx.Value.i1}]{(aidx.Value.i2.HasValue ? $"[{aidx.Value.i2.Value}]" : "")}";
+				_funcSource.AppendLine($"{_indent}{name}{atxt}{swiz ?? ""} {op} {expr.RefText};");
+			}
+			else
+				_funcSource.AppendLine($"{_indent}{name}{swiz ?? ""} {op} {expr.RefText};");
+		}
 
 		public void EmitCall(string fname, ExprResult[] args) =>
 			_funcSource.AppendLine($"{_indent}{fname}({String.Join(", ", args.Select(ae => ae.RefText))});");

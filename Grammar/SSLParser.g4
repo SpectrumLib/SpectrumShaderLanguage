@@ -118,7 +118,7 @@ assignment
 
 // Array indexer
 arrayIndexer
-    : '[' Index=INTEGER_LITERAL ']'
+    : '[' Index1=INTEGER_LITERAL (',' Index2=INTEGER_LITERAL)? ']'
     ;
 
 // Conditional statements

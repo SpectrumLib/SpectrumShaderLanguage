@@ -104,6 +104,37 @@ namespace SSLang
 			error = null;
 			return isNeg ? -res : res;
 		}
+
+		// Parses the two integers in an array indexer
+		public static bool TryParseArrayIndexer(SSLParser.ArrayIndexerContext ctx, out (uint Index1, uint? Index2) idx, out string error)
+		{
+			idx = (0, null);
+
+			var left = ParseIntegerLiteral(ctx.Index1.Text, out var isus, out error);
+			if (!left.HasValue)
+				return false;
+			if (left.Value < 0)
+			{
+				error = "Array indices cannot be negative.";
+				return false;
+			}
+
+			long? right = null;
+			if (ctx.Index2 != null)
+			{
+				right = ParseIntegerLiteral(ctx.Index2.Text, out isus, out error);
+				if (!right.HasValue)
+					return false;
+				if (right.Value < 0)
+				{
+					error = "Array indices cannot be negative.";
+					return false;
+				}
+			}
+
+			idx = ((uint)left.Value, right.HasValue ? (uint)right.Value : (uint?)null);
+			return true;
+		}
 		#endregion // Public Helpers
 
 		// This has to be overridden because we must manually visit all of the variable blocks before the functions

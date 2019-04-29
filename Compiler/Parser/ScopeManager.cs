@@ -200,7 +200,7 @@ namespace SSLang
 				scope.AddBuiltin(new Variable(ShaderType.Int, "$VertexIndex", VariableScope.Builtin, true, null));
 				scope.AddBuiltin(new Variable(ShaderType.Int, "$InstanceIndex", VariableScope.Builtin, true, null));
 				scope.AddBuiltin(new Variable(ShaderType.Float4, "$Position", VariableScope.Builtin, false, null, false));
-				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", VariableScope.Builtin, false, null));
+				scope.AddBuiltin(new Variable(ShaderType.Float, "$PointSize", VariableScope.Builtin, false, null, false));
 			}
 			else
 			{
@@ -208,6 +208,7 @@ namespace SSLang
 				scope.AddBuiltin(new Variable(ShaderType.Bool, "$FrontFacing", VariableScope.Builtin, true, null));
 				scope.AddBuiltin(new Variable(ShaderType.Float2, "$PointCoord", VariableScope.Builtin, true, null));
 				scope.AddBuiltin(new Variable(ShaderType.Int, "$SampleId", VariableScope.Builtin, true, null));
+				scope.AddBuiltin(new Variable(ShaderType.Int, "$NumSamples", VariableScope.Builtin, true, null));
 				scope.AddBuiltin(new Variable(ShaderType.Float2, "$SamplePosition", VariableScope.Builtin, true, null));
 				scope.AddBuiltin(new Variable(ShaderType.Float, "$FragDepth", VariableScope.Builtin, false, null, false));
 			}
