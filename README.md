@@ -17,7 +17,7 @@ More information for the libraries and command line tool can be found on the Git
 
 ## Contributing
 
-We welcome bugfixes, feature implementations, and optimizations through pull requests. When working on the source code, please follow the style and comment quality/quantity that you see in existing source code.
+We welcome bugfixes, feature implementations, and optimizations through pull requests. When working on the source code, please follow the style and comment quality/quantity that you see in existing source code. Additionally, we welcome reference implementations for the reflection library in langauges other than C#.
 
 All changes, additions, and removals from the SSL grammar must be approved first by one of the lead developers. All changes must follow the goal of keeping SSL simpler than GLSL, and changes must be backwards compatible (no removals after the initial SSL interface is fully defined).
 

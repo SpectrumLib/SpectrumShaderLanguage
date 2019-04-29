@@ -27,6 +27,11 @@ namespace SSLang.Reflection
 		/// </summary>
 		public readonly bool IsArray;
 		/// <summary>
+		/// The binding location of the uniform. If the uniform is part of a block, then this will be the blocks'
+		/// binding location.
+		/// </summary>
+		public readonly uint Location;
+		/// <summary>
 		/// The block that this uniform belongs to. Will only be non-null if the uniform is a value type.
 		/// </summary>
 		public readonly UniformBlock Block;
@@ -59,12 +64,7 @@ namespace SSLang.Reflection
 		/// Gets if the uniform is a handle type. Handle type uniforms will never appear inside of a uniform block.
 		/// </summary>
 		public bool IsHandleType => Type.IsHandleType();
-		/// <summary>
-		/// The binding location of the uniform. If the uniform is part of a block, then this will be the blocks'
-		/// binding location.
-		/// </summary>
-		public uint Location => Block?.Location ?? _location;
-		private readonly uint _location;
+		
 		/// <summary>
 		/// Gets the size of the uniform, in bytes. Takes into account the size of the array, if the uniform is an array.
 		/// </summary>
@@ -78,10 +78,10 @@ namespace SSLang.Reflection
 			Type = type;
 			ArraySize = arrSize.GetValueOrDefault(1);
 			IsArray = arrSize.HasValue;
+			Location = block?.Location ?? loc;
 			Block = block;
 			Index = idx;
 			Offset = off;
-			_location = loc;
 		}
 	}
 

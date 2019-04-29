@@ -71,11 +71,9 @@ namespace SSLang.Reflection
 			// Write the outputs
 			sb.AppendLine("Outputs");
 			sb.AppendLine("-------");
-			uint oidx = 0;
 			foreach (var output in info.Outputs)
 			{
-				sb.AppendLine($"{output.Name,-20} {output.Type,-20} Loc={oidx,-3}");
-				++oidx;
+				sb.AppendLine($"{output.Name,-20} {output.Type,-20}");
 			}
 			sb.AppendLine();
 
@@ -110,23 +108,22 @@ namespace SSLang.Reflection
 				// Write shader info
 				writer.Write((byte)info.Stages); // Stage mask
 
-				// Write the uniforms
+				// Write the uniform
+				info.Sort();
 				writer.Write((byte)info.Uniforms.Count);
 				writer.Write(info.AreUniformsContiguous());
+				writer.Write((byte)info.Blocks.Count);
+				foreach (var block in info.Blocks)
+					writer.Write((byte)block.Location);
 				foreach (var uni in info.Uniforms)
 				{
 					writer.Write((byte)uni.Name.Length);
 					writer.Write(Encoding.ASCII.GetBytes(uni.Name));
 					writer.Write((byte)uni.Type);
-					writer.Write((byte)uni.Type.GetSize());
 					writer.Write(uni.IsArray ? (byte)uni.ArraySize : (byte)0);
 					writer.Write(uni.Type.IsSubpassInput() ? (byte)uni.SubpassIndex : uni.Type.IsImageType() ? (byte)uni.ImageFormat : (byte)0xFF);
 					writer.Write((byte)uni.Location);
-					writer.Write(uni.Type.IsValueType());
-					if (uni.Type.IsValueType()) // It will be in a block
-						writer.Write((byte)uni.Index);
-					else
-						writer.Write((byte)0xFF);
+					writer.Write((byte)uni.Index);
 				}
 
 				// Write the vertex attributes
@@ -136,22 +133,17 @@ namespace SSLang.Reflection
 					writer.Write((byte)attr.Name.Length);
 					writer.Write(Encoding.ASCII.GetBytes(attr.Name));
 					writer.Write((byte)attr.Type);
-					writer.Write((byte)attr.Type.GetSize());
 					writer.Write(attr.IsArray ? (byte)attr.ArraySize : (byte)0);
 					writer.Write((byte)attr.Location);
-					writer.Write((byte)attr.SlotCount);
 				}
 
 				// Write the outputs
-				uint oidx = 0;
+				writer.Write((byte)info.Outputs.Count);
 				foreach (var output in info.Outputs)
 				{
 					writer.Write((byte)output.Name.Length);
 					writer.Write(Encoding.ASCII.GetBytes(output.Name));
 					writer.Write((byte)output.Type);
-					writer.Write((byte)output.Type.GetSize());
-					writer.Write((byte)oidx);
-					++oidx;
 				}
 
 				// Write the file

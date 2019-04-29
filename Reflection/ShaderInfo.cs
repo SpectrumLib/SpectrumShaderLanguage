@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -51,6 +52,18 @@ namespace SSLang.Reflection
 			_attributes = new List<VertexAttribute>();
 			_outputs = new List<FragmentOutput>();
 		}
+		
+		/// <summary>
+		/// Sorts all of the uniforms, attributes, and outputs in the info by binding location and offset. Note that
+		/// if you get information from the compiler, or loaded from a file, the information will already be sorted.
+		/// </summary>
+		public void Sort()
+		{
+			_uniforms.Sort((u1, u2) => (u1.Location == u2.Location) ? u1.Offset.CompareTo(u2.Offset) : u1.Location.CompareTo(u2.Location));
+			_blocks.Sort((b1, b2) => b1.Location.CompareTo(b2.Location));
+			_attributes.Sort((a1, a2) => a1.Location.CompareTo(a2.Location));
+			_outputs.Sort((o1, o2) => o1.Index.CompareTo(o2.Index));
+		}
 
 		/// <summary>
 		/// Checks if the uniforms in the shader are contiguous in their bindings.
@@ -94,7 +107,18 @@ namespace SSLang.Reflection
 		/// <returns>The shader info object describing the loaded reflection information.</returns>
 		public static ShaderInfo LoadFromFile(string path)
 		{
-			return null;
+			if (!File.Exists(path))
+				throw new IOException($"The path is invalid, or points to a file that does not exist.");
+
+			using (var file = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+			using (var reader = new BinaryReader(file))
+			{
+				var header = reader.ReadBytes(7);
+				if (header[0] != 'S' || header[1] != 'S' || header[2] != 'L' || header[3] != 'R')
+					throw new InvalidOperationException($"The file does not appear to be a valid binary SSL reflection file.");
+				var ver = new Version(header[4], header[5], header[6]);
+				return ReflectionReader.LoadFrom(reader, ver);
+			}
 		}
 	}
 }

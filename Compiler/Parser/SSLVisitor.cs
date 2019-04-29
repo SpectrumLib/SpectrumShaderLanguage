@@ -179,6 +179,7 @@ namespace SSLang
 			}
 
 			// Validate that the required blocks are present
+			Info.Sort();
 			if (ScopeManager.Attributes.Count == 0)
 				Error(context, "A shader is required to have an 'attributes' block to describe the vertex input.");
 			if (ScopeManager.Outputs.Count == 0)
