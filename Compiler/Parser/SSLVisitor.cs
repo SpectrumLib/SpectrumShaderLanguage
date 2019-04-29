@@ -106,33 +106,52 @@ namespace SSLang
 		}
 
 		// Parses the two integers in an array indexer
-		public static bool TryParseArrayIndexer(SSLParser.ArrayIndexerContext ctx, out (uint Index1, uint? Index2) idx, out string error)
+		public bool TryParseArrayIndexer(SSLParser.ArrayIndexerContext ctx, (uint? L1, uint? L2) lims, out (ExprResult Index1, ExprResult Index2) idx, out string error)
 		{
-			idx = (0, null);
+			idx = (null, null);
 
-			var left = ParseIntegerLiteral(ctx.Index1.Text, out var isus, out error);
-			if (!left.HasValue)
-				return false;
-			if (left.Value < 0)
+			var lexpr = Visit(ctx.Index1);
+			if (lexpr.Type != ShaderType.Int && lexpr.Type != ShaderType.UInt)
 			{
-				error = "Array indices cannot be negative.";
+				error = $"The array indexer expression must be of type Int.";
 				return false;
 			}
-
-			long? right = null;
-			if (ctx.Index2 != null)
+			var left = lexpr.GetIntegerLiteral();
+			if (left.HasValue) // Check the literal
 			{
-				right = ParseIntegerLiteral(ctx.Index2.Text, out isus, out error);
-				if (!right.HasValue)
-					return false;
-				if (right.Value < 0)
+				if (left.Value < 0)
 				{
 					error = "Array indices cannot be negative.";
+					return false; 
+				}
+				if (lims.L1.HasValue && left.Value > lims.L1.Value)
+				{
+					error = $"The first array indexer has a value that is too large for the expression ({left.Value} > {lims.L1.Value}).";
 					return false;
 				}
 			}
 
-			idx = ((uint)left.Value, right.HasValue ? (uint)right.Value : (uint?)null);
+			ExprResult rexpr = (ctx.Index2 != null) ? Visit(ctx.Index2) : null;
+			if (rexpr != null)
+			{
+				var right = rexpr.GetIntegerLiteral();
+				if (right.HasValue) // Check the literal
+				{
+					if (right.Value < 0)
+					{
+						error = "Array indices cannot be negative.";
+						return false;
+					}
+					if (lims.L2.HasValue && right.Value > lims.L2.Value)
+					{
+						error = $"The second array indexer has a value that is too large for the expression ({right.Value} > {lims.L2.Value}).";
+						return false;
+					} 
+				}
+			}
+
+			idx = (lexpr, rexpr);
+			error = null;
 			return true;
 		}
 		#endregion // Public Helpers
@@ -1126,14 +1145,14 @@ namespace SSLang
 			if (vl.BOOLEAN_LITERAL() != null)
 				return new ExprResult(ShaderType.Bool, null, vl.BOOLEAN_LITERAL().Symbol.Text);
 			if (vl.FLOAT_LITERAL() != null)
-				return new ExprResult(ShaderType.Float, null, vl.FLOAT_LITERAL().Symbol.Text);
+				return new ExprResult(ShaderType.Float, null, vl.FLOAT_LITERAL().Symbol.Text, true);
 			if (vl.INTEGER_LITERAL() != null)
 			{
 				var ltxt = vl.INTEGER_LITERAL().Symbol.Text;
 				var val = ParseIntegerLiteral(ltxt, out bool isus, out var error);
 				if (!val.HasValue)
-					Error(vl.INTEGER_LITERAL().Symbol, "Unable to parse the integer literal.");
-				return new ExprResult(isus ? ShaderType.UInt : ShaderType.Int, null, val.Value.ToString());
+					Error(vl.INTEGER_LITERAL().Symbol, error);
+				return new ExprResult(isus ? ShaderType.UInt : ShaderType.Int, null, val.Value.ToString(), true);
 			}
 			return null; // Never reached
 		}

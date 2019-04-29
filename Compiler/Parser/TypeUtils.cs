@@ -21,32 +21,28 @@ namespace SSLang
 
 			if (hasa)
 			{
-				if (!SSLVisitor.TryParseArrayIndexer(actx, out var aidx, out var error))
+				var lim =
+					res.IsArray ? res.ArraySize : res.Type.IsVectorType() ? res.Type.GetComponentCount() :
+					((res.Type == ShaderType.Mat2) ? 2u : (res.Type == ShaderType.Mat3) ? 3u : 4u);
+				if (!vis.TryParseArrayIndexer(actx, (lim - 1, res.Type.IsMatrixType() ? lim - 1 : (uint?)null), out var aidx, out var error))
 					vis.Error(actx, error);
 				if (res.IsArray)
 				{
-					if (aidx.Index2.HasValue)
+					if (aidx.Index2 != null)
 						vis.Error(actx, "Multi-dimensional arrays are not supported.");
-					if (aidx.Index1 >= res.ArraySize)
-						vis.Error(actx, "The array indexer is too large for the array.");
-					res = new ExprResult(res.Type, null, $"{res.RefText}[{aidx.Index1}]");
+					res = new ExprResult(res.Type, null, $"{res.RefText}[{aidx.Index1.RefText}]");
 				}
 				else if (res.Type.IsVectorType())
 				{
-					if (aidx.Index2.HasValue)
+					if (aidx.Index2 != null)
 						vis.Error(actx, "Vectors cannot have more than one array indexer.");
-					if (aidx.Index1 >= res.Type.GetComponentCount())
-						vis.Error(actx, "The array indexer is too large for the vector.");
-					res = new ExprResult(res.Type.GetComponentType(), null, $"{res.RefText}[{aidx.Index1}]");
+					res = new ExprResult(res.Type.GetComponentType(), null, $"{res.RefText}[{aidx.Index1.RefText}]");
 				}
 				else if (res.Type.IsMatrixType())
 				{
-					if (!aidx.Index2.HasValue)
+					if (aidx.Index2 == null)
 						vis.Error(actx, "Matrices must have two array indexers to access their members.");
-					var dim = (res.Type == ShaderType.Mat2) ? 2u : (res.Type == ShaderType.Mat3) ? 3u : 4u;
-					if (aidx.Index1 >= dim || aidx.Index2.Value >= dim)
-						vis.Error(actx, $"The array indexers are too large for the matrix type ({res.Type}: {aidx.Index1}, {aidx.Index2.Value}).");
-					res = new ExprResult(ShaderType.Float, null, $"{res.RefText}[{aidx.Index1}][{aidx.Index2.Value}]");
+					res = new ExprResult(ShaderType.Float, null, $"{res.RefText}[{aidx.Index1.RefText}][{aidx.Index2.RefText}]");
 				}
 				else
 					vis.Error(actx, "The preceeding expression cannot have array indexers applied to it.");
@@ -71,7 +67,7 @@ namespace SSLang
 		}
 
 		// Gets the type of an lvalue (such as an assignment) with an array indexer and swizzle applied
-		public static ShaderType ApplyLValueModifier(SSLVisitor vis, IToken name, Variable vrbl, SSLParser.ArrayIndexerContext actx, ITerminalNode swizzle, out (uint, uint?)? arrIndex)
+		public static ShaderType ApplyLValueModifier(SSLVisitor vis, IToken name, Variable vrbl, SSLParser.ArrayIndexerContext actx, ITerminalNode swizzle, out (ExprResult, ExprResult)? arrIndex)
 		{
 			bool hasa = (actx != null);
 			bool hass = (swizzle != null);
@@ -80,31 +76,27 @@ namespace SSLang
 
 			if (hasa)
 			{
-				if (!SSLVisitor.TryParseArrayIndexer(actx, out var aidx, out var error))
+				var lim =
+					vrbl.IsArray ? vrbl.ArraySize : vrbl.Type.IsVectorType() ? vrbl.Type.GetComponentCount() :
+					((vrbl.Type == ShaderType.Mat2) ? 2u : (vrbl.Type == ShaderType.Mat3) ? 3u : 4u);
+				if (!vis.TryParseArrayIndexer(actx, (lim - 1, vrbl.Type.IsMatrixType() ? lim - 1 : (uint?)null), out var aidx, out var error))
 					vis.Error(actx, error);
 				if (vrbl.IsArray)
 				{
-					if (aidx.Index2.HasValue)
+					if (aidx.Index2 != null)
 						vis.Error(actx, "Multi-dimensional arrays are not supported.");
-					if (aidx.Index1 >= vrbl.ArraySize)
-						vis.Error(actx, "The array indexer is too large for the array.");
 					ltype = vrbl.Type;
 				}
 				else if (vrbl.Type.IsVectorType())
 				{
-					if (aidx.Index2.HasValue)
+					if (aidx.Index2 != null)
 						vis.Error(actx, "Vectors cannot have more than one array indexer.");
-					if (aidx.Index1 >= vrbl.Type.GetComponentCount())
-						vis.Error(actx, "The array indexer is too large for the vector.");
 					ltype = vrbl.Type.GetComponentType();
 				}
 				else if (vrbl.Type.IsMatrixType())
 				{
-					if (!aidx.Index2.HasValue)
+					if (aidx.Index2 == null)
 						vis.Error(actx, "Matrices must have two array indexers to access their members.");
-					var dim = (vrbl.Type == ShaderType.Mat2) ? 2u : (vrbl.Type == ShaderType.Mat3) ? 3u : 4u;
-					if (aidx.Index1 >= dim || aidx.Index2.Value >= dim)
-						vis.Error(actx, $"The array indexers are too large for the matrix type ({vrbl.Type}: {aidx.Index1}, {aidx.Index2.Value}).");
 					ltype = ShaderType.Float;
 				}
 				else

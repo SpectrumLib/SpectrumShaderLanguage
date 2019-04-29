@@ -82,11 +82,13 @@ namespace SSLang
 			uint? asize = null;
 			if (ctx.arrayIndexer() != null)
 			{
-				if (!SSLVisitor.TryParseArrayIndexer(ctx.arrayIndexer(), out var aidx, out var error))
+				if (!vis.TryParseArrayIndexer(ctx.arrayIndexer(), (null, null), out var aidx, out var error))
 					vis.Error(ctx.arrayIndexer(), error);
-				if (aidx.Index2.HasValue)
+				if (aidx.Index2 != null)
 					vis.Error(ctx.arrayIndexer(), "Cannot declare multi-dimensional arrays.");
-				asize = aidx.Index1;
+				if (!aidx.Index1.GetIntegerLiteral().HasValue) // Must be a literal (OR A SPEC CONSTANT TODO)
+					vis.Error(ctx.arrayIndexer(), "Must use integer literals when declaring arrays.");
+				asize = (uint)aidx.Index1.GetIntegerLiteral().Value;
 			}
 
 			return new Variable(type.Value, name, scope, false, asize);
@@ -109,11 +111,13 @@ namespace SSLang
 			uint? asize = null;
 			if (ctx.arrayIndexer() != null)
 			{
-				if (!SSLVisitor.TryParseArrayIndexer(ctx.arrayIndexer(), out var aidx, out var error))
+				if (!vis.TryParseArrayIndexer(ctx.arrayIndexer(), (null, null), out var aidx, out var error))
 					vis.Error(ctx.arrayIndexer(), error);
-				if (aidx.Index2.HasValue)
+				if (aidx.Index2 != null)
 					vis.Error(ctx.arrayIndexer(), "Cannot declare multi-dimensional arrays.");
-				asize = aidx.Index1;
+				if (!aidx.Index1.GetIntegerLiteral().HasValue) // Must be a literal (OR A SPEC CONSTANT TODO)
+					vis.Error(ctx.arrayIndexer(), "Must use integer literals when declaring arrays.");
+				asize = (uint)aidx.Index1.GetIntegerLiteral().Value;
 			}
 
 			return new Variable(type.Value, name, scope, ctx.KW_CONST() != null, asize);
