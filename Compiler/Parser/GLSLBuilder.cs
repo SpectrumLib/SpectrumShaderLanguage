@@ -18,12 +18,14 @@ namespace SSLang
 		};
 
 		#region Fields
-		// Contains the variable listings for the uniforms and locals
-		private readonly StringBuilder _varSource;
+		// Contains the variable listings for the uniforms
+		private readonly StringBuilder _uniSource;
 		// Contains the variable listings for the vertex inputs
 		private readonly StringBuilder _attrSource;
 		// Contains the variable listings for the fragment outptus
 		private readonly StringBuilder _outputSource;
+		// Contains the variable listings for the locals
+		private readonly Dictionary<ShaderStages, StringBuilder> _localSources;
 		// Contains the function output for general functions and stages
 		private readonly Dictionary<ShaderStages, StringBuilder> _funcSources;
 
@@ -40,28 +42,36 @@ namespace SSLang
 
 		public GLSLBuilder()
 		{
-			_varSource = new StringBuilder(1024);
+			_uniSource = new StringBuilder(1024);
 			_attrSource = new StringBuilder(512);
 			_outputSource = new StringBuilder(512);
 			_funcSources = new Dictionary<ShaderStages, StringBuilder>() {
 				{ ShaderStages.None, new StringBuilder(2048) }, { ShaderStages.Vertex, new StringBuilder(2048) }, { ShaderStages.TessControl, new StringBuilder(2048) },
 				{ ShaderStages.TessEval, new StringBuilder(2048) }, { ShaderStages.Geometry, new StringBuilder(2048) }, { ShaderStages.Fragment, new StringBuilder(2048) }
 			};
+			_localSources = new Dictionary<ShaderStages, StringBuilder>() {
+				{ ShaderStages.None, new StringBuilder(512) }, { ShaderStages.Vertex, new StringBuilder(512) }, { ShaderStages.TessControl, new StringBuilder(512) },
+				{ ShaderStages.TessEval, new StringBuilder(512) }, { ShaderStages.Geometry, new StringBuilder(512) }, { ShaderStages.Fragment, new StringBuilder(512) }
+			};
 
 			// Initial generated glsl
-			_varSource.AppendLine(GENERATED_COMMENT);
-			_varSource.AppendLine(VERSION_STRING);
+			_uniSource.AppendLine(GENERATED_COMMENT);
+			_uniSource.AppendLine(VERSION_STRING);
 			foreach (var ext in EXTENSIONS)
-				_varSource.AppendLine($"#extension {ext} : require");
-			_varSource.AppendLine();
+				_uniSource.AppendLine($"#extension {ext} : require");
+			_uniSource.AppendLine();
 			_attrSource.AppendLine("// Vertex attributes");
 			_outputSource.AppendLine("// Fragment stage outputs");
+			foreach (var sb in _localSources.Values)
+				sb.AppendLine("// Internal values");
+			foreach (var sb in _funcSources.Values)
+				sb.AppendLine();
 		}
 
-		public void EmitBlankLineVar() => _varSource.AppendLine();
+		public void EmitBlankLineVar() => _uniSource.AppendLine();
 		public void EmitBlankLineFunc() => _funcSource.AppendLine();
 
-		public void EmitCommentVar(string cmt) => _varSource.AppendLine("// " + cmt);
+		public void EmitCommentVar(string cmt) => _uniSource.AppendLine("// " + cmt);
 		public void EmitCommentFunc(string cmt) => _funcSource.AppendLine($"{_indent}// " + cmt);
 
 		public void PushIndent() => _indent += "\t";
@@ -86,31 +96,33 @@ namespace SSLang
 			}
 			else if (vrbl.Type.IsImageType())
 			{
-				_varSource.AppendLine($"// Uniform binding {loc}");
-				_varSource.AppendLine($"layout(set = 0, binding = {loc}, {vrbl.ImageFormat.Value.ToGLSLKeyword()}) coherent uniform {vrbl.GetGLSLDecl()};");
+				_uniSource.AppendLine($"// Uniform binding {loc}");
+				_uniSource.AppendLine($"layout(set = 0, binding = {loc}, {vrbl.ImageFormat.Value.ToGLSLKeyword()}) coherent uniform {vrbl.GetGLSLDecl()};");
 			}
 			else
 			{
-				_varSource.AppendLine($"// Uniform binding {loc}");
-				_varSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl()};");
+				_uniSource.AppendLine($"// Uniform binding {loc}");
+				_uniSource.AppendLine($"layout(set = 0, binding = {loc}) uniform {vrbl.GetGLSLDecl()};");
 			}
 		}
 
 		public void EmitUniformBlockHeader(string name, uint loc)
 		{
-			_varSource.AppendLine($"// Uniform binding {loc}");
-			_varSource.AppendLine($"layout(scalar, set = 0, binding = {loc}) uniform {name} {{");
+			_uniSource.AppendLine($"// Uniform binding {loc}");
+			_uniSource.AppendLine($"layout(scalar, set = 0, binding = {loc}) uniform {name} {{");
 		}
 
 		public void EmitUniformBlockMember(Variable vrbl, uint offset) =>
-			_varSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl()};");
+			_uniSource.AppendLine($"\tlayout(offset = {offset}) {vrbl.GetGLSLDecl()};");
 
-		public void EmitUniformBlockClose() => _varSource.AppendLine("};");
+		public void EmitUniformBlockClose() => _uniSource.AppendLine("};");
 
 		public void EmitInternal(Variable vrbl, uint loc, ShaderStages stage)
 		{
 			var access = (vrbl.ReadStages.HasFlag(stage) ? "in" : "") + (vrbl.WriteStages.HasFlag(stage) ? "out" : "");
-			_varSource.AppendLine($"layout(location = {loc}) {access} {vrbl.GetGLSLDecl(stage)};");
+			var ct = vrbl.Type.GetComponentType();
+			var interp = (ct == ShaderType.Int || ct == ShaderType.UInt) ? "flat" : "";
+			_localSources[stage].AppendLine($"layout(location = {loc}) {access} {interp} {vrbl.GetGLSLDecl(stage)};");
 		}
 		#endregion // Variables
 
@@ -187,25 +199,33 @@ namespace SSLang
 		{
 			switch (stage)
 			{
-				case ShaderStages.All: return 
-					_varSource.ToString()
+				case ShaderStages.All: return
+					"// NOTE THAT THIS FILE WILL NOT COMPILE, AS IT IS NOT VALID GLSL\n"
+					+ _uniSource.ToString()
 					+ _attrSource.ToString()
 					+ _outputSource.ToString()
 					+ _funcSources[ShaderStages.None].ToString()
+					+ _localSources[ShaderStages.Vertex].ToString()
 					+ _funcSources[ShaderStages.Vertex].ToString()
+					+ _localSources[ShaderStages.TessControl].ToString()
 					+ _funcSources[ShaderStages.TessControl].ToString()
+					+ _localSources[ShaderStages.TessEval].ToString()
 					+ _funcSources[ShaderStages.TessEval].ToString()
+					+ _localSources[ShaderStages.Geometry].ToString()
 					+ _funcSources[ShaderStages.Geometry].ToString()
+					+ _localSources[ShaderStages.Fragment].ToString()
 					+ _funcSources[ShaderStages.Fragment].ToString();
 				case ShaderStages.Vertex: return
-					_varSource.ToString()
+					_uniSource.ToString()
 					+ _attrSource.ToString() + "\n"
 					+ _funcSources[ShaderStages.None].ToString()
+					+ _localSources[ShaderStages.Vertex].ToString()
 					+ _funcSources[ShaderStages.Vertex].ToString();
 				case ShaderStages.Fragment: return
-					_varSource.ToString()
+					_uniSource.ToString()
 					+ _outputSource.ToString() + "\n"
 					+ _funcSources[ShaderStages.None].ToString()
+					+ _localSources[ShaderStages.Fragment].ToString()
 					+ _funcSources[ShaderStages.Fragment].ToString();
 				default:
 					return "";
