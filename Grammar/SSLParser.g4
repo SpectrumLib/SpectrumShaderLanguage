@@ -47,8 +47,7 @@ uniformQualifier
     | INTEGER_LITERAL
     ;
 imageLayoutQualifier
-    : IFQ_RGBA_F | IFQ_RGBA_I | IFQ_RGBA_U | IFQ_RG_F | IFQ_RG_I | IFQ_RG_U | IFQ_R_F 
-    | IFQ_R_I | IFQ_R_U 
+    : IFQ_F4 | IFQ_I4 | IFQ_U4 | IFQ_F2 | IFQ_I2 | IFQ_U2 | IFQ_F1 | IFQ_I1 | IFQ_U1
     ;
 
 // Vertex shader input (attributes)

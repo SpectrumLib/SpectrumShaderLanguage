@@ -19,7 +19,7 @@ namespace SSLang
 		}
 
 		public static ImageFormat? TranslateImageFormat(SSLParser.ImageLayoutQualifierContext ctx) =>
-			(ImageFormat)(ctx.Start.Type - SSLParser.IFQ_RGBA_F);
+			(ImageFormat)(ctx.Start.Type - SSLParser.IFQ_F4);
 
 		public static bool IsSwizzleValid(ShaderType type, char swizzle)
 		{

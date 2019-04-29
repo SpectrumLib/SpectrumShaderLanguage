@@ -10,39 +10,39 @@ namespace SSLang.Reflection
 		/// <summary>
 		/// The texels are 4-channel (RGBA) 32-bit floats (<see cref="ShaderType.Float4"/>).
 		/// </summary>
-		RGBA_F = 0,
+		F4 = 0,
 		/// <summary>
 		/// The texels are 4-channel (RGBA) 32-bit signed integers (<see cref="ShaderType.Int4"/>).
 		/// </summary>
-		RGBA_I = 1,
+		I4 = 1,
 		/// <summary>
 		/// The texels are 4-channel (RGBA) 32-bit unsigned integers (<see cref="ShaderType.UInt4"/>).
 		/// </summary>
-		RGBA_U = 2,
+		U4 = 2,
 		/// <summary>
 		/// The texels are 2-channel (RG) 32-bit floats (<see cref="ShaderType.Float2"/>).
 		/// </summary>
-		RG_F = 3,
+		F2 = 3,
 		/// <summary>
 		/// The texels are 2-channel (RG) 32-bit signed integers (<see cref="ShaderType.Int2"/>).
 		/// </summary>
-		RG_I = 4,
+		I2 = 4,
 		/// <summary>
 		/// The texels are 2-channel (RG) 32-bit unsigned integers (<see cref="ShaderType.UInt2"/>).
 		/// </summary>
-		RG_U = 5,
+		U2 = 5,
 		/// <summary>
 		/// The texels are 1-channel (R) 32-bit floats (<see cref="ShaderType.Float"/>).
 		/// </summary>
-		R_F = 6,
+		F1 = 6,
 		/// <summary>
 		/// The texels are 1-channel (R) 32-bit signed integers (<see cref="ShaderType.Int"/>).
 		/// </summary>
-		R_I = 7,
+		I1 = 7,
 		/// <summary>
 		/// The texels are 1-channel (R) 32-bit unsigned integers (<see cref="ShaderType.UInt"/>).
 		/// </summary>
-		R_U = 8
+		U1 = 8
 	}
 
 	/// <summary>
@@ -52,7 +52,7 @@ namespace SSLang.Reflection
 	{
 		// This must be kept in the same order as the enums, as it depends on direct casting to access
 		internal static readonly string[] SSL_KEYWORDS = {
-			"rgba_f", "rgba_i", "rgba_u", "rg_f", "rg_i", "rg_u", "r_f", "r_i", "r_u"
+			"f4", "i4", "u4", "f2", "i2", "u2", "f1", "i1", "u1"
 		};
 		// This must be kept in the same order as the enums, as it depends on direct casting to access
 		internal static readonly string[] GLSL_KEYWORDS = {
@@ -72,9 +72,9 @@ namespace SSLang.Reflection
 		/// <returns>The format channel count.</returns>
 		public static uint GetChannelCount(this ImageFormat fmt)
 		{
-			if (fmt <= ImageFormat.RGBA_U) return 4;
-			if (fmt <= ImageFormat.RG_U) return 2;
-			if (fmt <= ImageFormat.R_U) return 1;
+			if (fmt <= ImageFormat.U4) return 4;
+			if (fmt <= ImageFormat.U2) return 2;
+			if (fmt <= ImageFormat.U1) return 1;
 			return 0;
 		}
 
