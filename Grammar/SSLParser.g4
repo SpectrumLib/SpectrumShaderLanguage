@@ -101,7 +101,7 @@ statement
 
 // Declaring new variables
 variableDeclaration
-    : type Name=IDENTIFIER arrayIndexer?
+    : 'flat'? type Name=IDENTIFIER arrayIndexer?
     ;
 variableDefinition
     : 'const'? type Name=IDENTIFIER arrayIndexer? '=' (expression|arrayLiteral)

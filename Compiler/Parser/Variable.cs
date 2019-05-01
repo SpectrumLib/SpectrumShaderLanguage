@@ -28,6 +28,8 @@ namespace SSLang
 		public ShaderStages WriteStages { get; internal set; } = ShaderStages.None;
 		public readonly ImageFormat? ImageFormat;
 		public readonly uint? SubpassIndex;
+		// Used internally to track if the variable has flat interpolation (internals only)
+		public readonly bool IsFlat;
 		// Used internally to throw an error for attempting to read write-only built-in variables or 'out' function parameters
 		public readonly bool CanRead;
 
@@ -42,7 +44,7 @@ namespace SSLang
 		public bool IsGlobal => (Scope != VariableScope.Local) && (Scope != VariableScope.Argument);
 		#endregion // Fields
 
-		public Variable(ShaderType type, string name, VariableScope scope, bool @const, uint? asize, bool cr = true, ImageFormat? ifmt = null, uint? si = null)
+		public Variable(ShaderType type, string name, VariableScope scope, bool @const, uint? asize, bool cr = true, ImageFormat? ifmt = null, uint? si = null, bool flat = false)
 		{
 			Type = type;
 			Name = name;
@@ -53,6 +55,7 @@ namespace SSLang
 			CanRead = cr;
 			ImageFormat = ifmt;
 			SubpassIndex = si;
+			IsFlat = flat;
 		}
 
 		public string GetGLSLDecl(ShaderStages? stage = null) =>
@@ -73,6 +76,9 @@ namespace SSLang
 			if (name.Length > 32)
 				vis.Error(ctx, "Variable names cannot be longer than 32 characters.");
 
+			if (ctx.KW_FLAT() != null && scope != VariableScope.Internal)
+				vis.Error(ctx, "'flat' qualifier is only valid for internals.");
+
 			var type = ReflectionUtils.TranslateTypeContext(ctx.type());
 			if (!type.HasValue)
 				vis.Error(ctx, $"Unable to convert variable '{name}' to internal type.");
@@ -91,7 +97,7 @@ namespace SSLang
 				asize = (uint)aidx.Index1.GetIntegerLiteral().Value;
 			}
 
-			return new Variable(type.Value, name, scope, false, asize);
+			return new Variable(type.Value, name, scope, false, asize, flat: (ctx.KW_FLAT() != null));
 		}
 
 		internal static Variable FromContext(SSLParser.VariableDefinitionContext ctx, SSLVisitor vis, VariableScope scope)

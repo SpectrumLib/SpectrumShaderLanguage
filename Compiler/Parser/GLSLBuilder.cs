@@ -121,7 +121,7 @@ namespace SSLang
 		{
 			var access = (vrbl.ReadStages.HasFlag(stage) ? "in" : "") + (vrbl.WriteStages.HasFlag(stage) ? "out" : "");
 			var ct = vrbl.Type.GetComponentType();
-			var interp = (ct == ShaderType.Int || ct == ShaderType.UInt) ? "flat" : "";
+			var interp = (vrbl.IsFlat || ct == ShaderType.Int || ct == ShaderType.UInt) ? "flat" : "";
 			_localSources[stage].AppendLine($"layout(location = {loc}) {access} {interp} {vrbl.GetGLSLDecl(stage)};");
 		}
 		#endregion // Variables

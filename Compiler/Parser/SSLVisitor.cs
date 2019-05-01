@@ -223,7 +223,6 @@ namespace SSLang
 				Info.Attributes.Max(v => v.Location + v.Type.GetSlotCount(v.ArraySize)),
 				(uint)Info.Outputs.Count
 			);
-			GLSL.EmitCommentVar("Internal variables");
 			foreach (var i in ScopeManager.Internals.Values)
 			{
 				bool any = false;
@@ -239,7 +238,6 @@ namespace SSLang
 				if (any)
 					intOff += i.Type.GetSlotCount(i.ArraySize);
 			}
-			GLSL.EmitBlankLineVar();
 
 			return null;
 		}
@@ -313,6 +311,8 @@ namespace SSLang
 				Error(ctx, $"The fragment output '{vname}' can only be accessed in the fragment shader stage.");
 			if (vrbl.Type.IsSubpassInput() && _currStage != ShaderStages.Fragment)
 				Error(ctx, $"The subpass input '{vname}' can only be accessed in the fragment shader stage.");
+			if (vrbl.IsInternal && _currStage == ShaderStages.None)
+				Error(ctx, $"The internal '{vname}' cannot be accessed outside of a stage function.");
 
 			if (read)
 				vrbl.ReadStages |= _currStage;
