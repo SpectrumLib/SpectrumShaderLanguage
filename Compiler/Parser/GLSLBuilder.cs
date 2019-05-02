@@ -124,6 +124,13 @@ namespace SSLang
 			var interp = (vrbl.IsFlat || ct == ShaderType.Int || ct == ShaderType.UInt) ? "flat" : "";
 			_localSources[stage].AppendLine($"layout(location = {loc}) {access} {interp} {vrbl.GetGLSLDecl(stage)};");
 		}
+
+		public void EmitConstant(Variable vrbl, ExprResult expr)
+		{
+			var layout = vrbl.IsSpecialized ? $"layout(constant_id = {vrbl.ConstantIndex}) " : "";
+			_uniSource.AppendLine($"{layout}const {vrbl.Type.ToGLSLKeyword()} {vrbl.Name} = {expr.RefText};");
+			_uniSource.AppendLine();
+		}
 		#endregion // Variables
 
 		#region Functions

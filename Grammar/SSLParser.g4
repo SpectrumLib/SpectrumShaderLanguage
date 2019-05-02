@@ -25,6 +25,7 @@ topLevelStatement
     | attributesStatement
     | outputsStatement
     | internalsStatement
+    | constantStatement
     | stageFunction
     | standardFunction
     ;
@@ -69,6 +70,15 @@ internalsStatement
 stageFunction
     : '@vert' block     #vertFunction
     | '@frag' block     #fragFunction
+    ;
+
+// Global and Specialization constants
+constantStatement
+    : 'const' ('(' SpecIndex=INTEGER_LITERAL ')')? type Name=IDENTIFIER '=' constantValue ';'
+    ;
+constantValue
+    : Value=valueLiteral
+    | type '(' valueLiteral (',' valueLiteral)* ')'
     ;
 
 // Standard function (non-stage function)

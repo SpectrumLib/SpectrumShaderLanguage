@@ -460,6 +460,34 @@ namespace SSLang
 			return null;
 		}
 
+		public override ExprResult VisitConstantStatement([NotNull] SSLParser.ConstantStatementContext context)
+		{
+			var vrbl = ScopeManager.AddConstant(context, this);
+			var expr = Visit(context.constantValue());
+			if (!expr.Type.CanPromoteTo(vrbl.Type))
+				Error(context, $"The value '{expr.Type}' cannot be promoted to type '{expr.Type}'.");
+			GLSL.EmitConstant(vrbl, expr);
+			return null;
+		}
+
+		public override ExprResult VisitConstantValue([NotNull] SSLParser.ConstantValueContext context)
+		{
+			if (context.type() != null)
+			{
+				var ntype = ReflectionUtils.TranslateTypeContext(context.type());
+				if (!ntype.HasValue)
+					Error(context, $"Did not understand the type '{context.Start.Text}' in type construction.");
+
+				var args = context.valueLiteral().Select(e => Visit(e)).ToList();
+				if (!FunctionCallUtils.CanConstructType(ntype.Value, args, out var error))
+					Error(context, error);
+
+				return new ExprResult(ntype.Value, 0, $"{context.type().Start.Text}( {String.Join(", ", args.Select(a => a.RefText))} )");
+			}
+			else
+				return Visit(context.Value);
+		}
+
 		public override ExprResult VisitStandardFunction([NotNull] SSLParser.StandardFunctionContext context)
 		{
 			var func = ScopeManager.AddFunction(context, this);
@@ -1142,20 +1170,23 @@ namespace SSLang
 
 		public override ExprResult VisitLiteralAtom([NotNull] SSLParser.LiteralAtomContext context)
 		{
-			var vl = context.valueLiteral();
-			if (vl.BOOLEAN_LITERAL() != null)
-				return new ExprResult(ShaderType.Bool, null, vl.BOOLEAN_LITERAL().Symbol.Text);
-			if (vl.FLOAT_LITERAL() != null)
-				return new ExprResult(ShaderType.Float, null, vl.FLOAT_LITERAL().Symbol.Text, true);
-			if (vl.INTEGER_LITERAL() != null)
+			return Visit(context.valueLiteral());
+		}
+
+		public override ExprResult VisitValueLiteral([NotNull] SSLParser.ValueLiteralContext context)
+		{
+			if (context.BOOLEAN_LITERAL() != null)
+				return new ExprResult(ShaderType.Bool, null, context.BOOLEAN_LITERAL().Symbol.Text);
+			else if (context.FLOAT_LITERAL() != null)
+				return new ExprResult(ShaderType.Float, null, context.FLOAT_LITERAL().Symbol.Text, true);
+			else
 			{
-				var ltxt = vl.INTEGER_LITERAL().Symbol.Text;
+				var ltxt = context.INTEGER_LITERAL().Symbol.Text;
 				var val = ParseIntegerLiteral(ltxt, out bool isus, out var error);
 				if (!val.HasValue)
-					Error(vl.INTEGER_LITERAL().Symbol, error);
+					Error(context.INTEGER_LITERAL().Symbol, error);
 				return new ExprResult(isus ? ShaderType.UInt : ShaderType.Int, null, val.Value.ToString(), true);
 			}
-			return null; // Never reached
 		}
 
 		public override ExprResult VisitVariableAtom([NotNull] SSLParser.VariableAtomContext context)

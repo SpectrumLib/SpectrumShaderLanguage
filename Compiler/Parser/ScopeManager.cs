@@ -23,6 +23,9 @@ namespace SSLang
 		private readonly Dictionary<string, Variable> _internals;
 		public IReadOnlyDictionary<string, Variable> Internals => _internals;
 
+		private readonly Dictionary<string, Variable> _constants;
+		public IReadOnlyDictionary<string, Variable> Constants => _constants;
+
 		private readonly Dictionary<string, StandardFunction> _functions;
 		public IReadOnlyDictionary<string, StandardFunction> Functions => _functions;
 
@@ -39,6 +42,7 @@ namespace SSLang
 			_outputs = new Dictionary<string, Variable>();
 			_uniforms = new Dictionary<string, Variable>();
 			_internals = new Dictionary<string, Variable>();
+			_constants = new Dictionary<string, Variable>();
 			_functions = new Dictionary<string, StandardFunction>();
 			_scopes = new Stack<Scope>();
 		}
@@ -48,7 +52,8 @@ namespace SSLang
 			_attributes.ContainsKey(name) ? _attributes[name] :
 			_outputs.ContainsKey(name) ? _outputs[name] :
 			_uniforms.ContainsKey(name) ? _uniforms[name] :
-			_internals.ContainsKey(name) ? _internals[name] : null;
+			_internals.ContainsKey(name) ? _internals[name] :
+			_constants.ContainsKey(name) ? _constants[name] : null;
 
 		// Attempts to get a standard function
 		public StandardFunction FindFunction(string name) => _functions.ContainsKey(name) ? _functions[name] : null;
@@ -142,6 +147,18 @@ namespace SSLang
 				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
 
 			_internals.Add(v.Name, v);
+			return v;
+		}
+
+		public Variable AddConstant(SSLParser.ConstantStatementContext ctx, SSLVisitor vis)
+		{
+			var v = Variable.FromConstant(ctx, vis);
+
+			var pre = FindGlobal(v.Name);
+			if (pre != null)
+				vis.Error(ctx, $"A variable with the name '{v.Name}' already exists in the global {v.Scope} context.");
+
+			_constants.Add(v.Name, v);
 			return v;
 		}
 

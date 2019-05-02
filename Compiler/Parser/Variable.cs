@@ -28,6 +28,7 @@ namespace SSLang
 		public ShaderStages WriteStages { get; internal set; } = ShaderStages.None;
 		public readonly ImageFormat? ImageFormat;
 		public readonly uint? SubpassIndex;
+		public readonly uint? ConstantIndex;
 		// Used internally to track if the variable has flat interpolation (internals only)
 		public readonly bool IsFlat;
 		// Used internally to throw an error for attempting to read write-only built-in variables or 'out' function parameters
@@ -38,24 +39,27 @@ namespace SSLang
 		public bool IsAttribute => (Scope == VariableScope.Attribute);
 		public bool IsFragmentOutput => (Scope == VariableScope.FragmentOutput);
 		public bool IsInternal => (Scope == VariableScope.Internal);
+		public bool IsConstant => (Scope == VariableScope.Constant);
+		public bool IsSpecialized => (Scope == VariableScope.Constant) && ConstantIndex.HasValue;
 		public bool IsBuiltin => (Scope == VariableScope.Builtin);
 		public bool IsArgument => (Scope == VariableScope.Argument);
 		public bool IsLocal => (Scope == VariableScope.Local);
 		public bool IsGlobal => (Scope != VariableScope.Local) && (Scope != VariableScope.Argument);
 		#endregion // Fields
 
-		public Variable(ShaderType type, string name, VariableScope scope, bool @const, uint? asize, bool cr = true, ImageFormat? ifmt = null, uint? si = null, bool flat = false)
+		public Variable(ShaderType type, string name, VariableScope scope, bool @const, uint? asize, bool cr = true, ImageFormat? ifmt = null, uint? si = null, bool flat = false, uint? cidx = null)
 		{
 			Type = type;
 			Name = name;
 			Scope = scope;
-			Constant = (Scope == VariableScope.Uniform) || (Scope == VariableScope.Attribute) || @const;
+			Constant = (Scope == VariableScope.Uniform) || (Scope == VariableScope.Attribute) || (Scope == VariableScope.Constant) || @const;
 			ArraySize = Math.Max(asize.GetValueOrDefault(1), 1);
 			IsArray = asize.HasValue && asize.Value != 0;
 			CanRead = cr;
 			ImageFormat = ifmt;
 			SubpassIndex = si;
 			IsFlat = flat;
+			ConstantIndex = cidx;
 		}
 
 		public string GetGLSLDecl(ShaderStages? stage = null) =>
@@ -168,24 +172,56 @@ namespace SSLang
 
 			return new Variable(type.Value, name, VariableScope.Uniform, false, null, ifmt: ifmt, si: si);
 		}
+
+		internal static Variable FromConstant(SSLParser.ConstantStatementContext ctx, SSLVisitor vis)
+		{
+			var name = ctx.Name.Text;
+			if (name[0] == '$')
+				vis.Error(ctx, "Cannot start a variable with the character '$', this is reserved for built-in variables.");
+			if (name.Length > 32)
+				vis.Error(ctx, "Variable names cannot be longer than 32 characters.");
+
+			uint? cidx = null;
+			if (ctx.SpecIndex != null)
+			{
+				var ival = SSLVisitor.ParseIntegerLiteral(ctx.SpecIndex.Text, out var isus, out var perror);
+				if (!ival.HasValue)
+					vis.Error(ctx, "Could not parse integer literal.");
+				if (ival.Value < 0)
+					vis.Error(ctx, "Specialization constant index cannot be less than 0.");
+				cidx = (uint)ival.Value;
+			}
+
+			var type = ReflectionUtils.TranslateTypeContext(ctx.type());
+			if (!type.HasValue)
+				vis.Error(ctx, $"Unable to convert constant '{name}' to internal type.");
+			if (type == ShaderType.Void)
+				vis.Error(ctx, $"The variable '{name}' cannot be of type 'void'.");
+			if (!type.Value.IsValueType())
+				vis.Error(ctx, "Globals constants must be a value type.");
+
+			return new Variable(type.Value, name, VariableScope.Constant, true, null, cidx: cidx);
+		}
 	}
 
 	// Represents the different scopes that variable objects can occur in in a shader program.
 	internal enum VariableScope : byte
 	{
-		// The variable appears in the global scope as a uniform value.
+		// Uniform value
 		Uniform,
-		// The variable appears in the global scope as an input vertex attribute (only visible inside of vertex stage).
+		// Input vertex attribute (only visible inside of vertex stage)
 		Attribute,
-		// The variable appears in the global scope as an output from the fragment stage.
+		// Output from the fragment stage
 		FragmentOutput,
-		// The variable appears in the global scope as a value passed internally between stages.
+		// A value passed internally between stages
 		Internal,
-		// The variable appears in the global scope as one of the reserved built-in variables.
+		// One of the reserved built-in variables
 		Builtin,
-		// The variable appears locally within a function as an argument to that function.
+		// An argument to that function
 		Argument,
-		// The variable appears locally within a function as a variable within the function body.
-		Local
+		// Within a function as a variable within the function body
+		Local,
+		// The global constants and specialization constants
+		Constant
 	}
 }
