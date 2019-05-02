@@ -99,6 +99,8 @@ namespace SSLang
 				if (!aidx.Index1.GetIntegerLiteral().HasValue) // Must be a literal (OR A SPEC CONSTANT TODO)
 					vis.Error(ctx.arrayIndexer(), "Must use integer literals when declaring arrays.");
 				asize = (uint)aidx.Index1.GetIntegerLiteral().Value;
+				if (asize.Value > 255)
+					vis.Error(ctx.arrayIndexer(), "Cannot declare arrays larger than 255.");
 			}
 
 			return new Variable(type.Value, name, scope, false, asize, flat: (ctx.KW_FLAT() != null));
@@ -128,6 +130,8 @@ namespace SSLang
 				if (!aidx.Index1.GetIntegerLiteral().HasValue) // Must be a literal (OR A SPEC CONSTANT TODO)
 					vis.Error(ctx.arrayIndexer(), "Must use integer literals when declaring arrays.");
 				asize = (uint)aidx.Index1.GetIntegerLiteral().Value;
+				if (asize.Value > 255)
+					vis.Error(ctx.arrayIndexer(), "Cannot declare arrays larger than 255.");
 			}
 
 			return new Variable(type.Value, name, scope, ctx.KW_CONST() != null, asize);
@@ -162,6 +166,10 @@ namespace SSLang
 				var pv = SSLVisitor.ParseIntegerLiteral(ctx.Qualifier.INTEGER_LITERAL().GetText(), out var isus, out var error);
 				if (!pv.HasValue)
 					vis.Error(ctx, error);
+				if (pv.Value < 0)
+					vis.Error(ctx, "Subpass input index cannot be less than 0.");
+				if (pv.Value > 255)
+					vis.Error(ctx, "Subpass input index cannot be greater than 255.");
 				si = (uint)pv.Value;
 			}
 			else
@@ -189,6 +197,8 @@ namespace SSLang
 					vis.Error(ctx, "Could not parse integer literal.");
 				if (ival.Value < 0)
 					vis.Error(ctx, "Specialization constant index cannot be less than 0.");
+				if (ival.Value > 255)
+					vis.Error(ctx, "Specialization constant index cannot be greater than 255.");
 				cidx = (uint)ival.Value;
 			}
 

@@ -73,6 +73,20 @@ namespace SSLang.Reflection
 				info._outputs.Add(new FragmentOutput(oname, type, i));
 			}
 
+			// Load the specialization constants
+			var scount = reader.ReadByte();
+			while (scount > 0)
+			{
+				var slen = reader.ReadByte();
+				var aname = Encoding.ASCII.GetString(reader.ReadBytes(slen));
+				var type = (ShaderType)reader.ReadByte();
+				var idx = reader.ReadByte();
+
+				info._specializations.Add(new SpecConstant(aname, type, idx));
+
+				--scount;
+			}
+
 			// Return
 			info.Sort();
 			return info;

@@ -40,6 +40,12 @@ namespace SSLang.Reflection
 		public IReadOnlyList<FragmentOutput> Outputs => _outputs;
 		internal readonly List<FragmentOutput> _outputs;
 
+		/// <summary>
+		/// The specialization constants in the shader program.
+		/// </summary>
+		public IReadOnlyList<SpecConstant> Specializations => _specializations;
+		internal readonly List<SpecConstant> _specializations;
+
 		// Cached value for contiguous uniforms
 		private bool? _contiguousCache = null;
 		#endregion // Fields
@@ -51,6 +57,7 @@ namespace SSLang.Reflection
 			_blocks = new List<UniformBlock>();
 			_attributes = new List<VertexAttribute>();
 			_outputs = new List<FragmentOutput>();
+			_specializations = new List<SpecConstant>();
 		}
 		
 		/// <summary>
@@ -63,6 +70,7 @@ namespace SSLang.Reflection
 			_blocks.Sort((b1, b2) => b1.Location.CompareTo(b2.Location));
 			_attributes.Sort((a1, a2) => a1.Location.CompareTo(a2.Location));
 			_outputs.Sort((o1, o2) => o1.Index.CompareTo(o2.Index));
+			_specializations.Sort((s1, s2) => s1.Index.CompareTo(s2.Index));
 		}
 
 		/// <summary>

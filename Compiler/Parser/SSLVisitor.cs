@@ -465,7 +465,9 @@ namespace SSLang
 			var vrbl = ScopeManager.AddConstant(context, this);
 			var expr = Visit(context.constantValue());
 			if (!expr.Type.CanPromoteTo(vrbl.Type))
-				Error(context, $"The value '{expr.Type}' cannot be promoted to type '{expr.Type}'.");
+				Error(context, $"The value '{expr.Type}' cannot be cast to type '{expr.Type}'.");
+			if (vrbl.IsSpecialized)
+				Info._specializations.Add(new SpecConstant(vrbl.Name, vrbl.Type, vrbl.ConstantIndex.Value));
 			GLSL.EmitConstant(vrbl, expr);
 			return null;
 		}

@@ -77,6 +77,15 @@ namespace SSLang.Reflection
 			}
 			sb.AppendLine();
 
+			// Write the spec constants
+			sb.AppendLine("Specialization Constants");
+			sb.AppendLine("------------------------");
+			foreach (var spec in info.Specializations)
+			{
+				sb.AppendLine($"{spec.Name,-20} {spec.Type,-20} Idx={spec.Index,-3}");
+			}
+			sb.AppendLine();
+
 			// Write the file
 			try
 			{
@@ -144,6 +153,16 @@ namespace SSLang.Reflection
 					writer.Write((byte)output.Name.Length);
 					writer.Write(Encoding.ASCII.GetBytes(output.Name));
 					writer.Write((byte)output.Type);
+				}
+
+				// Write the specialization constants
+				writer.Write((byte)info.Specializations.Count);
+				foreach (var spec in info.Specializations)
+				{
+					writer.Write((byte)spec.Name.Length);
+					writer.Write(Encoding.ASCII.GetBytes(spec.Name));
+					writer.Write((byte)spec.Type);
+					writer.Write((byte)spec.Index);
 				}
 
 				// Write the file
