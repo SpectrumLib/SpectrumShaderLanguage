@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using Antlr4.Runtime;
 using SSLang.Generated;
 using SSLang.Reflection;
@@ -13,6 +14,11 @@ namespace SSLang
 	/// </summary>
 	public sealed class SSLCompiler : IDisposable
 	{
+		/// <summary>
+		/// The version of the compiler library currently being used.
+		/// </summary>
+		public static readonly Version TOOL_VERSION;
+
 		#region Fields
 		/// <summary>
 		/// The SSL source code that will be compiled.
@@ -112,7 +118,18 @@ namespace SSLang
 			lexer.AddErrorListener(err);
 			parser.AddErrorListener(err);
 
+			// Check for the version statement first
+			var versionCtx = parser.versionMetaStatement();
+			if (err.Error != null)
+			{
+				error = err.Error;
+				return false;
+			}
+			if (versionCtx != null && !checkVersion(versionCtx, out error))
+				return false;
+
 			// Perform the parsing, and report the error if there is one
+			parser.Reset();
 			var fileCtx = parser.file();
 			if (err.Error != null)
 			{
@@ -145,6 +162,33 @@ namespace SSLang
 			if (options.Compile && !compile(options, visitor, out error))
 				return false;
 
+			return true;
+		}
+
+		private bool checkVersion(SSLParser.VersionMetaStatementContext ctx, out CompileError err)
+		{
+			var vstr = ctx.Version.Text.Split('.');
+			uint maj = 0, min = 0, bld = 0;
+			if (!UInt32.TryParse(vstr[0], out maj) || !UInt32.TryParse(vstr[1], out min) || !UInt32.TryParse(vstr[2], out bld))
+			{
+				err = new CompileError(ErrorSource.Parser, (uint)ctx.Start.Line, (uint)ctx.Start.StartIndex, $"Unable to parse version statement '{ctx.Version.Text}'.");
+				return false;
+			}
+			if (maj > 255 || min > 255 || bld > 255)
+			{
+				err = new CompileError(ErrorSource.Parser, (uint)ctx.Start.Line, (uint)ctx.Start.StartIndex, $"Version integer components must be <= 255 ({ctx.Version.Text})'.");
+				return false;
+			}
+			var version = new Version((int)maj, (int)min, (int)bld);
+
+			if (version > TOOL_VERSION)
+			{
+				err = new CompileError(ErrorSource.Parser, (uint)ctx.Start.Line, (uint)ctx.Start.StartIndex,
+					$"Version mismatch - requires version '{version}', but highest available is version '{TOOL_VERSION.Major}.{TOOL_VERSION.Minor}.{TOOL_VERSION.Build}'.");
+				return false;
+			}
+
+			err = null;
 			return true;
 		}
 
@@ -306,5 +350,10 @@ namespace SSLang
 			_isDisposed = true;
 		}
 		#endregion // IDisposable
+
+		static SSLCompiler()
+		{
+			TOOL_VERSION = Assembly.GetExecutingAssembly().GetName().Version;
+		}
 	}
 }

@@ -160,7 +160,7 @@ namespace SSLang
 		public override ExprResult VisitFile([NotNull] SSLParser.FileContext context)
 		{
 			// Visit the meta statement first
-			var meta = context.shaderMetaStatement();
+			var meta = context.versionMetaStatement();
 			if (meta != null)
 				Visit(meta);
 
@@ -322,8 +322,11 @@ namespace SSLang
 		}
 
 		#region Top-Level
-		public override ExprResult VisitShaderMetaStatement([NotNull] SSLParser.ShaderMetaStatementContext context)
+		public override ExprResult VisitVersionMetaStatement([NotNull] SSLParser.VersionMetaStatementContext context)
 		{
+			// If there is a version statement, we know that it is already valid, as it was parsed before the rest of the file
+			var version = new Version(context.Version.Text);
+
 			return null;
 		}
 

@@ -37,6 +37,7 @@ KW_OUTPUTS          : 'outputs' ;
 KW_RETURN           : 'return' ;
 KW_SHADER           : 'shader' ;
 KW_UNIFORM          : 'uniform' ;
+KW_VERSION          : 'version' ;
 KW_WHILE            : 'while' ;
 
 // Shader stage function keywords
@@ -168,6 +169,9 @@ INTEGER_LITERAL
     ;
 FLOAT_LITERAL
     : '-'? DigitChar* '.' DigitChar+ ExponentPart?
+    ;
+VERSION_LITERAL
+    : DigitChar+ '.' DigitChar+ '.' DigitChar+
     ;
 fragment DecimalLiteral     : DigitChar+ ;
 fragment HexLiteral         : '0x' HexDigitChar+ ;

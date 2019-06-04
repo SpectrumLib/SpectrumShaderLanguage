@@ -42,6 +42,8 @@ namespace SSLang
 			// TODO: Cause problems to see what errors come out, and fill this out with more intelligent error messages as we go
 			if (ridx == SSLParser.RULE_file)
 				errMsg = $"Unexpected input '{badText}' at top level; expected type block, uniform, or function.";
+			else if (ridx == SSLParser.RULE_versionMetaStatement)
+				errMsg = $"Invalid shader version statement, ensure it is of the format 'version x.y.z;', where x, y, and z are all in [0, 255].";
 			else if (ridx == SSLParser.RULE_uniformQualifier)
 				errMsg = $"Invalid or empty uniform qualifier.";
 			else if (ridx == SSLParser.RULE_imageLayoutQualifier)

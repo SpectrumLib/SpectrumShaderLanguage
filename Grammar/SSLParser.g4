@@ -11,12 +11,12 @@ options {
 
 // Top-level file unit
 file
-    : shaderMetaStatement? topLevelStatement* EOF
+    : versionMetaStatement? topLevelStatement* EOF
     ;
 
 // Shader metadata statements
-shaderMetaStatement
-    : 'shader' '{' '}' ';'
+versionMetaStatement
+    : 'version' Version=VERSION_LITERAL ';'
     ;
 
 // All top-level statements that can appear in the file scope
