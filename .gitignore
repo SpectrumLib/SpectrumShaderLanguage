@@ -18,11 +18,11 @@ SSLC/bin/
 SSLC/Properties/
 
 # Ignore the generated files, as they are huge and can be quickly regenerated on each computer
-Generated/SSLLexer.cs
-Generated/SSLLexer.interp
-Generated/SSLLexer.tokens
-Generated/SSLParser.cs
-Generated/SSLParser.interp
-Generated/SSLParser.tokens
-Generated/SSLParserBaseVisitor.cs
-Generated/SSLParserVisitor.cs
+!Generated/
+Generated/*
+
+# TEMPORARY: Ignore the old source files for the cleanup
+Compiler-Old/
+Grammar-Old/
+Reflection-Old/
+SSLC-Old/
