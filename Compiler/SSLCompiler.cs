@@ -181,6 +181,12 @@ namespace SSLang
 			}
 			var version = new Version((int)maj, (int)min, (int)bld);
 
+			if (!Array.Exists(VALID_SOURCE_VERSIONS, vv => vv == version))
+			{
+				err = new CompileError(ErrorSource.Parser, (uint)ctx.Start.Line, (uint)ctx.Start.StartIndex,
+					$"The targeted version for the source code ({version}) is not a valid version.");
+				return false;
+			}
 			if (version > TOOL_VERSION)
 			{
 				err = new CompileError(ErrorSource.Parser, (uint)ctx.Start.Line, (uint)ctx.Start.StartIndex,
@@ -355,5 +361,9 @@ namespace SSLang
 		{
 			TOOL_VERSION = Assembly.GetExecutingAssembly().GetName().Version;
 		}
+
+		private static readonly Version[] VALID_SOURCE_VERSIONS = {
+			new Version(0, 1, 0)
+		};
 	}
 }

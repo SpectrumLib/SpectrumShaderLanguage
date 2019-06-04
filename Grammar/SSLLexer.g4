@@ -35,7 +35,6 @@ KW_INTERNALS        : 'internals' ;
 KW_OUT              : 'out' ;
 KW_OUTPUTS          : 'outputs' ;
 KW_RETURN           : 'return' ;
-KW_SHADER           : 'shader' ;
 KW_UNIFORM          : 'uniform' ;
 KW_VERSION          : 'version' ;
 KW_WHILE            : 'while' ;
