@@ -4,9 +4,6 @@
 
 Grammar/\.antlr/
 
-Generated/obj/
-Generated/bin/
-
 Compiler/obj/
 Compiler/bin/
 
@@ -18,8 +15,8 @@ SSLC/bin/
 SSLC/Properties/
 
 # Ignore the generated files, as they are huge and can be quickly regenerated on each computer
-!Generated/
 Generated/*
+!Generated/Generated.csproj
 
 # TEMPORARY: Ignore the old source files for the cleanup
 Compiler-Old/

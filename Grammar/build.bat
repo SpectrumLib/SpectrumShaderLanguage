@@ -19,4 +19,4 @@ java -jar antlr-4.7.2-complete.jar  ^
     -package SSLang.Generated       ^
     -Xexact-output-dir              ^
     -Dlanguage=CSharp               ^
-    SSLParser.g4
+    SSL.g4
