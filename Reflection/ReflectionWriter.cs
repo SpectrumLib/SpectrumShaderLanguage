@@ -20,7 +20,9 @@ namespace SSLang.Reflection
 		{
 			StringBuilder sb = new StringBuilder(1024);
 
-			sb.AppendLine($"SSL Reflection Dump (v{TOOL_VERSION.Major}.{TOOL_VERSION.Minor}.{TOOL_VERSION.Revision})");
+			sb.AppendLine($"SSL Reflection Dump");
+			sb.AppendLine($"Compiler Version: v{info.CompilerVersion.Major}.{info.CompilerVersion.Minor}.{info.CompilerVersion.Build}");
+			sb.AppendLine($"Source Version: v{info.SourceVersion.Major}.{info.SourceVersion.Minor}.{info.SourceVersion.Build}");
 			sb.AppendLine();
 
 			// General shader info
@@ -110,9 +112,12 @@ namespace SSLang.Reflection
 			{
 				// Write the header and tool version
 				writer.Write(Encoding.ASCII.GetBytes("SSLR"));
-				writer.Write((byte)TOOL_VERSION.Major);
-				writer.Write((byte)TOOL_VERSION.Minor);
-				writer.Write((byte)TOOL_VERSION.Revision);
+				writer.Write((byte)info.CompilerVersion.Major);
+				writer.Write((byte)info.CompilerVersion.Minor);
+				writer.Write((byte)info.CompilerVersion.Build);
+				writer.Write((byte)info.SourceVersion.Major);
+				writer.Write((byte)info.SourceVersion.Minor);
+				writer.Write((byte)info.SourceVersion.Build);
 
 				// Write shader info
 				writer.Write((byte)info.Stages); // Stage mask

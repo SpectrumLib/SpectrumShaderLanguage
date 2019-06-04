@@ -20,6 +20,14 @@ namespace SSLang.Reflection
 		/// </summary>
 		public ShaderStages Stages { get; internal set; } = ShaderStages.None;
 		/// <summary>
+		/// The version of the tool used to compile the shader, will be the same version that generated the reflection info.
+		/// </summary>
+		public Version CompilerVersion { get; internal set; } = new Version();
+		/// <summary>
+		/// The minimum SSL version required by the shader (from the source 'version' statement).
+		/// </summary>
+		public Version SourceVersion { get; internal set; } = new Version();
+		/// <summary>
 		/// The uniform values in the shader program.
 		/// </summary>
 		public IReadOnlyList<Uniform> Uniforms => _uniforms;
@@ -121,11 +129,12 @@ namespace SSLang.Reflection
 			using (var file = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
 			using (var reader = new BinaryReader(file))
 			{
-				var header = reader.ReadBytes(7);
+				var header = reader.ReadBytes(10);
 				if (header[0] != 'S' || header[1] != 'S' || header[2] != 'L' || header[3] != 'R')
 					throw new InvalidOperationException($"The file does not appear to be a valid binary SSL reflection file.");
-				var ver = new Version(header[4], header[5], header[6]);
-				return ReflectionReader.LoadFrom(reader, ver);
+				var cVer = new Version(header[4], header[5], header[6]);
+				var sVer = new Version(header[7], header[8], header[9]);
+				return ReflectionReader.LoadFrom(reader, cVer, sVer);
 			}
 		}
 	}

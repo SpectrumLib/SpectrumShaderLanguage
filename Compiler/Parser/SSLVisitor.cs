@@ -163,6 +163,9 @@ namespace SSLang
 			var meta = context.versionMetaStatement();
 			if (meta != null)
 				Visit(meta);
+			else
+				Info.SourceVersion = new Version(0, 1, 0); // The default source version if no version statement is present
+			Info.CompilerVersion = SSLCompiler.TOOL_VERSION;
 
 			var childs = context.children as List<IParseTree>;
 
@@ -326,6 +329,7 @@ namespace SSLang
 		{
 			// If there is a version statement, we know that it is already valid, as it was parsed before the rest of the file
 			var version = new Version(context.Version.Text);
+			Info.SourceVersion = version;
 
 			return null;
 		}

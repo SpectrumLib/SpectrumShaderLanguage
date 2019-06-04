@@ -11,12 +11,14 @@ namespace SSLang.Reflection
 	{
 		private static readonly Version TOOL_VERSION;
 
-		public static ShaderInfo LoadFrom(BinaryReader reader, Version fileVer)
+		public static ShaderInfo LoadFrom(BinaryReader reader, Version cVer, Version sVer)
 		{
-			if (fileVer > TOOL_VERSION)
-				throw new InvalidOperationException($"The file version {fileVer} cannot be loaded by this version of the library ({TOOL_VERSION}).");
+			if (cVer > TOOL_VERSION)
+				throw new InvalidOperationException($"The file version {cVer} cannot be loaded by this version of the library ({TOOL_VERSION}).");
 
 			ShaderInfo info = new ShaderInfo();
+			info.CompilerVersion = cVer;
+			info.SourceVersion = sVer;
 			
 			// Load the stages
 			var stages = reader.ReadByte();
