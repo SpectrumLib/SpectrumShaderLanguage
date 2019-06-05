@@ -71,7 +71,20 @@ namespace SSLC
 
 		private static void PrintHelp()
 		{
+			// =============================================================================================================
+			Console.WriteLine();
+			Console.WriteLine("sslc");
+			Console.WriteLine("----");
+			Console.WriteLine("sslc is the command line tool used to compile Spectrum Shader Language files (.ssl) into");
+			Console.WriteLine("Vulkan-compatible SPIR-V bytecode. It can also create reflection info about the shaders.");
+			Console.WriteLine("It is designed for use with the Spectrum graphics library, but can be used standalone,");
+			Console.WriteLine("and is designed to generate easy to consume files for any third party programs.");
 
+			// =============================================================================================================
+			Console.WriteLine();
+			Console.WriteLine("Usage:        sslc[.exe] [args] <input_file>.ssl");
+			Console.WriteLine("The input file must always be the last argument.");
+			Console.WriteLine("For compatiblity, all arguments can be specified with '-', '--', or '/' (Windows only).");
 		}
 	}
 }

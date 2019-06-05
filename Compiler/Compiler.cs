@@ -102,6 +102,27 @@ namespace SSLang
 			if (verCtx != null && !checkVersion(verCtx, out error))
 				return false;
 
+			// Perform the full parsing
+			parser.Reset();
+			var fileCtx = parser.file();
+			if (errl.Error != null)
+			{
+				error = errl.Error;
+				return false;
+			}
+
+			// Visit the tree (this generates the GLSL in memory)
+			Translator trans = new Translator(tokenStream, this, options);
+			try
+			{
+				trans.Visit(fileCtx);
+			}
+			catch (VisitException e)
+			{
+				error = e.Error;
+				return false;
+			}
+
 			error = null;
 			return true;
 		}
